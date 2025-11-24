@@ -162,6 +162,19 @@ export function renderApp(
   deleteButton.setAttribute('aria-label', 'Delete all completed todos')
   footer.appendChild(deleteButton)
 
+  // Create version display element
+  const versionDisplay = document.createElement('div')
+  versionDisplay.className = 'version-display'
+  versionDisplay.textContent = 'v...' // Placeholder, will be updated async
+  footer.appendChild(versionDisplay)
+
+  // Fetch and display app version
+  window.electron.getAppVersion().then(version => {
+    versionDisplay.textContent = `v${version}`
+  }).catch(() => {
+    versionDisplay.textContent = '' // Hide on error
+  })
+
   footer.setAttribute('role', 'status')
   footer.setAttribute('aria-live', 'polite')
 

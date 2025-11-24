@@ -25,6 +25,11 @@ ipcMain.handle('save-todos', async (_event, filePath: string, todos: Todo[]) => 
   await ToonStorage.save(filePath, todos);
 });
 
+// IPC handler for getting app version
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion();
+});
+
 // Capture startup time before any async operations
 const startTime = Date.now();
 

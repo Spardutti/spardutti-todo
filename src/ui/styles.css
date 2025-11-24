@@ -200,6 +200,17 @@ ul, ol {
   margin-bottom: 0.5rem;                      /* Space between hints and delete button */
 }
 
+/* Version display - small text in bottom right */
+.version-display {
+  position: absolute;                         /* Position in bottom right corner */
+  right: 1rem;                                /* Distance from right edge */
+  bottom: 0.5rem;                             /* Distance from bottom edge */
+  font-size: 10px;                            /* Smaller than footer hints */
+  color: #004400;                             /* Dark green - very subtle */
+  opacity: 0.7;                               /* Make it unobtrusive */
+  /* font-family inherited from body (Consolas monospace) */
+}
+
 /* ============================================
    LAYOUT & APP CONTAINER
    ============================================ */
@@ -212,6 +223,7 @@ ul, ol {
   padding: 16px;                              /* Edge breathing room per UX spec */
   background: var(--color-bg-primary);        /* Pure black #000000 */
   box-sizing: border-box;                     /* Include padding in height calculation */
+  position: relative;                         /* Position context for absolute children */
 }
 
 /* Delete button temporary styling (will be removed in Epic 4 when Ctrl+D is implemented) */

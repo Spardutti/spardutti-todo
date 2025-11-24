@@ -5,6 +5,7 @@ export interface ElectronAPI {
   getTodosPath: () => Promise<string>
   loadTodos: (filePath: string) => Promise<Todo[]>
   saveTodos: (filePath: string, todos: Todo[]) => Promise<void>
+  getAppVersion: () => Promise<string>
 }
 
 export interface UpdaterAPI {

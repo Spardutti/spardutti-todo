@@ -9,7 +9,8 @@ import type { UpdateStatus } from '../src/types/UpdateStatus'
 contextBridge.exposeInMainWorld('electron', {
   getTodosPath: () => ipcRenderer.invoke('get-todos-path'),
   loadTodos: (filePath: string) => ipcRenderer.invoke('load-todos', filePath),
-  saveTodos: (filePath: string, todos: Todo[]) => ipcRenderer.invoke('save-todos', filePath, todos)
+  saveTodos: (filePath: string, todos: Todo[]) => ipcRenderer.invoke('save-todos', filePath, todos),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 })
 
 // Expose updater API to renderer process
