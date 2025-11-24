@@ -401,3 +401,70 @@ export function hideError(): void {
     errorTimeout = null
   }
 }
+
+/**
+ * Initializes update notification system by listening to IPC messages from main process.
+ *
+ * Registers a callback with the updater API to receive update status changes.
+ * Updates the footer to show update notifications based on the status received.
+ *
+ * Update notification states:
+ * - 'available': Shows "Update available. Downloading..." (persistent while downloading)
+ * - 'downloaded': Shows "Update available. Restart to install." (persistent until app close)
+ * - 'not-available': No change to footer (keep keyboard hints)
+ * - 'error': No change for automatic checks (silent, logged only)
+ *
+ * @example
+ * ```typescript
+ * // Called during app initialization in renderer.ts
+ * initUpdateNotifications()
+ * ```
+ */
+export function initUpdateNotifications(): void {
+  // Get footer element
+  const footer = document.getElementById('footer') as HTMLDivElement
+  if (!footer) {
+    console.warn('Footer element not found, update notifications will not be displayed')
+    return
+  }
+
+  // Check if updater API is available
+  if (!window.updater) {
+    console.warn('window.updater is not defined. Update notifications will not work.')
+    return
+  }
+
+  // Register callback for update status changes
+  window.updater.onUpdateStatus((status) => {
+    const hintsElement = getFooterHintsElement(footer)
+    if (!hintsElement) return
+
+    // Handle different update statuses
+    switch (status.status) {
+      case 'available':
+        // Show "Downloading..." message (persistent while downloading)
+        hintsElement.textContent = status.message
+        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        break
+
+      case 'downloaded':
+        // Show "Restart to install" message (persistent until app close)
+        hintsElement.textContent = status.message
+        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        break
+
+      case 'not-available':
+        // Silent for automatic checks - no footer change
+        // Keep existing keyboard hints
+        break
+
+      case 'error':
+        // Silent for automatic checks - no footer change
+        // Manual checks in Story 6.3 will handle error display
+        break
+
+      default:
+        console.warn('Unknown update status:', status.status)
+    }
+  })
+}

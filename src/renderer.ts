@@ -16,6 +16,7 @@ import {
   restoreFooterHints,
   setFooterOriginalContent,
   displayError,
+  initUpdateNotifications,
 } from '@/ui/render'
 import KeyboardManager from '@/keyboard/KeyboardManager'
 
@@ -377,6 +378,13 @@ async function initApp(): Promise<void> {
   if (hintsElement) {
     hintsElement.textContent = dynamicHints
   }
+
+  // ===================================
+  // Story 6.2: Initialize Update Notifications
+  // ===================================
+  // Initialize update notification system to listen for IPC messages from main process
+  // This must be called after DOM is ready (footer exists) but before user interaction
+  initUpdateNotifications()
 
   // Global keyboard event handler
   window.addEventListener('keydown', (event) => {

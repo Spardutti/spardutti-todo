@@ -3,7 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import log from 'electron-log';
 import { ToonStorage } from './storage';
-import { initUpdater } from './updater';
+import { initUpdater, isUpdateDownloaded, quitAndInstall } from './updater';
 import type { Todo } from '../src/types/Todo';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -104,6 +104,16 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+// Handle update installation on app quit
+app.on('before-quit', () => {
+  // Check if an update has been downloaded
+  if (isUpdateDownloaded()) {
+    log.info('Installing update before quit...');
+    // quitAndInstall() will quit the app and run the installer
+    quitAndInstall();
   }
 });
 

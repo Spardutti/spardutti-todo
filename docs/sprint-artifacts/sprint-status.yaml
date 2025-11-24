@@ -84,7 +84,7 @@ development_status:
   # Epic 6: Auto-Update System
   epic-6: contexted
   6-1-configure-electron-updater-and-github-releases: done
-  6-2-implement-automatic-update-download-and-notification: backlog
+  6-2-implement-automatic-update-download-and-notification: done
   6-3-implement-manual-update-check-fallback: backlog
   6-4-test-and-verify-auto-update-flow: backlog
   epic-6-retrospective: optional

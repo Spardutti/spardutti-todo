@@ -1,0 +1,346 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>2</storyId>
+    <title>Implement Automatic Update Download and Notification</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-2-implement-automatic-update-download-and-notification.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>to be notified when an update is available and have it download automatically in the background</iWant>
+    <soThat>I can stay up-to-date without manual effort and know when to restart the app</soThat>
+    <tasks>
+      <task id="1">Enhance electron/updater.ts with IPC messaging (AC: #1, #2, #6)</task>
+      <task id="2">Update electron/preload.ts to expose updater API (AC: #6)</task>
+      <task id="3">Create src/types/UpdateStatus.ts interface (AC: #6)</task>
+      <task id="4">Implement update notification rendering in src/ui/render.ts (AC: #1, #2, #3)</task>
+      <task id="5">Add before-quit handler in electron/main.ts for quitAndInstall (AC: #5)</task>
+      <task id="6">Update electron/updater.ts to export update status (AC: #5)</task>
+      <task id="7">Update src/renderer.ts entry point (AC: #6)</task>
+      <task id="8">Test update notification display (AC: #1, #2, #3)</task>
+      <task id="9">Test UI responsiveness during download simulation (AC: #4)</task>
+      <task id="10">Test quitAndInstall flow (AC: #5) - MANUAL TEST ONLY</task>
+      <task id="11">Verify data persistence through update (AC: #5)</task>
+      <task id="12">Update ESLint and TypeScript checks</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">
+      <title>Update available notification displays</title>
+      <details>
+        - GIVEN a new version is available on GitHub Releases
+        - WHEN the app launches and electron-updater detects the update
+        - THEN footer displays: "Update available. Downloading..." (bright green #00FF00)
+        - AND notification does not block app usage
+        - AND notification persists while downloading
+      </details>
+    </criterion>
+    <criterion id="AC2">
+      <title>Update downloaded notification displays</title>
+      <details>
+        - GIVEN an update has finished downloading
+        - WHEN the update-downloaded event fires
+        - THEN footer displays: "Update available. Restart to install." (bright green #00FF00)
+        - AND notification remains persistent (does not auto-hide)
+        - AND notification replaces keyboard hints in footer
+      </details>
+    </criterion>
+    <criterion id="AC3">
+      <title>No notification when no update available</title>
+      <details>
+        - GIVEN the app is on the latest version
+        - WHEN the app launches and update check completes
+        - THEN no update notification appears in footer
+        - AND footer continues showing keyboard hints normally
+        - AND check is logged silently via electron-log
+      </details>
+    </criterion>
+    <criterion id="AC4">
+      <title>Background download does not block UI</title>
+      <details>
+        - GIVEN an update is downloading (50-80MB .exe file)
+        - WHEN I use the app (create todos, toggle, navigate)
+        - THEN all app functions remain responsive (no perceived lag)
+        - AND download happens in separate thread (non-blocking)
+        - AND no download progress bar is shown (terminal aesthetic constraint)
+      </details>
+    </criterion>
+    <criterion id="AC5">
+      <title>Update installs on app close</title>
+      <details>
+        - GIVEN an update has been downloaded
+        - WHEN I close the app (Esc, Ctrl+Q, or window X)
+        - THEN app calls autoUpdater.quitAndInstall()
+        - AND app quits immediately
+        - AND NSIS installer runs silently in background
+        - AND app relaunches automatically with new version
+        - AND todos.toon data persists (no data loss)
+      </details>
+    </criterion>
+    <criterion id="AC6">
+      <title>IPC communication between main and renderer</title>
+      <details>
+        - GIVEN electron-updater events fire in main process
+        - WHEN update-available, update-downloaded, or update-not-available events occur
+        - THEN main process sends IPC messages: mainWindow.webContents.send('update-status', status)
+        - AND renderer receives messages via preload-exposed API
+        - AND footer component updates based on UpdateStatus data
+      </details>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>APIs and Interfaces</section>
+        <snippet>Defines UpdateStatus interface with status types (checking, available, not-available, downloaded, error), IPC communication patterns, and event handler implementations for electron-updater integration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>Workflows and Sequencing - Workflow 1: Automatic Update Check</section>
+        <snippet>Complete flow from app launch through update check, background download, and user notification. Handles offline gracefully, downloads in background, shows persistent "Restart to install" message.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>Workflows and Sequencing - Workflow 3: Installation on Quit</section>
+        <snippet>Before-quit handler pattern: Check if update downloaded, call quitAndInstall(), NSIS installer runs silently, app relaunches with new version, todos.toon persists.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Deployment Architecture - Update Mechanism</section>
+        <snippet>Update notifications must use terminal aesthetic: Footer location, bright green #00FF00, Consolas 12px, no modals, no progress bars, persistent "Restart to install" message.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>Non-Functional Requirements - Performance</section>
+        <snippet>Update check adds &lt;200ms to startup, background download has no UI impact, footer updates must be instant (&lt;16ms), no animations per terminal constraint.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/6-1-configure-electron-updater-and-github-releases.md</path>
+        <title>Story 6.1: Configure electron-updater and GitHub Releases</title>
+        <section>Completion Notes</section>
+        <snippet>Foundation complete: electron/updater.ts with event handlers ready, initUpdater() integrated in main.ts, electron-log working, offline mode tested. Ready for IPC enhancement in Story 6.2.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>electron/updater.ts</path>
+        <kind>service</kind>
+        <symbol>initUpdater</symbol>
+        <lines>10-50</lines>
+        <reason>Contains event handlers that need IPC message sending. Already has logging, needs mainWindow.webContents.send() calls for update-available and update-downloaded events.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/updater.ts</path>
+        <kind>service</kind>
+        <symbol>quitAndInstall</symbol>
+        <lines>62-64</lines>
+        <reason>Function to be called from before-quit handler when update is downloaded. Already exported, ready to use.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/preload.ts</path>
+        <kind>ipc-bridge</kind>
+        <symbol>contextBridge.exposeInMainWorld</symbol>
+        <lines>8-12</lines>
+        <reason>Currently exposes electron API for todos. Need to add updater API object with onUpdateStatus callback registration.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/main.ts</path>
+        <kind>main-process</kind>
+        <symbol>createWindow</symbol>
+        <lines>31-70</lines>
+        <reason>Contains window lifecycle and initUpdater call on ready-to-show (line 53). Need to add before-quit handler in this file.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>renderer</kind>
+        <symbol>renderApp</symbol>
+        <lines>129-186</lines>
+        <reason>Creates footer element and manages footer content. Need to add initUpdateNotifications() function to this file for IPC listener setup.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>renderer</kind>
+        <symbol>showFeedback</symbol>
+        <lines>294-315</lines>
+        <reason>Pattern for temporary footer messages with auto-hide. Update notifications use similar pattern but persistent for downloaded status.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/window.d.ts</path>
+        <kind>types</kind>
+        <symbol>Window</symbol>
+        <lines>10-13</lines>
+        <reason>Global window type declaration. Need to add updater: UpdaterAPI to Window interface for TypeScript support.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>renderer-entry</kind>
+        <symbol>main entry</symbol>
+        <lines>1-100</lines>
+        <reason>Renderer entry point where initUpdateNotifications() needs to be called after DOM ready but before user interaction.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="electron-updater" version="6.7.1">Auto-update client library. autoUpdater events, checkForUpdatesAndNotify(), quitAndInstall().</package>
+        <package name="electron-log" version="5.4.1">File-based logging for all update events. Already configured as autoUpdater.logger.</package>
+        <package name="electron" version="39.2.3">BrowserWindow, ipcMain, contextBridge, app lifecycle events.</package>
+      </npm>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="terminal-aesthetic">
+      <title>Terminal Aesthetic Requirements</title>
+      <details>
+        - Font: Consolas 12px monospace (no exceptions)
+        - Color: #00FF00 (bright green) for update notifications
+        - Background: #000000 (pure black, inherited)
+        - No animations or transitions (instant state changes)
+        - No progress bars (background download, terminal constraint)
+        - No modal dialogs (inline footer notifications only)
+      </details>
+    </constraint>
+    <constraint id="non-blocking-design">
+      <title>Non-Blocking Background Download</title>
+      <details>
+        - Download must not block event loop or UI rendering
+        - All app functions (create, toggle, navigate) remain responsive during download
+        - No perceived lag (&lt;16ms response time target)
+        - electron-updater handles download in separate thread automatically
+      </details>
+    </constraint>
+    <constraint id="offline-first">
+      <title>Offline-First Error Handling</title>
+      <details>
+        - Update check failures must not show error UI for automatic checks
+        - App continues functioning 100% if update check fails
+        - Error notifications only for manual checks (Story 6.3: Ctrl+U)
+        - All errors logged via electron-log for debugging
+      </details>
+    </constraint>
+    <constraint id="data-persistence">
+      <title>Data Persistence Through Update</title>
+      <details>
+        - todos.toon stored in %APPDATA%/spardutti-todo/ (not modified by installer)
+        - ToonStorage auto-save ensures data is written before app quits
+        - NSIS installer only replaces files in C:\Program Files\
+        - No data loss scenario possible if update installation occurs
+      </details>
+    </constraint>
+    <constraint id="code-quality">
+      <title>Code Quality Standards</title>
+      <details>
+        - ESLint: 0 errors, 21 warnings (existing acceptable warnings)
+        - TypeScript strict mode: enabled, no 'any' types
+        - All existing tests (74 tests) must continue passing
+        - No new ESLint errors introduced by IPC code
+      </details>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>UpdateStatus</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+        interface UpdateStatus {
+          status: 'checking' | 'available' | 'not-available' | 'downloaded' | 'error'
+          version?: string           // New version number (if available)
+          message: string            // Display text for footer
+          error?: string             // Error details (if status === 'error')
+        }
+      </signature>
+      <path>src/types/UpdateStatus.ts</path>
+    </interface>
+    <interface>
+      <name>UpdaterAPI</name>
+      <kind>Window API (preload exposed)</kind>
+      <signature>
+        interface UpdaterAPI {
+          onUpdateStatus: (callback: (status: UpdateStatus) => void) => void
+        }
+      </signature>
+      <path>src/types/window.d.ts</path>
+    </interface>
+    <interface>
+      <name>IPC: update-status</name>
+      <kind>IPC message (Main → Renderer)</kind>
+      <signature>
+        mainWindow.webContents.send('update-status', {
+          status: 'available' | 'downloaded' | 'not-available',
+          version?: string,
+          message: string
+        })
+      </signature>
+      <path>electron/updater.ts</path>
+    </interface>
+    <interface>
+      <name>autoUpdater.on('update-available')</name>
+      <kind>electron-updater event</kind>
+      <signature>
+        autoUpdater.on('update-available', (info) => {
+          // info.version: string
+          // Send IPC message, log event
+        })
+      </signature>
+      <path>electron/updater.ts:28-30</path>
+    </interface>
+    <interface>
+      <name>autoUpdater.on('update-downloaded')</name>
+      <kind>electron-updater event</kind>
+      <signature>
+        autoUpdater.on('update-downloaded', (info) => {
+          // info.version: string
+          // Set _updateDownloaded flag, send IPC, log event
+        })
+      </signature>
+      <path>electron/updater.ts:38-40</path>
+    </interface>
+    <interface>
+      <name>app.on('before-quit')</name>
+      <kind>Electron app lifecycle event</kind>
+      <signature>
+        app.on('before-quit', (event) => {
+          if (isUpdateDownloaded()) {
+            quitAndInstall()
+          }
+        })
+      </signature>
+      <path>electron/main.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests with Vitest for core logic. Integration tests for IPC flow. Manual E2E tests for update download/install (full flow deferred to Story 6.4). Co-located test files (*.test.ts). TypeScript strict mode enabled. Mock electron-updater events for testing. Existing 74 tests must continue passing. Target: 85% code coverage for Epic 6 components.
+    </standards>
+    <locations>
+      - src/**/*.test.ts (co-located unit tests)
+      - tests/integration/ (IPC and event handler tests, if created)
+      - Manual testing via dev console for IPC message triggering
+    </locations>
+    <ideas>
+      <idea ac="AC1">Mock update-available event in dev console, verify footer shows "Update available. Downloading..." in bright green, verify app remains usable (create/toggle todos)</idea>
+      <idea ac="AC2">Mock update-downloaded event, verify footer updates to "Update available. Restart to install.", verify message is persistent (does not auto-hide), verify keyboard hints replaced</idea>
+      <idea ac="AC3">Mock update-not-available event on app launch, verify no footer change, verify keyboard hints remain, check electron-log for silent logging</idea>
+      <idea ac="AC4">Create 20 todos while download status is active (mocked), navigate with j/k, toggle with Space, verify all operations remain instant, verify no UI freezing</idea>
+      <idea ac="AC5">Add logging to before-quit handler, verify isUpdateDownloaded() returns correct state, verify quitAndInstall() code path is reached (full install test in Story 6.4)</idea>
+      <idea ac="AC6">Unit test: Verify UpdateStatus interface structure. Integration test: Mock IPC send, verify renderer callback receives status. Test footer text updates based on status values.</idea>
+      <idea general="Edge case: Multiple rapid update events">Fire update-available then update-downloaded within 1 second, verify footer updates correctly to final state</idea>
+      <idea general="Edge case: Update event during bulk delete confirmation">Trigger Ctrl+D confirmation, then fire update-available, decide priority (update notification should take precedence)</idea>
+    </ideas>
+  </tests>
+</story-context>
+</story-context>
