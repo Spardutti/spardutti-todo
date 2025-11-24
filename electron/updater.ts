@@ -11,6 +11,14 @@ export function initUpdater(mainWindow: BrowserWindow): void {
   // Configure electron-updater to use electron-log for all logging
   autoUpdater.logger = log
 
+  // Configure GitHub as the update provider
+  // This tells electron-updater where to check for releases
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'Spardutti',
+    repo: 'spardutti-todo',
+  })
+
   // Event: Checking for update
   autoUpdater.on('checking-for-update', () => {
     log.info('Checking for updates...')
