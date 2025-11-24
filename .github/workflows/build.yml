@@ -3,6 +3,8 @@ name: Build Windows Installer
 on:
   push:
     branches: [master, main]
+    tags:
+      - 'v*'
   pull_request:
     branches: [master, main]
   workflow_dispatch:
@@ -48,3 +50,14 @@ jobs:
         run: |
           echo "Generated installer files:"
           dir out\make\squirrel.windows\x64\
+
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            out/make/squirrel.windows/x64/*.exe
+            out/make/squirrel.windows/x64/RELEASES
+            out/make/squirrel.windows/x64/*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
