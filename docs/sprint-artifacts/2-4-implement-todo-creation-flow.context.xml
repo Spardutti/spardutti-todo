@@ -1,0 +1,301 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Implement Todo Creation Flow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/home/spardutti/Projects/spardutti-todo/docs/sprint-artifacts/2-4-implement-todo-creation-flow.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>to create a new todo by typing text and pressing Enter</iWant>
+    <soThat>I can quickly capture tasks without breaking my workflow</soThat>
+    <tasks>
+- Add Enter key event listener to input field (AC: #1, #4)
+  - Import renderTodoList from @/ui/render
+  - Get reference to input element from renderApp()
+  - Add keydown event listener: input.addEventListener('keydown', handleEnterKey)
+  - Check if key === 'Enter' in handler
+  - Prevent default form submission: event.preventDefault()
+  - Extract input value: const text = input.value
+  - Validate text is not empty: if (!text.trim()) return
+  - Store original function scope refs (store, listContainer) for handler access
+
+- Implement todo creation logic (AC: #1, #3)
+  - Call todoStore.add(text) to create new todo
+  - TodoStore.add() returns the created Todo object
+  - Todo has id (UUID v4), text, completed: false, createdAt (ISO 8601)
+  - Add console.log for debugging (optional, remove in production)
+
+- Re-render todo list to show new item (AC: #1)
+  - Get updated todos array: const todos = store.getAll()
+  - Call renderTodoList(todos, listContainer) to update DOM
+  - Verify new todo appears in list with ☐ checkbox
+  - Verify todo text displays correctly (wraps if long)
+
+- Clear input field and maintain focus (AC: #2, #5)
+  - Clear input: input.value = ''
+  - Maintain focus: input.focus() (explicit call as safety)
+  - Verify cursor stays in input (ready for next todo)
+  - Test rapid-fire entry: Type, Enter, Type, Enter, Type, Enter
+
+- Implement auto-scroll to bottom (AC: #6)
+  - After renderTodoList(), scroll list container
+  - Set scrollTop to scrollHeight: listContainer.scrollTop = listContainer.scrollHeight
+  - Verify new todo is visible at bottom of list
+  - Test with many todos (>10) to verify scrolling works
+
+- Refactor renderApp() to return element references (AC: #1)
+  - Change renderApp return type from void to object
+  - Return { input, listContainer, footer } from renderApp()
+  - Update renderer.ts to destructure returned refs
+  - Pass refs to event handler setup function
+  - Alternative: Store refs in module scope if simpler
+
+- Handle edge cases (AC: #4)
+  - Empty input: Press Enter with no text → No action taken
+  - Whitespace-only: "   " → Trimmed, no todo created
+  - Very long text (500+ chars): Todo wraps correctly
+  - Rapid Enter presses: No duplicate todos (debouncing not needed if validation works)
+
+- Update renderer.ts entry point (AC: #1, #2)
+  - Call renderApp() and destructure refs
+  - Set up event listener after renderApp()
+  - Verify no TypeScript errors
+  - Verify strict mode compliance
+
+- Manual testing (AC: all)
+  - Run npm start and open app
+  - Verify input field is auto-focused on launch
+  - Type "Test todo 1" and press Enter
+  - Verify todo appears in list with ☐ checkbox
+  - Verify input clears and stays focused
+  - Type "Test todo 2" and press Enter immediately
+  - Verify both todos appear in order (newest at bottom)
+  - Press Enter with empty input → Verify no todo created
+  - Type "   " (whitespace only) and press Enter → Verify no todo created
+  - Create 20 todos to test scrolling
+  - Verify list scrolls to bottom automatically
+  - Verify no console errors
+  - Verify TypeScript compilation: npx tsc --noEmit
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Enter key creates todo from input text**
+   - GIVEN the app is launched and the input field is focused
+   - WHEN I type "Buy groceries" and press Enter
+   - THEN a new todo appears in the list below with text "Buy groceries"
+
+2. **Input field clears and stays focused after creation**
+   - WHEN I press Enter to create a todo
+   - THEN the input field clears immediately
+   - AND the input field stays focused (cursor ready for next todo)
+   - AND this enables rapid-fire todo entry without re-focusing
+
+3. **New todo has correct structure**
+   - WHEN a todo is created
+   - THEN it has:
+     - Empty checkbox (☐)
+     - Text: "Buy groceries"
+     - Unique ID (UUID v4)
+     - Current timestamp (ISO 8601)
+     - completed: false
+
+4. **Empty input validation**
+   - GIVEN the input field is empty or contains only whitespace
+   - WHEN I press Enter
+   - THEN no todo is created (no action taken)
+   - AND no error message is shown
+   - AND the input field remains focused
+
+5. **Multiple todos can be added in succession**
+   - WHEN I type todo text and press Enter
+   - THEN I can immediately type another todo and press Enter to add it
+   - AND todos appear in creation order (newest at bottom)
+   - AND no clicking or refocusing required between todos
+
+6. **List auto-scrolls to new todo**
+   - WHEN a new todo is added and the list is scrollable
+   - THEN the list auto-scrolls to show the newly added todo at the bottom
+   - AND the user sees confirmation that the todo was added
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- PRD: Product vision and requirements -->
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Functional Requirements">
+        FR1: Users can create a new todo by typing text and pressing Enter. FR19: Input field has focus immediately on launch (ready to type). FR20: Immediate visual feedback for all user actions.
+      </doc>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="User Experience Principles">
+        Terminal aesthetic with monospace fonts, keyboard-first navigation, every action accessible via keyboard shortcut, immediate visual feedback for all actions, no animations or transitions that slow down workflow.
+      </doc>
+
+      <!-- Architecture: Technical decisions and patterns -->
+      <doc path="docs/architecture.md" title="Architecture" section="Communication Patterns">
+        Unidirectional data flow: TodoStore → render() → DOM. Event handling pattern: KeyboardManager captures events, handlers call TodoStore methods, UI re-renders after mutation. No global state - all state flows through TodoStore instance.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Performance Considerations">
+        Input latency: Zero perceived lag (&lt;16ms response). Immediate feedback on Enter press. Batch DOM updates using DocumentFragment. All operations appear instant.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Structure Patterns">
+        Refactor renderApp() to return {input, listContainer, footer} for event handler access. Clean separation: render.ts creates DOM, renderer.ts adds behavior. Type-safe references, explicit dependencies.
+      </doc>
+
+      <!-- UX Design: User flows and patterns -->
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Journey 1: Task Capture">
+        Primary 2-second flow: Launch → Input focused → Type text → Press Enter → Todo appears instantly → Input clears → Focus stays in input (ready for next). Enable rapid-fire entry without re-focusing.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Core Experience Principles">
+        Speed: Instant response, zero perceived latency. Feedback: Crisp and visual, implicit success (todo appears = saved). Focus: Input-centric, always return to input after actions.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Feedback Patterns">
+        Success feedback is implicit: todo appears in list = saved successfully. Input clears = action completed. Focus stays in input = ready for next action. No explicit "Todo created!" message needed.
+      </doc>
+
+      <!-- Epic Tech Spec: Detailed technical guidance -->
+      <doc path="docs/sprint-artifacts/tech-spec-epic-2.md" title="Epic 2 Technical Specification" section="Workflows and Sequencing">
+        Workflow 1 (Create Todo): User presses Enter → validate text.trim() → call todoStore.add(text) → renderTodoList() → clear input → focus stays → auto-scroll to bottom. Uses DocumentFragment for batch DOM updates.
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-2.md" title="Epic 2 Technical Specification" section="Performance">
+        Todo creation: &lt;16ms (single frame). Input latency: Zero perceptible lag. Render update: &lt;16ms. Measurement: performance.now() for development tracking.
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Existing rendering system (Story 2-3) -->
+      <artifact path="src/ui/render.ts" kind="module" symbol="renderInput" lines="18-26" reason="Creates input element with autofocus and placeholder - Story 2.4 adds Enter key event listener to this input"/>
+      <artifact path="src/ui/render.ts" kind="module" symbol="renderTodoItem" lines="43-70" reason="Creates todo list items with unicode checkboxes - Story 2.4 renders new todos using this function"/>
+      <artifact path="src/ui/render.ts" kind="module" symbol="renderTodoList" lines="87-106" reason="Batch renders todos using DocumentFragment - Story 2.4 calls this after store.add() to update UI"/>
+      <artifact path="src/ui/render.ts" kind="module" symbol="renderApp" lines="124-157" reason="Main app initialization - Story 2.4 refactors this to return {input, listContainer, footer} for event handler access"/>
+
+      <!-- TodoStore for state management -->
+      <artifact path="src/store/TodoStore.ts" kind="class" symbol="TodoStore" lines="18-151" reason="State management class - Story 2.4 calls store.add(text) to create todos"/>
+      <artifact path="src/store/TodoStore.ts" kind="method" symbol="add" lines="44-62" reason="Creates new todo with UUID and timestamp - Story 2.4's primary state mutation"/>
+      <artifact path="src/store/TodoStore.ts" kind="method" symbol="getAll" lines="120-122" reason="Returns all todos for rendering - Story 2.4 calls this after add() to re-render list"/>
+
+      <!-- Data model -->
+      <artifact path="src/types/Todo.ts" kind="interface" symbol="Todo" lines="17-54" reason="Todo interface with id, text, completed, createdAt fields - defines shape of created todos"/>
+
+      <!-- Renderer entry point -->
+      <artifact path="src/renderer.ts" kind="module" symbol="initApp" lines="26-43" reason="App initialization - Story 2.4 adds Enter key event listener after renderApp() call here"/>
+    </code>
+
+    <dependencies>
+      <runtime>
+        <package name="crypto" version="built-in" usage="crypto.randomUUID() for todo id generation (used by TodoStore.add)"/>
+      </runtime>
+      <development>
+        <package name="typescript" version="~5.9.2" usage="Type safety, strict mode compilation"/>
+        <package name="vitest" version="^4.0.13" usage="Unit testing framework (TodoStore tests)"/>
+        <package name="@types/node" version="^24.10.1" usage="Node.js type definitions"/>
+        <package name="vite" version="^5.4.21" usage="Build tool with HMR for rapid development"/>
+      </development>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Architecture constraints from architecture.md -->
+    <constraint type="architecture">Unidirectional data flow: TodoStore → render() → DOM. Never update DOM → store directly.</constraint>
+    <constraint type="architecture">No event handlers in render.ts - only in renderer.ts or separate event module.</constraint>
+    <constraint type="architecture">All state changes go through TodoStore methods (add, toggle, deleteCompleted).</constraint>
+    <constraint type="architecture">Re-render after each state change (simple, predictable).</constraint>
+
+    <!-- Story-specific refactoring constraint -->
+    <constraint type="refactoring">renderApp() must return {input, listContainer, footer} instead of void to provide element references for event handlers.</constraint>
+    <constraint type="refactoring">Event listener setup happens in renderer.ts after renderApp() call, not inside renderApp().</constraint>
+
+    <!-- Performance constraints -->
+    <constraint type="performance">Todo creation must complete in &lt;16ms (single frame) for instant perceived response.</constraint>
+    <constraint type="performance">Use DocumentFragment batching for renderTodoList() calls (single reflow).</constraint>
+    <constraint type="performance">Auto-scroll uses scrollTop = scrollHeight (instant, no smooth scrolling).</constraint>
+
+    <!-- Input validation constraints -->
+    <constraint type="validation">Empty input validation: if (!text.trim()) return - no todo created, no error shown.</constraint>
+    <constraint type="validation">Whitespace-only input is trimmed and rejected (same as empty).</constraint>
+
+    <!-- Type safety constraints -->
+    <constraint type="typescript">TypeScript strict mode enabled - no any types, explicit return types.</constraint>
+    <constraint type="typescript">Input value is always string type - TodoStore.add() expects string parameter.</constraint>
+
+    <!-- Security constraints -->
+    <constraint type="security">Use textContent (not innerHTML) for todo text to prevent XSS - already implemented in renderTodoItem().</constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- renderApp() refactored return type -->
+    <interface name="renderApp return type" kind="function signature">
+      <signature>
+        function renderApp(store: TodoStore, container: HTMLElement): {
+          input: HTMLInputElement
+          listContainer: HTMLUListElement
+          footer: HTMLDivElement
+        }
+      </signature>
+      <path>src/ui/render.ts:124</path>
+      <usage>Story 2.4 refactors this function to return element references for event handler setup</usage>
+    </interface>
+
+    <!-- TodoStore.add() interface -->
+    <interface name="TodoStore.add()" kind="class method">
+      <signature>add(text: string): Todo | null</signature>
+      <path>src/store/TodoStore.ts:44</path>
+      <usage>Story 2.4 calls this when Enter pressed to create todo, returns Todo object or null if empty</usage>
+    </interface>
+
+    <!-- renderTodoList() interface -->
+    <interface name="renderTodoList()" kind="function">
+      <signature>function renderTodoList(todos: Todo[], container: HTMLElement): void</signature>
+      <path>src/ui/render.ts:87</path>
+      <usage>Story 2.4 calls this after store.add() to update DOM with new todo</usage>
+    </interface>
+
+    <!-- DOM Event Handler pattern -->
+    <interface name="Enter key event handler" kind="event handler pattern">
+      <signature>
+        input.addEventListener('keydown', (event: KeyboardEvent) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            const text = input.value.trim()
+            if (!text) return
+            store.add(text)
+            renderTodoList(store.getAll(), listContainer)
+            input.value = ''
+            input.focus()
+            listContainer.scrollTop = listContainer.scrollHeight
+          }
+        })
+      </signature>
+      <path>src/renderer.ts (to be added)</path>
+      <usage>Story 2.4 implements this pattern in renderer.ts after renderApp() call</usage>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Epic 2 uses manual testing for UI interactions. No automated tests for rendering or event handlers. Unit tests exist for TodoStore class (src/store/TodoStore.test.ts) covering add(), toggle(), deleteCompleted() methods. Story 2.4 focuses on manual workflow testing: type todo, press Enter, verify todo appears, verify input clears, verify focus stays, test rapid-fire entry.
+    </standards>
+
+    <locations>
+      <location>src/store/TodoStore.test.ts - Unit tests for TodoStore methods</location>
+      <location>Manual testing via npm start - Developer testing during implementation</location>
+    </locations>
+
+    <ideas>
+      <!-- Manual testing mapped to acceptance criteria -->
+      <test id="AC1" description="Type 'Buy groceries' and press Enter - verify todo appears in list with ☐ checkbox"/>
+      <test id="AC2" description="After pressing Enter, verify input field clears and cursor stays in input (ready for next todo)"/>
+      <test id="AC3" description="Verify new todo has correct structure: empty checkbox, text displays correctly, UUID generated"/>
+      <test id="AC4" description="Press Enter with empty input - verify no todo created, no error shown, input stays focused"/>
+      <test id="AC4-whitespace" description="Type '   ' (whitespace only) and press Enter - verify no todo created"/>
+      <test id="AC5" description="Rapid-fire entry: Type 'Task 1' → Enter → 'Task 2' → Enter → 'Task 3' → Enter. Verify all 3 appear in order, no refocusing needed"/>
+      <test id="AC6" description="Create 20 todos, verify list auto-scrolls to show newest todo at bottom"/>
+      <test id="edge-long-text" description="Type 500+ character todo, verify text wraps correctly and checkbox stays top-aligned"/>
+      <test id="typescript" description="Run npx tsc --noEmit, verify zero TypeScript errors"/>
+      <test id="console" description="Open DevTools console, create todos, verify no errors or warnings"/>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,473 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>4</storyId>
+    <title>Verify Data Persistence and Performance</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-4-verify-data-persistence-and-performance.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to verify that data persists correctly and performance meets requirements</iWant>
+    <soThat>users have a reliable and fast experience</soThat>
+    <tasks>
+- [ ] Create test data generator script (AC: #4, #7, #8)
+  - [ ] Create `scripts/generate-test-data.js` or similar
+  - [ ] Function: `generateTodos(count: number): Todo[]`
+  - [ ] Function: `writeToonFile(filePath: string, todos: Todo[])`
+  - [ ] Generate fixtures: 10, 100, 1000, 5000 todos
+  - [ ] Save fixtures to temp directory for testing
+  - [ ] Script usage: `node scripts/generate-test-data.js 1000`
+
+- [ ] Manual test: Basic persistence (AC: #1)
+  - [ ] Delete existing todos.toon file
+  - [ ] Launch app, create 3 todos with specific text
+  - [ ] Close app with Esc
+  - [ ] Reopen app, verify all 3 todos present
+  - [ ] Open todos.toon in text editor, verify UUIDs and timestamps
+  - [ ] Verify order matches creation order
+
+- [ ] Manual test: Toggle persistence (AC: #2)
+  - [ ] Create 2 todos, toggle one to completed
+  - [ ] Verify checkbox, strikethrough, color change
+  - [ ] Close app, reopen
+  - [ ] Verify completed todo still completed
+  - [ ] Verify active todo still active
+  - [ ] Check file for `completed: true/false` values
+
+- [ ] Manual test: Delete persistence (AC: #3)
+  - [ ] Create 5 todos, complete 3
+  - [ ] Bulk delete with Ctrl+D, confirm with Y
+  - [ ] Close app immediately (test auto-save timing)
+  - [ ] Reopen app, verify only 2 todos
+  - [ ] Open todos.toon, verify array count is todos[2]
+
+- [ ] Performance test: 1000 todos load (AC: #4, #7)
+  - [ ] Use test generator to create 1000 todo file
+  - [ ] Copy to %APPDATA%/spardutti-todo/todos.toon
+  - [ ] Launch app with DevTools open (F12)
+  - [ ] Record Performance tab during launch
+  - [ ] Verify app launches in <2 seconds
+  - [ ] Check electron-log for load time
+  - [ ] Verify target: <100ms load time
+
+- [ ] Performance test: 1000 todos interaction (AC: #4)
+  - [ ] With 1000 todos loaded, create new todo
+  - [ ] Measure perceived latency (should be instant)
+  - [ ] Verify input clears immediately
+  - [ ] Check no UI freeze or delay
+  - [ ] Use DevTools Performance to verify no frame drops
+
+- [ ] Manual test: TOON format readability (AC: #5)
+  - [ ] Create 3 todos with varied text (short, long, special chars)
+  - [ ] Close app
+  - [ ] Open %APPDATA%/spardutti-todo/todos.toon in Notepad
+  - [ ] Verify structure matches TOON spec
+  - [ ] Verify text is human-readable
+  - [ ] Verify file size is reasonable
+  - [ ] Verify version metadata present
+
+- [ ] Manual test: Manual file editing (AC: #6)
+  - [ ] Create 2 todos, close app
+  - [ ] Open todos.toon in text editor
+  - [ ] Add new todo entry manually with valid syntax
+  - [ ] Update array count: todos[2] → todos[3]
+  - [ ] Save file
+  - [ ] Reopen app
+  - [ ] Verify manually added todo appears and works
+  - [ ] Test toggle and delete on manual todo
+
+- [ ] Performance test: Save timing (AC: #8)
+  - [ ] Use test generator for 100 todos
+  - [ ] Load app, create new todo
+  - [ ] Check electron-log for save timing
+  - [ ] Verify <30ms for 100 todos
+  - [ ] Repeat with 1000 todos
+  - [ ] Verify <50ms for 1000 todos
+  - [ ] Monitor with DevTools: no main thread blocking
+
+- [ ] Manual test: Complex workflow (AC: #9)
+  - [ ] Execute the full sequence from AC #9
+  - [ ] Track state after each step (write down counts)
+  - [ ] Close app after final step
+  - [ ] Reopen, verify final state matches expectations
+  - [ ] Open todos.toon, verify 6 entries
+  - [ ] Verify 1 completed, 5 active in file
+
+- [ ] Performance test: Startup time with data (AC: #10)
+  - [ ] Measure startup time with empty file (0 todos)
+  - [ ] Measure startup time with 100 todos
+  - [ ] Measure startup time with 1000 todos
+  - [ ] Use stopwatch or DevTools Performance tab
+  - [ ] Record times in test log
+  - [ ] Verify all scenarios meet targets
+
+- [ ] Document performance results
+  - [ ] Create performance test report
+  - [ ] Include: Load times, save times, startup times
+  - [ ] Include: File sizes for 10, 100, 1000 todos
+  - [ ] Include: Memory usage (DevTools Memory tab)
+  - [ ] Document any performance issues found
+  - [ ] Add notes to story completion section
+
+- [ ] Update epic verification status
+  - [ ] Verify all Epic 5 acceptance criteria met (AC1-AC10 from tech spec)
+  - [ ] Cross-reference with PRD requirements (FR7-FR10)
+  - [ ] Update sprint-status.yaml for Epic 5 completion
+  - [ ] Note any outstanding issues for future epics
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Basic persistence verification**
+   - GIVEN the app is launched for the first time
+   - WHEN I create 3 todos with text "Task 1", "Task 2", "Task 3"
+   - AND I close the app (Esc or Ctrl+Q)
+   - AND I reopen the app
+   - THEN all 3 todos are present with correct text
+   - AND the todos have the same UUIDs (verify via file inspection)
+   - AND the todos have correct createdAt timestamps
+   - AND the todos are displayed in the same order (Task 1, Task 2, Task 3)
+   - AND completed status is false for all 3 todos
+
+2. **Toggle persistence verification**
+   - GIVEN I have 2 todos: "Active task", "Complete this"
+   - WHEN I toggle "Complete this" to completed status
+   - AND I close the app
+   - AND I reopen the app
+   - THEN "Complete this" is still marked as completed (checkbox ☑, strikethrough, dark green)
+   - AND "Active task" is still active (checkbox ☐, bright green)
+   - AND both todos have the same IDs as before close
+
+3. **Delete persistence verification**
+   - GIVEN I have 5 todos total
+   - WHEN I complete 3 of them
+   - AND I bulk delete completed todos (Ctrl+D, confirm with Y)
+   - AND I close the app immediately after deletion
+   - AND I reopen the app
+   - THEN only 2 active todos remain in the list
+   - AND the completed todos are gone (not just hidden)
+   - AND the file contains exactly 2 todo entries
+
+4. **Large list performance - 1000 todos**
+   - GIVEN I generate a TOON file with 1000 todos using a test script
+   - WHEN I launch the app
+   - THEN the app launches in under 2 seconds (cold start)
+   - AND all 1000 todos are visible in the scrollable list
+   - AND I can scroll through the list smoothly (no lag)
+   - WHEN I create a new todo "Test 1001"
+   - THEN the todo appears instantly (<16ms perceived latency, no visible delay)
+   - AND the input clears and stays focused immediately
+   - AND the save operation completes in the background (<50ms, non-blocking)
+   - AND I can immediately create another todo without waiting
+
+5. **Human-readable TOON format verification**
+   - GIVEN I have created 3 todos in the app
+   - WHEN I close the app
+   - AND I open %APPDATA%/spardutti-todo/todos.toon in a text editor (Notepad)
+   - THEN I see a TOON format file with structure:
+   ```
+   todos[3]{id,text,completed,createdAt}:
+     <uuid>,<text>,<true/false>,<ISO-timestamp>
+     ...
+
+   version: 1.0
+   ```
+   - AND the todo text is readable (not encoded or obfuscated)
+   - AND the file size is reasonable (<5KB for 100 todos)
+   - AND the format follows the TOON specification exactly
+
+6. **Manual file editing verification**
+   - GIVEN I have 2 todos in the app
+   - WHEN I close the app
+   - AND I manually edit todos.toon in a text editor
+   - AND I add a new todo entry with valid TOON syntax:
+   ```
+   550e8400-e29b-41d4-a716-446655440000,Manually added task,false,2025-11-24T10:00:00Z
+   ```
+   - AND I update the array count to todos[3]
+   - AND I save the file
+   - AND I reopen the app
+   - THEN all 3 todos appear in the list
+   - AND "Manually added task" is present and functional (can be toggled, deleted)
+   - AND the manually added todo has the correct UUID and timestamp
+
+7. **Performance monitoring - Load time**
+   - GIVEN I have a todos.toon file with 100 todos
+   - WHEN I launch the app with DevTools open (F12)
+   - THEN I can measure the load time from ToonStorage.load() call
+   - AND the load time is <50ms (target for 100 todos)
+   - AND electron-log contains: `log.info('Todos loaded', { count: 100, durationMs: <50 })`
+   - WHEN I increase to 1000 todos
+   - THEN the load time is <100ms (target for 1000 todos)
+
+8. **Performance monitoring - Save time**
+   - GIVEN I have 100 todos in memory
+   - WHEN I create a new todo (triggers auto-save)
+   - THEN the save operation completes in <30ms (async, measured via log)
+   - AND electron-log contains timing info (if implemented)
+   - AND the UI remains responsive (no frame drops in DevTools Performance tab)
+   - WHEN I have 1000 todos in memory
+   - THEN the save operation completes in <50ms
+
+9. **Complex workflow persistence**
+   - GIVEN I start with an empty app
+   - WHEN I perform this sequence:
+     1. Create 5 todos
+     2. Toggle todos 1 and 3 to completed
+     3. Create 2 more todos (7 total)
+     4. Bulk delete completed (5 active remain)
+     5. Toggle todo 2 to completed
+     6. Create 1 more todo (6 total)
+     7. Close app
+   - AND I reopen the app
+   - THEN I have exactly 6 todos
+   - AND 1 todo is completed, 5 are active
+   - AND the order and text match expectations
+   - AND file inspection confirms 6 entries in TOON format
+
+10. **Startup time with data**
+    - GIVEN I have 0 todos (empty file)
+    - WHEN I measure app launch time (from click to input focused)
+    - THEN startup time is <2 seconds
+    - GIVEN I have 100 todos
+    - WHEN I measure app launch time
+    - THEN startup time is <2 seconds (no significant increase)
+    - GIVEN I have 1000 todos
+    - WHEN I measure app launch time
+    - THEN startup time is <2.5 seconds (acceptable slight increase)
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Documentation artifacts relevant to this story -->
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification: Data Persistence (TOON Storage)</title>
+        <section>Overview - Acceptance Criteria</section>
+        <snippet>Authoritative acceptance criteria AC1-AC10 for Epic 5. Story 5.4 validates AC1-AC10 comprehensively, focusing on happy path persistence (AC1-AC3, AC9-AC10) and performance under load (AC8). Error scenarios (AC5-AC7) already validated in Story 5.3.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>Non-Functional Requirements - Performance</section>
+        <snippet>Load: 100 todos <50ms, 1000 todos <100ms. Save: 100 todos <30ms, 1000 todos <50ms (async). Startup: <2s with empty file, <2.5s with 1000 todos. Memory: <1MB for 1000 todos.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - File Format (TOON)</section>
+        <snippet>TOON format structure with schema: todos[N]{id,text,completed,createdAt}: ... version: 1.0. Human-readable, 30-60% more compact than JSON.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Performance Considerations</section>
+        <snippet>Startup: <2s cold start, <1s warm. Runtime: Zero perceived lag <16ms. File I/O: Async non-blocking. Rendering 1000+ todos: <100ms initial render.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Functional Requirements - Data Persistence</section>
+        <snippet>FR7: Local storage on Windows PC (%APPDATA%). FR8: Persist between sessions. FR9: Offline access (no internet). FR10: Human-readable format for manual editing/backup.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- Code artifacts - existing implementation to verify -->
+      <artifact>
+        <path>electron/storage.ts</path>
+        <kind>module</kind>
+        <symbol>ToonStorage</symbol>
+        <lines>1-end</lines>
+        <reason>ToonStorage class with encode/decode/load/save methods - the core persistence layer to verify</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>module</kind>
+        <symbol>TodoStore</symbol>
+        <lines>1-end</lines>
+        <reason>TodoStore with integrated auto-save after mutations (add/toggle/deleteCompleted) - verify save triggers correctly</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>module</kind>
+        <symbol>displayError, hideError</symbol>
+        <lines>all</lines>
+        <reason>Error display functions added in Story 5.3 - may be relevant for observing error scenarios</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>module</kind>
+        <symbol>main</symbol>
+        <lines>all</lines>
+        <reason>Renderer entry point with TodoStore initialization and load() call - startup sequence to verify</reason>
+      </artifact>
+      <artifact>
+        <path>package.json</path>
+        <kind>config</kind>
+        <symbol>dependencies</symbol>
+        <lines>all</lines>
+        <reason>Verify @toon-format/toon dependency is installed for test data generation script</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@toon-format/toon</package>
+        <version>1.0.0</version>
+        <purpose>TOON encode/decode for test data generation and format verification</purpose>
+      </node>
+      <node>
+        <package>electron-log</package>
+        <version>5.4.1</version>
+        <purpose>Check logs for performance timing metrics (load/save durations)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- **No Code Changes Required:** Story 5.4 is verification-only. All implementation is complete from Stories 5.1, 5.2, and 5.3.
+- **Manual Testing Focus:** This story is primarily manual testing with some scripted test data generation. Goal is to verify end-to-end workflows and performance characteristics.
+- **Performance Targets:** Load 1000 todos <100ms, save 1000 todos <50ms, startup <2.5s with 1000 todos, <2s with 100 todos or empty.
+- **TOON Format Compliance:** File must be human-readable in text editor with structure: todos[N]{id,text,completed,createdAt}: ... version: 1.0
+- **File Location:** All data stored in %APPDATA%/spardutti-todo/todos.toon (Windows user-specific path)
+- **No Error Scenarios:** Story 5.3 already validated error handling (corrupt file, save failure, missing file). Story 5.4 focuses on happy path and performance.
+- **Testing Tools:** Chrome DevTools (Performance tab, Memory tab), electron-log file inspection, Notepad for manual file editing, stopwatch for timing.
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ToonStorage.encode()</name>
+      <kind>function</kind>
+      <signature>static encode(todos: Todo[]): string</signature>
+      <path>electron/storage.ts</path>
+      <purpose>Convert Todo array to TOON format string - verify format correctness in AC #5</purpose>
+    </interface>
+    <interface>
+      <name>ToonStorage.decode()</name>
+      <kind>function</kind>
+      <signature>static decode(toonString: string): Todo[]</signature>
+      <path>electron/storage.ts</path>
+      <purpose>Parse TOON string to Todo array - verify round-trip encoding in manual edit test AC #6</purpose>
+    </interface>
+    <interface>
+      <name>ToonStorage.load()</name>
+      <kind>function</kind>
+      <signature>static async load(filePath: string): Promise&lt;Todo[]&gt;</signature>
+      <path>electron/storage.ts</path>
+      <purpose>Load todos from disk - measure timing for AC #7 performance test</purpose>
+    </interface>
+    <interface>
+      <name>ToonStorage.save()</name>
+      <kind>function</kind>
+      <signature>static async save(filePath: string, todos: Todo[]): Promise&lt;void&gt;</signature>
+      <path>electron/storage.ts</path>
+      <purpose>Save todos to disk - measure timing for AC #8 performance test</purpose>
+    </interface>
+    <interface>
+      <name>TodoStore.load()</name>
+      <kind>method</kind>
+      <signature>async load(): Promise&lt;void&gt;</signature>
+      <path>src/store/TodoStore.ts</path>
+      <purpose>Initialize store from disk on startup - verify in all persistence tests</purpose>
+    </interface>
+    <interface>
+      <name>TodoStore.add()</name>
+      <kind>method</kind>
+      <signature>add(text: string): Todo</signature>
+      <path>src/store/TodoStore.ts</path>
+      <purpose>Create todo with auto-save - verify persistence in AC #1, #4</purpose>
+    </interface>
+    <interface>
+      <name>TodoStore.toggle()</name>
+      <kind>method</kind>
+      <signature>toggle(id: string): void</signature>
+      <path>src/store/TodoStore.ts</path>
+      <purpose>Toggle completion with auto-save - verify persistence in AC #2</purpose>
+    </interface>
+    <interface>
+      <name>TodoStore.deleteCompleted()</name>
+      <kind>method</kind>
+      <signature>deleteCompleted(): number</signature>
+      <path>src/store/TodoStore.ts</path>
+      <purpose>Bulk delete with auto-save - verify persistence in AC #3</purpose>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+**Testing Standards for Story 5.4:**
+This story is verification-focused with manual testing and performance measurement. No new automated tests are required. Use existing test infrastructure from Stories 5.1-5.3.
+
+**Manual Test Approach:**
+- Execute workflows with app close/reopen cycles
+- Inspect todos.toon file in text editor for format correctness
+- Verify state preservation across sessions
+- Measure timing with DevTools and electron-log
+
+**Performance Profiling:**
+- Chrome DevTools Performance tab for startup profiling
+- Chrome DevTools Memory tab for heap snapshots
+- electron-log timing metrics for load/save operations
+- Stopwatch or DevTools for end-to-end timing
+
+**Test Data Generation:**
+- Create scripts/generate-test-data.js for large dataset generation
+- Use @toon-format/toon library directly for encoding fixtures
+- Generate 10, 100, 1000, 5000 todo fixtures for testing
+    </standards>
+    <locations>
+- src/store/TodoStore.test.ts (existing unit tests - reference for TodoStore behavior)
+- electron/storage.ts (ToonStorage implementation - no new tests, verify behavior)
+- scripts/generate-test-data.js (to be created for test data generation)
+    </locations>
+    <ideas>
+**Test Ideas Mapped to Acceptance Criteria:**
+
+**AC #1 (Basic Persistence):**
+- Verify UUID consistency across sessions (inspect file, compare on reload)
+- Verify ISO timestamp format and chronological order
+- Test with edge case: Create todos very quickly, verify all persist
+
+**AC #2 (Toggle Persistence):**
+- Create scenario: Toggle same todo multiple times before close, verify final state persists
+- Test with mixed states: Some completed, some active, verify each independently
+
+**AC #3 (Delete Persistence):**
+- Test timing: Close app immediately after delete confirmation to verify auto-save speed
+- Verify file array count matches UI count
+
+**AC #4 (Large List Performance):**
+- Measure scroll performance with FPS counter in DevTools
+- Test rapid todo creation with 1000 existing todos (stress test save queue)
+- Monitor main thread blocking in Performance tab
+
+**AC #5 (TOON Format):**
+- Test with special characters: commas, quotes, newlines, unicode emojis
+- Verify file size scaling: 10 todos vs 100 vs 1000 (should be linear)
+
+**AC #6 (Manual Editing):**
+- Test invalid UUID: Add entry with malformed UUID, verify error handling
+- Test missing fields: Omit createdAt, verify decode validation
+- Test array count mismatch: todos[3] but only 2 entries, verify behavior
+
+**AC #7 (Load Time):**
+- Measure with different file locations: SSD vs HDD if available
+- Profile TOON decode separately from file I/O (identify bottlenecks)
+
+**AC #8 (Save Time):**
+- Verify fire-and-forget pattern: UI updates before save completes
+- Test save queuing: Rapid mutations (10 in 1 second), verify no data loss
+
+**AC #9 (Complex Workflow):**
+- Document expected state after each step for manual verification
+- Use file snapshots: Copy todos.toon after each step for inspection
+
+**AC #10 (Startup Time):**
+- Measure from process start to input focused (use Performance.now() or external timer)
+- Test with cold cache: Clear %TEMP% before launch if possible
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,279 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1</storyId>
+    <title>Initialize Electron Project with Vite + TypeScript Template</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-1-initialize-electron-project-with-vite-typescript-template.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to initialize the project using the official Electron Forge Vite + TypeScript template</iWant>
+    <soThat>I have a working foundation with fast build tooling and type safety from day one</soThat>
+    <tasks>
+      - Execute project initialization command (AC: #1, #2)
+        - Run `npx create-electron-app@latest spardutti-todo --template=vite-typescript`
+        - Verify command completes successfully without errors
+        - Verify all expected files and directories are created
+      - Verify TypeScript configuration (AC: #2)
+        - Open `tsconfig.json`
+        - Confirm `noImplicitAny` is enabled
+        - Confirm `strictNullChecks` is enabled
+        - Verify compiler options are set for strict mode
+      - Verify Vite configuration files (AC: #2)
+        - Confirm `vite.main.config.ts` exists
+        - Confirm `vite.preload.config.ts` exists
+        - Confirm `vite.renderer.config.ts` exists
+        - Review configurations for correctness
+      - Verify Electron Forge configuration (AC: #2)
+        - Confirm `forge.config.ts` exists
+        - Review packaging configuration
+      - Verify project structure (AC: #2)
+        - Confirm `electron/main.ts` exists
+        - Confirm `electron/preload.ts` exists
+        - Confirm `src/main.ts` exists
+        - Confirm `index.html` exists
+        - Verify `package.json` contains required dependencies
+      - Test development server (AC: #3)
+        - Run `npm start`
+        - Verify server starts without errors
+        - Verify application window opens
+        - Verify Vite default content displays correctly
+      - Verify Hot Module Replacement (AC: #4)
+        - With dev server running, edit `src/main.ts`
+        - Make a visible change (e.g., modify text content)
+        - Verify change reflects in app without full reload
+        - Confirm HMR working correctly
+      - Document Node.js version requirement (AC: #1)
+        - Note Node.js 22+ required for future dependencies
+        - Consider adding .nvmrc file for version management
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. **Project structure created successfully**
+       - GIVEN I am starting a new project
+       - WHEN I execute `npx create-electron-app@latest spardutti-todo --template=vite-typescript`
+       - THEN the project structure is created with Electron Forge + Vite + TypeScript configuration
+
+    2. **Required configuration files present**
+       - `package.json` with Electron, Vite, TypeScript, and Electron Forge dependencies
+       - `tsconfig.json` with strict mode enabled (`noImplicitAny`, `strictNullChecks`)
+       - `vite.main.config.ts`, `vite.preload.config.ts`, `vite.renderer.config.ts`
+       - `forge.config.ts` for Electron Forge configuration
+       - `electron/main.ts` (main process entry point)
+       - `electron/preload.ts` (IPC bridge if needed)
+       - `src/main.ts` (renderer process entry point)
+       - `index.html` (app HTML shell)
+
+    3. **Development server starts successfully**
+       - WHEN I run `npm start`
+       - THEN the development server starts without errors
+       - AND the application window opens
+       - AND displays the Vite default content
+
+    4. **HMR verification**
+       - WHEN I make changes to renderer code
+       - THEN changes reflect immediately with Hot Module Replacement
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation &amp; Project Setup</title>
+        <section>Story 1.1 Context</section>
+        <snippet>This story establishes the baseline Electron + Vite + TypeScript project using the official template. Command: `npx create-electron-app@latest spardutti-todo --template=vite-typescript`. Node.js 22+ required for future dependencies (rollup-plugin-visualizer). Template provides: TypeScript 5.9+, Vite 5+, Electron Forge 7+, ESLint. Verify HMR works in dev mode.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Project Initialization</title>
+        <section>Project Initialization</section>
+        <snippet>First implementation story must execute: `npx create-electron-app@latest spardutti-todo --template=vite-typescript`. Starter Template Provides: TypeScript with tsconfig.json, Vite (fast build with HMR for sub-2s startup), Electron Forge (packaging for Windows), project structure with main/preload/renderer separation, build scripts, ESLint configuration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Technology Stack Details</title>
+        <section>Core Technologies</section>
+        <snippet>Runtime: Electron 33+, Node.js 22+ (required for rollup-plugin-visualizer), TypeScript 5.9+ with strict mode. Build: Vite 5+ (fast dev server, HMR, production bundling), Electron Forge 7+ (packaging, distribution), Terser (minification).</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements - Success Criteria</title>
+        <section>Success Criteria</section>
+        <snippet>Primary Success Metric: Task capture completes in under 2 seconds from app activation to return to work. Technical Success: Fast startup time (application launches instantly), minimal resource footprint, reliable local data persistence.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements - desktop_app Specific</title>
+        <section>Platform Support</section>
+        <snippet>Windows-only application. Target: Windows 10 and later. Native or Electron-based implementation (optimize for startup speed). Update Strategy: Auto-update mechanism required via electron-updater.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown - Story 1.1 Complete</title>
+        <section>Story 1.1</section>
+        <snippet>As a developer, I want to initialize the project using the official Electron Forge Vite + TypeScript template, so that I have a working foundation with fast build tooling and type safety from day one. Acceptance: Project structure created with Electron Forge + Vite + TypeScript, all config files present (package.json, tsconfig.json, vite configs, forge.config.ts, electron/main.ts, electron/preload.ts, src/main.ts, index.html), dev server starts with `npm start`, application window opens with Vite default content, HMR verified working.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- No existing code - Story 1.1 is the first implementation story (greenfield project) -->
+      <!-- Expected output after Story 1.1: -->
+      <!-- - electron/main.ts (main process entry point) -->
+      <!-- - electron/preload.ts (IPC bridge) -->
+      <!-- - src/main.ts (renderer process entry point) -->
+      <!-- - index.html (app HTML shell) -->
+      <!-- - package.json, tsconfig.json, vite.*.config.ts, forge.config.ts -->
+    </code>
+    <dependencies>
+      <!-- Template-Provided Dependencies (Story 1.1) -->
+      <!-- These dependencies are automatically installed by the Electron Forge template -->
+      <npm>
+        <package name="electron" version="33+" type="runtime">Chromium + Node.js runtime for Windows desktop application</package>
+        <package name="@electron-forge/cli" version="7+" type="build">Build and packaging CLI tool</package>
+        <package name="@electron-forge/plugin-vite" version="7+" type="build">Vite integration for Electron Forge</package>
+        <package name="vite" version="5+" type="build">Fast build tool with HMR for development and production bundling</package>
+        <package name="typescript" version="5.9+" type="build">TypeScript compiler with strict mode support</package>
+        <package name="eslint" version="latest" type="dev">Code linting and quality checks</package>
+      </npm>
+
+      <!-- Additional Dependencies (Installed in Later Stories) -->
+      <!-- Story 1.3: @toon-format/toon 1.0.0, electron-updater 6.7.1, electron-log 5.4.1, rollup-plugin-visualizer 6.0.5 -->
+      <!-- Story 1.3: vitest (latest), @types/node (latest) -->
+
+      <!-- System Requirements -->
+      <system>
+        <requirement>Node.js 22+ (for rollup-plugin-visualizer compatibility in Story 1.3)</requirement>
+        <requirement>npm 10+ (package manager)</requirement>
+        <requirement>Windows 10+ (target deployment platform)</requirement>
+        <requirement>Git (recommended for version control)</requirement>
+      </system>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Development Constraints -->
+    <constraint type="platform">Node.js 22+ required (for rollup-plugin-visualizer in Story 1.3)</constraint>
+    <constraint type="platform">Windows 10+ target platform (per PRD desktop_app requirements)</constraint>
+    <constraint type="platform">Development and testing must be done on Windows environment</constraint>
+
+    <!-- TypeScript Configuration Constraints -->
+    <constraint type="typescript">Strict mode required (noImplicitAny, strictNullChecks per ADR-002)</constraint>
+    <constraint type="typescript">TypeScript 5.9+ for latest type safety features</constraint>
+
+    <!-- Performance Constraints -->
+    <constraint type="performance">Application must launch in under 2 seconds (PRD primary success metric)</constraint>
+    <constraint type="performance">Startup time must be logged with electron-log for tracking</constraint>
+    <constraint type="performance">Vite HMR must reflect changes in under 1 second</constraint>
+
+    <!-- Build System Constraints -->
+    <constraint type="build">Must use Electron Forge (official tooling, not electron-builder)</constraint>
+    <constraint type="build">Must use Vite 5+ for fast bundling and HMR</constraint>
+    <constraint type="build">Electron 33+ required for latest Chromium features</constraint>
+
+    <!-- Security Constraints -->
+    <constraint type="security">Context isolation must be enabled (contextIsolation: true)</constraint>
+    <constraint type="security">Node integration must be disabled in renderer (nodeIntegration: false)</constraint>
+    <constraint type="security">Preload script must be configured as secure IPC bridge</constraint>
+
+    <!-- Project Structure Constraints -->
+    <constraint type="structure">Main process code in electron/ directory</constraint>
+    <constraint type="structure">Renderer process code in src/ directory</constraint>
+    <constraint type="structure">Clear separation between main and renderer processes</constraint>
+
+    <!-- Template Constraints -->
+    <constraint type="template">Must use official Electron Forge vite-typescript template exactly as specified</constraint>
+    <constraint type="template">Template command: npx create-electron-app@latest spardutti-todo --template=vite-typescript</constraint>
+    <constraint type="template">Do not deviate from template structure in Story 1.1 (modifications come in later stories)</constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- No existing interfaces - greenfield project -->
+    <!-- Expected interfaces after Story 1.1: -->
+    <!-- - Electron main process APIs (BrowserWindow, app, etc.) -->
+    <!-- - Vite dev server HMR interface -->
+    <!-- - Electron Forge build/packaging APIs -->
+  </interfaces>
+  <tests>
+    <standards>
+      Story 1.1 is project initialization and configuration only - no application logic exists yet to unit test.
+
+      Testing approach for Story 1.1:
+      - Manual verification of project structure (checklist verification)
+      - Manual execution of template generation command
+      - Manual verification that dev server starts without errors
+      - Manual verification that application window opens
+      - Manual verification of HMR by editing renderer code
+      - Visual inspection of generated files and configurations
+
+      Unit testing framework (Vitest) will be configured in Story 1.3.
+      Actual unit tests will be written in feature epics (Epic 2+) as application logic is implemented.
+
+      TypeScript strict mode compilation acts as automated verification for type safety.
+    </standards>
+
+    <locations>
+      No test files for Story 1.1 (configuration-only story).
+      Future test locations (from Story 1.3 onwards):
+      - Co-located with source: *.test.ts files next to implementation files
+      - Example: src/store/TodoStore.test.ts next to TodoStore.ts
+    </locations>
+
+    <ideas>
+      <test id="AC-1" criterion="Project structure created successfully">
+        Manual Test: Execute template command and verify all expected files created
+        - Run: npx create-electron-app@latest spardutti-todo --template=vite-typescript
+        - Verify files exist: package.json, tsconfig.json, vite.main.config.ts, vite.preload.config.ts, vite.renderer.config.ts, forge.config.ts
+        - Verify directories exist: electron/, src/, with main.ts files in each
+        - Verify index.html exists in root
+        - Expected result: All files present, command completes without errors
+      </test>
+
+      <test id="AC-2" criterion="Required configuration files present">
+        Manual Test: Inspect configuration files for required settings
+        - Open tsconfig.json and verify strict mode enabled (noImplicitAny: true, strictNullChecks: true)
+        - Verify Vite config files exist for main, preload, and renderer processes
+        - Verify forge.config.ts exists with Electron Forge configuration
+        - Verify package.json contains Electron, Vite, TypeScript dependencies
+        - Expected result: All configurations present with strict mode enabled
+      </test>
+
+      <test id="AC-3" criterion="Development server starts successfully">
+        Manual Test: Start dev server and verify application launches
+        - Run: npm start
+        - Verify terminal shows Vite dev server starting
+        - Verify no errors in terminal output
+        - Verify application window opens
+        - Verify Vite default content displays in window
+        - Expected result: App launches in under 2 seconds, window shows Vite template content
+      </test>
+
+      <test id="AC-4" criterion="HMR verification">
+        Manual Test: Verify Hot Module Replacement works
+        - With dev server running, open src/main.ts in editor
+        - Make a visible change (e.g., modify text content in the template)
+        - Save the file
+        - Observe application window for automatic update
+        - Expected result: Changes reflect in app within 1 second without full reload
+      </test>
+
+      <test id="EDGE-1" criterion="Node.js version check">
+        Manual Test: Verify Node.js version meets requirements
+        - Run: node --version
+        - Verify output shows v22.x.x or higher
+        - Expected result: Node.js 22+ installed (required for Story 1.3 dependencies)
+      </test>
+
+      <test id="EDGE-2" criterion="Template failure handling">
+        Manual Test: Verify error handling if template unavailable
+        - Simulate network failure or template unavailability
+        - Run template command
+        - Verify clear error message appears
+        - Expected result: Command fails gracefully with actionable error message
+      </test>
+    </ideas>
+  </tests>
+</story-context>

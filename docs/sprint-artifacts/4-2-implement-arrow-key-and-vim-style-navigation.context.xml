@@ -1,0 +1,336 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>2</storyId>
+    <title>Implement Arrow Key and Vim-Style Navigation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-2-implement-arrow-key-and-vim-style-navigation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>to navigate todos using arrow keys or vim-style j/k keys</iWant>
+    <soThat>I can efficiently move through my list without a mouse</soThat>
+    <tasks>
+      - [ ] Implement navigation state management (AC: #7, #9)
+        - [ ] Add `selectedTodoIndex: number | null` to renderer.ts application state
+        - [ ] Create `selectNext()` helper function with bounds checking
+        - [ ] Create `selectPrevious()` helper function with bounds checking
+        - [ ] Create `getSelectedTodo(): Todo | null` helper function
+        - [ ] Create `clearSelection()` helper function
+        - [ ] Initialize selectedTodoIndex = null on app startup
+      - [ ] Register navigation shortcuts in KeyboardManager (AC: #1, #2)
+        - [ ] Register "arrowdown" key with selectNext() handler
+        - [ ] Register "j" key with selectNext() handler (vim-style)
+        - [ ] Register "arrowup" key with selectPrevious() handler
+        - [ ] Register "k" key with selectPrevious() handler (vim-style)
+        - [ ] Add descriptions for help hints ("Next todo", "Previous todo")
+      - [ ] Implement selectNext() function (AC: #1, #4)
+      - [ ] Implement selectPrevious() function (AC: #2, #5)
+      - [ ] Update renderTodoList() to support selection state (AC: #3)
+      - [ ] Add selection styling to styles.css (AC: #3)
+      - [ ] Implement auto-scroll functionality (AC: #6)
+      - [ ] Implement selection adjustment on list changes (AC: #9)
+      - [ ] Integration with existing code
+      - [ ] Testing and validation
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Navigate to next todo with Down arrow or "j" key - selection moves down one item
+    2. Navigate to previous todo with Up arrow or "k" key - selection moves up one item
+    3. Selected todo has visual indicator with background color #001100 (subtle dark green tint)
+    4. Bounds checking at bottom - pressing Down/j on last todo does nothing (no wrap)
+    5. Bounds checking at top - pressing Up/k on first todo does nothing (no wrap)
+    6. Auto-scroll selected todo into view using instant behavior (no smooth animation)
+    7. Selection state persists across other actions until navigation occurs again
+    8. Graceful handling of empty list - navigation keys are no-ops with no errors
+    9. Selection adjustment when todos change - index stays valid or clears if deleted
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Architecture Document -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>ADR-003: Custom KeyboardManager Over External Library</section>
+        <snippet>Custom KeyboardManager class provides full control over normalization logic, built-in conflict detection, help screen generation, and zero dependencies. Terminal-specific needs like j/k vim-style navigation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Performance Considerations</section>
+        <snippet>Keyboard Response Time: &lt;16ms from keypress to visual feedback. All handlers synchronous only. Direct DOM manipulation only. ScrollIntoView uses behavior: 'instant'.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Terminal Aesthetic Enforcement</section>
+        <snippet>Selection color: #001100 (dark green tint). No animations or transitions. No box shadows except input focus glow. Borders: 1px solid green. Background: Pure black #000000.</snippet>
+      </doc>
+
+      <!-- Epic 4 Tech Spec -->
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Navigation State Structure</section>
+        <snippet>Add selectedTodoIndex: number | null to renderer.ts application state. Helper functions: selectNext(), selectPrevious(), getSelectedTodo(), clearSelection().</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>KeyboardManager Integration</section>
+        <snippet>Register arrow and vim shortcuts: arrowdown/j for selectNext(), arrowup/k for selectPrevious(). KeyboardManager already implemented in Story 4.1 with 39 passing tests.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Navigation Sequence Flow</section>
+        <snippet>User presses j/ArrowDown → KeyboardManager.handle(event) → selectNext() increments selectedTodoIndex (bounds-checked) → renderTodoList() with selection state → DOM updated with .selected class → scrollIntoView instant. Total &lt;16ms.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Existing KeyboardManager (Story 4.1) -->
+      <artifact>
+        <path>src/keyboard/KeyboardManager.ts</path>
+        <kind>class</kind>
+        <symbol>KeyboardManager</symbol>
+        <lines>1-200</lines>
+        <reason>Core keyboard shortcut system implemented in Story 4.1. Provides register(), handle(), getHints() methods. Story 4.2 uses this to register navigation shortcuts.</reason>
+      </artifact>
+
+      <!-- Main Application Entry -->
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>entry-point</kind>
+        <symbol>initApp</symbol>
+        <lines>32-121</lines>
+        <reason>Main application initialization. Story 4.2 adds: navigation state (selectedTodoIndex), helper functions (selectNext/selectPrevious), KeyboardManager shortcut registration.</reason>
+      </artifact>
+
+      <!-- Render System -->
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>module</kind>
+        <symbol>renderTodoList</symbol>
+        <lines>86-105</lines>
+        <reason>Main todo list rendering function. Story 4.2 modifies signature to accept selectedIndex parameter and applies .selected class to matching todo item.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>function</kind>
+        <symbol>renderTodoItem</symbol>
+        <lines>44-69</lines>
+        <reason>Individual todo item rendering. Story 4.2 adds conditional .selected class application when index matches selectedIndex.</reason>
+      </artifact>
+
+      <!-- Styling -->
+      <artifact>
+        <path>src/ui/styles.css</path>
+        <kind>stylesheet</kind>
+        <symbol>.todo-item:hover</symbol>
+        <lines>136-139</lines>
+        <reason>Existing hover state uses #001100 background. Story 4.2 adds .todo-item.selected with same background color for visual selection indicator.</reason>
+      </artifact>
+
+      <!-- TodoStore (existing dependency) -->
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>class</kind>
+        <symbol>TodoStore</symbol>
+        <lines>N/A</lines>
+        <reason>State management for todos. Navigation helpers use getAll() to retrieve list length for bounds checking.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <runtime>
+        <dependency name="electron" version="39.2.3" />
+        <dependency name="electron-log" version="5.4.1" />
+        <dependency name="@toon-format/toon" version="1.0.0" />
+        <dependency name="electron-updater" version="6.7.1" />
+      </runtime>
+      <dev>
+        <dependency name="typescript" version="~5.9.2" />
+        <dependency name="vitest" version="^4.0.13" />
+        <dependency name="vite" version="^5.4.21" />
+        <dependency name="jsdom" version="^27.2.0" />
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    1. **Performance Constraint:** All navigation operations must complete in &lt;16ms (zero perceived lag). Handler budget is &lt;5ms, leaving 11ms for render.
+    2. **Synchronous Operations Only:** No setTimeout, no Promise, no async/await. All state updates are immediate.
+    3. **Terminal Aesthetic:** Selection color must be #001100 (subtle dark green tint). No animations, no transitions, no smooth scrolling.
+    4. **No Wrap-Around:** Pressing Down/j at last todo or Up/k at first todo does nothing (explicit bounds checking).
+    5. **State Management Pattern:** selectedTodoIndex lives in renderer.ts application state. KeyboardManager is stateless.
+    6. **Direct DOM Manipulation:** Use direct DOM queries and updates. No virtual DOM. No UI framework.
+    7. **Bounds Checking:** All navigation operations must validate selectedTodoIndex against current todo list length.
+    8. **Graceful Empty State:** Navigation on empty list must be no-op (no errors, no console warnings).
+    9. **TypeScript Strict Mode:** No 'any' types. All functions properly typed. Strict null checking enabled.
+    10. **Existing Code Preservation:** Do not modify KeyboardManager class (Story 4.1 completed). Only use its public API.
+    11. **No New Files:** Story 4.2 modifies existing files only (renderer.ts, render.ts, styles.css).
+    12. **Selection Persistence:** Selection state persists across other actions until navigation occurs again.
+  </constraints>
+
+  <interfaces>
+    <!-- KeyboardManager Public API (Story 4.1) -->
+    <interface>
+      <name>KeyboardManager.register</name>
+      <kind>method</kind>
+      <signature>register(key: string, handler: () =&gt; void, description: string): void</signature>
+      <path>src/keyboard/KeyboardManager.ts:43-55</path>
+    </interface>
+    <interface>
+      <name>KeyboardManager.handle</name>
+      <kind>method</kind>
+      <signature>handle(event: KeyboardEvent): boolean</signature>
+      <path>src/keyboard/KeyboardManager.ts:92-109</path>
+    </interface>
+
+    <!-- TodoStore Public API -->
+    <interface>
+      <name>TodoStore.getAll</name>
+      <kind>method</kind>
+      <signature>getAll(): Todo[]</signature>
+      <path>src/store/TodoStore.ts</path>
+    </interface>
+
+    <!-- Render System API -->
+    <interface>
+      <name>renderTodoList</name>
+      <kind>function</kind>
+      <signature>renderTodoList(todos: Todo[], container: HTMLElement): void</signature>
+      <path>src/ui/render.ts:86-105</path>
+      <note>Story 4.2 modifies signature to: renderTodoList(todos: Todo[], container: HTMLElement, selectedIndex?: number)</note>
+    </interface>
+
+    <!-- Browser API -->
+    <interface>
+      <name>Element.scrollIntoView</name>
+      <kind>browser-api</kind>
+      <signature>scrollIntoView(options?: ScrollIntoViewOptions): void</signature>
+      <path>Native Browser API</path>
+      <note>Use { behavior: 'instant', block: 'nearest' } for auto-scroll functionality</note>
+    </interface>
+
+    <!-- Navigation Helper Functions (to be implemented) -->
+    <interface>
+      <name>selectNext</name>
+      <kind>function</kind>
+      <signature>function selectNext(): void</signature>
+      <path>src/renderer.ts (new)</path>
+      <note>Increments selectedTodoIndex with bounds checking, calls renderTodoList and scrollSelectedIntoView</note>
+    </interface>
+    <interface>
+      <name>selectPrevious</name>
+      <kind>function</kind>
+      <signature>function selectPrevious(): void</signature>
+      <path>src/renderer.ts (new)</path>
+      <note>Decrements selectedTodoIndex with bounds checking, calls renderTodoList and scrollSelectedIntoView</note>
+    </interface>
+    <interface>
+      <name>getSelectedTodo</name>
+      <kind>function</kind>
+      <signature>function getSelectedTodo(): Todo | null</signature>
+      <path>src/renderer.ts (new)</path>
+      <note>Returns current selected todo or null if no selection</note>
+    </interface>
+    <interface>
+      <name>scrollSelectedIntoView</name>
+      <kind>function</kind>
+      <signature>function scrollSelectedIntoView(): void</signature>
+      <path>src/renderer.ts (new)</path>
+      <note>Finds selected todo element in DOM and calls scrollIntoView with instant behavior</note>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Vitest (^4.0.13) with jsdom environment for unit/integration tests. Test files co-located with source (*.test.ts). TypeScript strict mode enforced in tests. Story 4.2 focuses on integration testing (navigation + rendering) with manual visual tests for selection styling. Story 4.1 already validated KeyboardManager with 39 passing unit tests. Use npm test to run all tests. Use npx tsc --noEmit for type checking.
+    </standards>
+
+    <locations>
+      src/keyboard/KeyboardManager.test.ts (existing from Story 4.1)
+      src/renderer.test.ts (optional for navigation helpers)
+      Manual visual tests for selection styling and auto-scroll behavior
+    </locations>
+
+    <ideas>
+      <test ac="1,2" description="Navigation with j/k and arrow keys">
+        - Create 5 todos
+        - Press 'j' three times → verify 4th todo (index 3) selected
+        - Press 'k' once → verify 3rd todo (index 2) selected
+        - Press ArrowDown → verify 4th todo selected
+        - Press ArrowUp → verify 3rd todo selected
+        - Verify j/k behavior matches arrow keys exactly
+      </test>
+
+      <test ac="3" description="Visual selection indicator">
+        - Select a todo via navigation
+        - Inspect element → verify background-color: #001100
+        - Verify visual distinction is clear but subtle
+        - Ensure no border-radius, no transitions
+      </test>
+
+      <test ac="4,5" description="Bounds checking">
+        - Navigate to first todo (index 0)
+        - Press Up/k → verify selection stays at index 0
+        - Navigate to last todo
+        - Press Down/j → verify selection stays at last index
+        - Check console for errors → should be none
+      </test>
+
+      <test ac="6" description="Auto-scroll to selected todo">
+        - Create 20 todos (more than viewport height)
+        - Navigate to todo #15
+        - Verify selected todo is visible in viewport
+        - Verify scrolling uses instant behavior (no smooth animation)
+      </test>
+
+      <test ac="7" description="Selection persistence">
+        - Select todo #3
+        - Click in input field and type
+        - Verify todo #3 still has selection indicator
+        - Press 'j' → verify moves to todo #4 (state persisted)
+      </test>
+
+      <test ac="8" description="Empty list graceful handling">
+        - Delete all todos
+        - Press j/k/arrows → verify no errors
+        - Check console → should be clean
+      </test>
+
+      <test ac="9" description="Selection adjustment on list changes">
+        - Select todo #2
+        - Click todo #2 to toggle complete
+        - Bulk delete completed todos
+        - Verify selection clears or adjusts to valid index
+        - No errors or invalid state
+      </test>
+
+      <test description="TypeScript validation">
+        - Run: npx tsc --noEmit
+        - Expect: zero errors (strict typing enforced)
+      </test>
+
+      <test description="Regression testing">
+        - Run: npm test
+        - Verify all existing tests still pass (TodoStore, KeyboardManager)
+        - Verify no regressions in existing functionality
+      </test>
+
+      <test description="Performance validation">
+        - Use browser DevTools Performance tab
+        - Record navigation session (press j/k 10x rapidly)
+        - Verify no frames drop below 60fps (16ms budget)
+        - Check handler execution time: should be &lt;5ms per keypress
+      </test>
+    </ideas>
+  </tests>
+</story-context>

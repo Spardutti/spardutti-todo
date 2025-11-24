@@ -1,0 +1,283 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Install Core Dependencies and Configure Tooling</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-3-install-core-dependencies-and-configure-tooling.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>all required dependencies installed and development tooling configured</iWant>
+    <soThat>I can implement features with the correct libraries and maintain code quality</soThat>
+    <tasks>
+- [ ] Install production dependencies (AC: #1)
+  - [ ] Run: `npm install @toon-format/toon@1.0.0 --save`
+  - [ ] Run: `npm install electron-updater@6.7.1 --save`
+  - [ ] Run: `npm install electron-log@5.4.1 --save`
+  - [ ] Run: `npm install rollup-plugin-visualizer@6.0.5 --save`
+  - [ ] Verify package.json dependencies section updated
+  - [ ] Verify package-lock.json created/updated
+
+- [ ] Install development dependencies (AC: #2)
+  - [ ] Run: `npm install vitest --save-dev`
+  - [ ] Run: `npm install @types/node --save-dev`
+  - [ ] Verify package.json devDependencies section updated
+  - [ ] Verify versions resolved in package-lock.json
+
+- [ ] Create Vitest configuration file (AC: #4)
+  - [ ] Create vitest.config.ts at project root
+  - [ ] Configure test environment: Node
+  - [ ] Set include pattern: `['src/**/*.test.ts', 'electron/**/*.test.ts']`
+  - [ ] Add TypeScript configuration reference
+  - [ ] Verify TypeScript recognizes config file (no errors)
+
+- [ ] Add NPM scripts to package.json (AC: #3)
+  - [ ] Add `"test": "vitest"` to scripts section
+  - [ ] Add `"build:analyze": "vite build --mode analyze"` to scripts
+  - [ ] Verify scripts syntax is valid JSON
+  - [ ] Verify no duplicate script names
+
+- [ ] Verify npm test execution (AC: #5)
+  - [ ] Run `npm test`
+  - [ ] Verify Vitest starts without errors
+  - [ ] Confirm "No test files found" message (expected - no tests yet)
+  - [ ] Verify exit code 0 (success)
+  - [ ] Stop test watcher (Ctrl+C if running in watch mode)
+
+- [ ] Verify npm install clean run (AC: #6)
+  - [ ] Delete node_modules and package-lock.json (clean slate)
+  - [ ] Run `npm install`
+  - [ ] Check for errors in output
+  - [ ] Check for peer dependency warnings
+  - [ ] Verify node_modules populated with all dependencies
+  - [ ] Verify all 6 dependencies (4 prod + 2 dev) installed correctly
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Production dependencies installed**
+   - GIVEN the project structure is configured
+   - WHEN I install production dependencies
+   - THEN package.json includes:
+     - @toon-format/toon: 1.0.0 (TOON data format encoding/decoding)
+     - electron-updater: 6.7.1 (auto-update system for Windows NSIS)
+     - electron-log: 5.4.1 (file-based logging system)
+     - rollup-plugin-visualizer: 6.0.5 (bundle analysis tool)
+   - AND all are in dependencies section (NOT devDependencies)
+   - AND package-lock.json includes all resolved versions
+
+2. **Development dependencies installed**
+   - WHEN I install dev dependencies
+   - THEN package.json includes:
+     - vitest: latest (unit testing framework for TypeScript)
+     - @types/node: latest (Node.js type definitions)
+   - AND both are in devDependencies section
+   - AND package-lock.json includes resolved versions
+
+3. **Package scripts configured**
+   - WHEN I update package.json scripts
+   - THEN the following scripts exist:
+     - `"test": "vitest"` (runs unit tests)
+     - `"build:analyze": "vite build --mode analyze"` (bundle size analysis)
+   - AND scripts can be executed with npm run
+
+4. **Vitest configuration created**
+   - WHEN I create vitest.config.ts
+   - THEN the file exists at project root
+   - AND basic configuration is defined (test environment, include patterns)
+   - AND configuration targets Node environment for unit tests
+   - AND TypeScript recognizes the config file
+
+5. **Vitest execution verified**
+   - WHEN I run `npm test`
+   - THEN vitest starts successfully
+   - AND reports "0 tests" or "No test files found" (acceptable - no tests written yet)
+   - AND exits with success code 0 (no errors)
+
+6. **Installation completes successfully**
+   - WHEN I run `npm install`
+   - THEN installation completes without errors
+   - AND no npm warnings about peer dependencies or version conflicts
+   - AND node_modules directory is populated
+   - AND package-lock.json is updated
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation &amp; Project Setup</title>
+        <section>Dependencies and Integrations (lines 294-367)</section>
+        <snippet>Defines exact versions and integration points for all 6 dependencies. Production deps pinned for stability (@toon-format/toon 1.0.0, electron-updater 6.7.1, electron-log 5.4.1, rollup-plugin-visualizer 6.0.5). Dev deps use latest (vitest, @types/node). Includes rationale for pinning vs latest strategy.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation &amp; Project Setup</title>
+        <section>Detailed Design - APIs and Interfaces (lines 100-144)</section>
+        <snippet>Defines NPM script interface including test and build:analyze scripts. Shows Vitest configuration pattern with Node environment, include patterns for src/**/*.test.ts and electron/**/*.test.ts, and import alias resolution.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Technology Stack Details (lines 104-141)</section>
+        <snippet>Core technologies: Electron 33+, Node.js 22+ (required for rollup-plugin-visualizer), TypeScript 5.9+ strict mode, Vite 5+, Electron Forge 7+. Testing: Vitest with co-located *.test.ts files. Data: @toon-format/toon 1.0.0 for TOON encode/decode.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Project Structure (lines 46-89)</section>
+        <snippet>Defines hybrid electron/ + src/ organization with feature modules: src/store/, src/keyboard/, src/storage/, src/ui/, src/types/, src/utils/. Test files co-located with source (*.test.ts pattern).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>package.json</path>
+        <kind>config</kind>
+        <symbol>scripts, dependencies, devDependencies</symbol>
+        <lines>1-42</lines>
+        <reason>Current dependency manifest. Story will add 6 new dependencies (4 prod + 2 dev) and 2 new scripts (test, build:analyze). Currently has electron 39.2.3, vite 5.4.21, typescript 5.9.2, forge 7.10.2 from template.</reason>
+      </artifact>
+      <artifact>
+        <path>tsconfig.json</path>
+        <kind>config</kind>
+        <symbol>compilerOptions.paths</symbol>
+        <lines>15-18</lines>
+        <reason>TypeScript path aliases already configured (@/* for src/, @electron/* for electron/) from Story 1-2. Vitest config will reference these for test import resolution.</reason>
+      </artifact>
+      <artifact>
+        <path>vite.renderer.config.ts</path>
+        <kind>config</kind>
+        <symbol>resolve.alias</symbol>
+        <lines>6-10</lines>
+        <reason>Vite import aliases already configured matching tsconfig paths from Story 1-2. Vitest config should use same alias pattern for consistency.</reason>
+      </artifact>
+      <artifact>
+        <path>src/</path>
+        <kind>directory</kind>
+        <symbol>store/, keyboard/, storage/, ui/, types/, utils/</symbol>
+        <lines>N/A</lines>
+        <reason>Directory structure established in Story 1-2. Vitest configuration will include test patterns for src/**/*.test.ts to cover all subdirectories.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/</path>
+        <kind>directory</kind>
+        <symbol>main.ts</symbol>
+        <lines>N/A</lines>
+        <reason>Main process directory. Vitest config includes electron/**/*.test.ts pattern for main process unit tests (used in future stories, not Epic 1).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="npm">
+        <package name="electron" version="39.2.3" type="dev">Already installed from template</package>
+        <package name="vite" version="5.4.21" type="dev">Already installed from template</package>
+        <package name="typescript" version="5.9.2" type="dev">Already installed from template</package>
+        <package name="@electron-forge/cli" version="7.10.2" type="dev">Already installed from template</package>
+        <package name="@electron-forge/plugin-vite" version="7.10.2" type="dev">Already installed from template</package>
+        <package name="eslint" version="8.57.1" type="dev">Already installed from template</package>
+        <package name="@toon-format/toon" version="1.0.0" type="prod">TO BE INSTALLED - TOON data format encoding/decoding</package>
+        <package name="electron-updater" version="6.7.1" type="prod">TO BE INSTALLED - Auto-update system for Windows NSIS</package>
+        <package name="electron-log" version="5.4.1" type="prod">TO BE INSTALLED - File-based logging system</package>
+        <package name="rollup-plugin-visualizer" version="6.0.5" type="prod">TO BE INSTALLED - Bundle analysis tool</package>
+        <package name="vitest" version="latest" type="dev">TO BE INSTALLED - Unit testing framework for TypeScript</package>
+        <package name="@types/node" version="latest" type="dev">TO BE INSTALLED - Node.js type definitions</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>All production dependencies MUST use exact pinned versions (no semver ranges ^ or ~) for reproducibility</constraint>
+    <constraint>Development dependencies MAY use latest for newest features and bug fixes</constraint>
+    <constraint>Vitest configuration MUST use Node environment (not jsdom) as we're testing logic, not DOM</constraint>
+    <constraint>Vitest include patterns MUST cover both src/**/*.test.ts and electron/**/*.test.ts directories</constraint>
+    <constraint>Package.json scripts section MUST include both "test" and "build:analyze" scripts</constraint>
+    <constraint>npm install MUST complete without peer dependency warnings or version conflicts</constraint>
+    <constraint>npm test MUST execute successfully even with zero test files (acceptable baseline)</constraint>
+    <constraint>TypeScript MUST recognize vitest.config.ts without errors (proper import from 'vitest/config')</constraint>
+    <constraint>Node.js 22+ is REQUIRED for rollup-plugin-visualizer compatibility</constraint>
+    <constraint>All 6 dependencies (4 prod + 2 dev) must be in correct sections of package.json</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>npm scripts</name>
+      <kind>CLI interface</kind>
+      <signature>
+        "test": "vitest" - Runs Vitest in watch mode (default) for TDD workflow
+        "build:analyze": "vite build --mode analyze" - Generates bundle size visualization
+      </signature>
+      <path>package.json scripts section</path>
+    </interface>
+    <interface>
+      <name>vitest.config.ts</name>
+      <kind>Configuration file</kind>
+      <signature>
+        import { defineConfig } from 'vitest/config'
+        export default defineConfig({
+          test: {
+            environment: 'node',
+            include: ['src/**/*.test.ts', 'electron/**/*.test.ts'],
+            globals: true
+          },
+          resolve: {
+            alias: { '@': path.resolve(__dirname, 'src'), '@electron': path.resolve(__dirname, 'electron') }
+          }
+        })
+      </signature>
+      <path>vitest.config.ts (to be created at project root)</path>
+    </interface>
+    <interface>
+      <name>@toon-format/toon API</name>
+      <kind>External library</kind>
+      <signature>
+        Used in Epic 5 (Story 5.1) for ToonStorage class
+        encode(todos: Todo[]): string
+        decode(toonString: string): Todo[]
+      </signature>
+      <path>node_modules/@toon-format/toon (Epic 5 integration point)</path>
+    </interface>
+    <interface>
+      <name>electron-updater API</name>
+      <kind>External library</kind>
+      <signature>
+        Used in Epic 6 (Story 6.1) for auto-update system
+        autoUpdater.checkForUpdates()
+        autoUpdater.on('update-available', handler)
+      </signature>
+      <path>node_modules/electron-updater (Epic 6 integration point)</path>
+    </interface>
+    <interface>
+      <name>electron-log API</name>
+      <kind>External library</kind>
+      <signature>
+        Used in Epic 1 (Story 1.4) and Epic 5+ for logging
+        log.info(message, context)
+        log.error(message, error)
+        Writes to: %APPDATA%/spardutti-todo/logs/main.log
+      </signature>
+      <path>node_modules/electron-log (Story 1.4 integration point)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Vitest is the unit testing framework for all TypeScript logic tests. Test files use *.test.ts naming convention and are co-located with source files (e.g., TodoStore.test.ts next to TodoStore.ts). Tests target Node environment (not jsdom) for testing pure TypeScript logic without DOM dependencies. Import aliases (@/*, @electron/*) are resolved in vitest.config.ts matching tsconfig.json and vite configs. Epic 1 establishes testing infrastructure but writes no actual tests - feature tests begin in Epic 2+.
+    </standards>
+    <locations>
+      <location>src/**/*.test.ts (renderer process unit tests)</location>
+      <location>electron/**/*.test.ts (main process unit tests)</location>
+      <location>vitest.config.ts (test configuration at project root)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-1">Verify package.json contains all 4 production dependencies in dependencies section with exact versions</idea>
+      <idea ac="AC-2">Verify package.json contains both dev dependencies in devDependencies section</idea>
+      <idea ac="AC-3">Verify package.json scripts include "test" and "build:analyze" with correct commands</idea>
+      <idea ac="AC-4">Verify vitest.config.ts exists, has correct TypeScript syntax, and includes proper environment and include patterns</idea>
+      <idea ac="AC-5">Execute npm test command and verify Vitest starts without errors (0 tests or "No test files found" is acceptable)</idea>
+      <idea ac="AC-6">Delete node_modules and package-lock.json, run npm install, verify no errors or peer dependency warnings</idea>
+    </ideas>
+  </tests>
+</story-context>

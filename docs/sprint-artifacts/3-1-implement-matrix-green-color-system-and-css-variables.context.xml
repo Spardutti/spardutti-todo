@@ -1,0 +1,201 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>1</storyId>
+    <title>Implement Matrix Green Color System and CSS Variables</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-1-implement-matrix-green-color-system-and-css-variables.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>the Matrix Green color palette defined as CSS custom properties</iWant>
+    <soThat>I have consistent colors throughout the application</soThat>
+    <tasks>
+      <task id="1" status="pending">Create src/ui/styles.css file</task>
+      <task id="2" status="pending">Define CSS custom properties in :root</task>
+      <task id="3" status="pending">Add global body styles</task>
+      <task id="4" status="pending">Add universal box-sizing reset</task>
+      <task id="5" status="pending">Import CSS in index.html</task>
+      <task id="6" status="pending">Verify CSS loads correctly</task>
+      <task id="7" status="pending">Test color variable usage</task>
+      <task id="8" status="pending">Verify TypeScript compilation</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">
+      <description>CSS color variables are defined</description>
+      <details>
+        - Create src/ui/styles.css
+        - Define CSS custom properties in :root
+        - Must include: --color-bg-primary (#000000), --color-text-primary (#00FF00), --color-text-secondary (#008800), --color-text-completed (#004400), --color-border-default (#00FF00), --color-error (#FF0000)
+      </details>
+    </criterion>
+    <criterion id="AC2">
+      <description>Global styles are applied</description>
+      <details>
+        - Body element: background var(--color-bg-primary), color var(--color-text-primary), font-family Consolas/Courier New monospace, font-size 14px, margin/padding 0
+        - Universal selector (*): box-sizing border-box
+      </details>
+    </criterion>
+    <criterion id="AC3">
+      <description>CSS file is imported in index.html</description>
+      <details>
+        - Include link rel="stylesheet" href="./src/ui/styles.css" in head section
+        - CSS loads before JavaScript
+      </details>
+    </criterion>
+    <criterion id="AC4">
+      <description>App displays with black background and green text</description>
+      <details>
+        - Background is pure black (#000000)
+        - Existing text elements display in bright green (#00FF00)
+        - Font is Consolas monospace or Courier New fallback
+      </details>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Overview and Color System</section>
+        <snippet>Defines the Matrix Green color palette using CSS custom properties: --color-bg-primary (#000000), --color-text-primary (#00FF00), --color-text-secondary (#008800), --color-text-completed (#004400), --color-border-default (#00FF00), --color-error (#FF0000). Pure CSS implementation with no preprocessor dependencies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Terminal Aesthetic Enforcement</section>
+        <snippet>Specifies terminal aesthetic constraints: Font must be Consolas monospace 14px, colors limited to Matrix Green palette only, no animations/transitions, borders 1px solid green, background pure black. Uses pure CSS (no preprocessor) per technology stack.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Design System Foundation and Color System</section>
+        <snippet>Terminal-styled web components using custom CSS with ANSI-inspired color palette. Background #000000 (pure black), primary text #00FF00 (terminal green), completed tasks #808080 or #004400, errors #FF0000. Consolas monospace font system with Courier New fallback.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>User Experience Principles - Visual Aesthetic</section>
+        <snippet>Terminal aesthetic positioning with old Windows command-line look and feel. Monospace fonts, simple terminal colors (black background, white/green text), zero modern UI flourishes. Flow-state optimized for sub-2-second task capture.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>index.html</path>
+        <kind>html</kind>
+        <symbol>head section</symbol>
+        <lines>3-6</lines>
+        <reason>CSS link tag must be added here to import styles.css in the head section before JavaScript</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>renderer</kind>
+        <symbol>renderApp, renderInput, renderTodoItem</symbol>
+        <lines>128-189</lines>
+        <reason>Creates DOM structure that will be styled by CSS: #app container, input element, #todo-list ul, todo items with data-completed attributes, #footer element</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>renderer</kind>
+        <symbol>renderTodoItem</symbol>
+        <lines>43-71</lines>
+        <reason>Defines todo item structure with data-completed attribute and inline styles that will be replaced by CSS classes</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>vite</package>
+        <version>^5.4.21</version>
+        <purpose>Automatically bundles CSS with renderer process, HMR for instant CSS updates</purpose>
+      </node>
+      <node>
+        <package>electron</package>
+        <version>39.2.3</version>
+        <purpose>Renders Chromium with CSS custom properties support</purpose>
+      </node>
+      <node>
+        <package>typescript</package>
+        <version>~5.9.2</version>
+        <purpose>Type checking (CSS doesn't affect TS but validates build integrity)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Terminal Aesthetic: Font must be Consolas monospace 14px (no exceptions, no font size variations except footer 12px)</constraint>
+    <constraint>Colors: Matrix Green palette ONLY - #00FF00 (bright green), #004400 (dark green), #008800 (dimmed green), #000000 (black), #FF0000 (red)</constraint>
+    <constraint>No animations or transitions - all state changes must be instant (FR21)</constraint>
+    <constraint>No box shadows except input focus glow (0 0 8px #00FF00)</constraint>
+    <constraint>Borders: 1px solid green, no border-radius (sharp corners only)</constraint>
+    <constraint>Background: Pure black (#000000) only</constraint>
+    <constraint>Pure CSS implementation: No preprocessor (SASS/LESS/PostCSS), no CSS framework (Bootstrap/Tailwind), no CSS-in-JS</constraint>
+    <constraint>Single CSS file: All styling in src/ui/styles.css (target &lt;10KB, expected ~5KB)</constraint>
+    <constraint>CSS must not degrade &lt;2s startup time or introduce perceived latency</constraint>
+    <constraint>No JavaScript changes needed - this is CSS-only implementation</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>DOM Structure</name>
+      <kind>HTML structure</kind>
+      <signature>&lt;div id="app"&gt;
+  &lt;input type="text" placeholder="..." autofocus /&gt;
+  &lt;ul id="todo-list" role="list"&gt;
+    &lt;li data-id="..." data-completed="false|true"&gt;
+      &lt;span&gt;☐|☑&lt;/span&gt;
+      &lt;span&gt;Todo text&lt;/span&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+  &lt;div id="footer"&gt;Enter: Save | Space: Toggle | Esc: Close&lt;/div&gt;
+  &lt;button id="delete-completed-btn"&gt;Delete Completed&lt;/button&gt;
+&lt;/div&gt;</signature>
+      <path>src/ui/render.ts</path>
+    </interface>
+    <interface>
+      <name>CSS Selectors Available</name>
+      <kind>CSS targets</kind>
+      <signature>#app - App container
+#todo-input - Input field (to be added)
+#todo-list - List container (ul)
+li[data-completed="true"] - Completed todos
+li[data-completed="false"] - Active todos
+#footer - Footer hints
+#delete-completed-btn - Delete button</signature>
+      <path>src/ui/render.ts</path>
+    </interface>
+    <interface>
+      <name>CSS Custom Properties Contract</name>
+      <kind>CSS variables</kind>
+      <signature>:root {
+  --color-bg-primary: #000000;
+  --color-text-primary: #00FF00;
+  --color-text-secondary: #008800;
+  --color-text-completed: #004400;
+  --color-border-default: #00FF00;
+  --color-error: #FF0000;
+}</signature>
+      <path>docs/sprint-artifacts/tech-spec-epic-3.md</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Manual visual inspection using Chrome DevTools is the primary testing approach for CSS styling. Verify color values with DevTools color picker, computed styles for font-family and font-size, and visual inspection against UX Design specification. Automated validation limited to grep search for forbidden CSS properties (transition, animation, @keyframes).</standards>
+    <locations>
+      <location>src/ui/styles.css - all CSS styling (new file to be created)</location>
+      <location>Chrome DevTools - Elements inspector, Computed Styles, Network tab</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Verify all 6 CSS variables defined in :root using DevTools Elements tab</idea>
+      <idea ac="AC2">Check body computed styles: background-color rgb(0,0,0), color rgb(0,255,0), font-family Consolas</idea>
+      <idea ac="AC3">Verify styles.css loads in Network tab with 200 status code</idea>
+      <idea ac="AC4">Visual inspection: black background, green text, Consolas monospace font</idea>
+      <idea ac="AC4">DevTools color picker verification of exact hex values (#000000, #00FF00)</idea>
+      <idea>Automated test: Run grep -E "(transition|animation|@keyframes)" src/ui/styles.css and expect exit code 1 (no matches)</idea>
+      <idea>Verify TypeScript compilation with npx tsc --noEmit (should have zero errors)</idea>
+    </ideas>
+  </tests>
+</story-context>

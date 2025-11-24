@@ -1,0 +1,359 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>1</storyId>
+    <title>Implement KeyboardManager Class</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-1-implement-keyboardmanager-class.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a centralized KeyboardManager class to register and handle keyboard shortcuts</iWant>
+    <soThat>I have conflict detection, consistent key handling, and automatic help generation</soThat>
+    <tasks>
+- [ ] Create KeyboardManager class structure (AC: #1)
+  - [ ] Create src/keyboard directory if it doesn't exist
+  - [ ] Create src/keyboard/KeyboardManager.ts file
+  - [ ] Define ShortcutHandler interface in src/types/Shortcut.ts
+  - [ ] Implement class with private _shortcuts Map<string, ShortcutHandler>
+  - [ ] Create constructor to initialize empty Map
+  - [ ] Add method stubs: register(), unregister(), handle(), getHints()
+  - [ ] Export KeyboardManager class as default export
+
+- [ ] Implement register() method with normalization and conflict detection (AC: #2)
+  - [ ] Implement key normalization logic:
+    - [ ] Convert to lowercase
+    - [ ] Handle modifier keys: ctrlKey + "d" → "ctrl+d"
+    - [ ] Standardize special keys: " " → "space", "ArrowDown" → "arrowdown"
+  - [ ] Add conflict detection: check if key exists in _shortcuts Map
+  - [ ] If exists, throw Error with message: `Shortcut '${key}' already registered`
+  - [ ] Store ShortcutHandler object in Map: { key, handler, description }
+  - [ ] Add TypeScript strict typing for all parameters
+
+- [ ] Implement handle() method for event processing (AC: #3)
+  - [ ] Accept KeyboardEvent parameter
+  - [ ] Call _normalizeKey(event) to get normalized key string
+  - [ ] Look up key in _shortcuts Map
+  - [ ] If found:
+    - [ ] Call event.preventDefault()
+    - [ ] Call event.stopPropagation()
+    - [ ] Execute handler function
+    - [ ] Return true
+  - [ ] If not found, return false
+  - [ ] Add private _normalizeKey(event: KeyboardEvent): string helper method
+  - [ ] Handle edge case: modifier-only keys (Shift, Ctrl, Alt alone) → return empty or ignore
+
+- [ ] Implement unregister() method (AC: #1)
+  - [ ] Accept key string parameter
+  - [ ] Normalize key using same logic as register()
+  - [ ] Delete key from _shortcuts Map
+  - [ ] No error if key doesn't exist (idempotent)
+
+- [ ] Implement getHints() method for help text generation (AC: #4)
+  - [ ] Iterate over _shortcuts Map entries
+  - [ ] For each entry, format as: `${description}: ${key}`
+  - [ ] Join all formatted strings with " | " separator
+  - [ ] Return complete hints string
+  - [ ] Handle empty Map case: return empty string or placeholder
+
+- [ ] Create unit test suite (AC: #5)
+  - [ ] Create src/keyboard/KeyboardManager.test.ts
+  - [ ] Import KeyboardManager and necessary test utilities
+  - [ ] Test key normalization
+  - [ ] Test conflict detection
+  - [ ] Test handler invocation
+  - [ ] Test unhandled events
+  - [ ] Test hints generation
+  - [ ] Test unregister()
+  - [ ] Run tests: npm test src/keyboard/
+
+- [ ] Add TypeScript type definitions (AC: #1)
+  - [ ] Create src/types/Shortcut.ts if not exists
+  - [ ] Define ShortcutHandler interface
+  - [ ] Export interface for use in KeyboardManager
+  - [ ] Update KeyboardManager imports to use ShortcutHandler type
+
+- [ ] Integration validation
+  - [ ] Run TypeScript compiler: npx tsc --noEmit → expect zero errors
+  - [ ] Run full test suite: npm test → expect all tests pass
+  - [ ] Verify import paths work with @ alias
+  - [ ] Check file compiles in Vite build: npm run build → no errors
+
+- [ ] Documentation and comments
+  - [ ] Add JSDoc comments to all public methods
+  - [ ] Document key normalization rules in private _normalizeKey()
+  - [ ] Add inline comments for conflict detection logic
+  - [ ] Document ShortcutHandler interface properties
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **KeyboardManager class exists at src/keyboard/KeyboardManager.ts with required structure**
+   - GIVEN the UI is fully styled (Epic 3 complete)
+   - WHEN I create src/keyboard/KeyboardManager.ts
+   - THEN the class has the following structure:
+     ```typescript
+     class KeyboardManager {
+       private _shortcuts: Map<string, ShortcutHandler>
+       register(key: string, handler: () => void, description: string): void
+       unregister(key: string): void
+       handle(event: KeyboardEvent): boolean
+       getHints(): string
+     }
+     ```
+
+2. **The register() method normalizes keys and detects conflicts**
+   - GIVEN a KeyboardManager instance
+   - WHEN I call register(key, handler, description)
+   - THEN the key is normalized to lowercase (e.g., "Enter" → "enter", "ctrl+d")
+   - AND if the key is already registered, an error is thrown (conflict detection)
+   - AND the handler is stored with its description for help generation
+
+3. **The handle() method processes KeyboardEvents correctly**
+   - GIVEN a KeyboardEvent is received
+   - WHEN I call handle(event)
+   - THEN the event is normalized to a key string
+   - AND if a matching handler exists, it is called
+   - AND the method returns true if handled, false if not
+   - AND for handled keys, preventDefault() and stopPropagation() are called
+
+4. **The getHints() method returns formatted shortcut hints**
+   - GIVEN shortcuts are registered
+   - WHEN I call getHints()
+   - THEN a formatted string is returned: "Enter: Save | Space: Toggle | Ctrl+D: Delete All | ..."
+   - AND the format uses descriptions from registered shortcuts
+   - AND hints are separated by " | " (pipe with spaces)
+
+5. **Unit tests exist and pass**
+   - GIVEN the KeyboardManager implementation is complete
+   - WHEN I run npm test
+   - THEN unit tests exist in src/keyboard/KeyboardManager.test.ts covering:
+     - Key normalization (uppercase → lowercase, modifiers)
+     - Conflict detection (registering duplicate keys)
+     - Handler invocation (correct handler called)
+     - Hints generation (formatted output)
+   - AND all tests pass
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>KeyboardManager Class Signature (lines 113-147)</section>
+        <snippet>Defines the complete class structure with private _shortcuts Map, public methods (register, unregister, handle, getHints), and private _normalizeKey helper. Includes JSDoc comments and type signatures.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Key Normalization Rules (lines 150-155)</section>
+        <snippet>Convert to lowercase ("Enter" → "enter"), handle modifiers (ctrlKey + "d" → "ctrl+d"), ignore modifier-only keys, standardize special keys (" " → "space", "ArrowDown" → "arrowdown").</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Data Models and Contracts - ShortcutHandler Interface (lines 92-99)</section>
+        <snippet>Interface definition: { key: string, handler: () => void, description: string }. Used as Map value type in KeyboardManager._shortcuts registry.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Test Strategy - Unit Test Coverage Goals (lines 808-862)</section>
+        <snippet>Target >90% coverage using Vitest. Test cases include: key normalization, conflict detection, handler invocation, return values, hints generation, edge cases (modifier-only keys, invalid events).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>ADR-003: Custom KeyboardManager Over External Library (lines 826-851)</section>
+        <snippet>Decision to build custom KeyboardManager instead of using Mousetrap. Rationale: full control over normalization, conflict detection, help generation, zero dependencies, terminal-specific needs (j/k vim navigation).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Class Structure (lines 201-221)</section>
+        <snippet>Standard class organization: 1) Private properties, 2) Constructor, 3) Public methods (alphabetical), 4) Private methods (alphabetical). Private members prefixed with underscore.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Naming Conventions (lines 175-190)</section>
+        <snippet>Classes: PascalCase (KeyboardManager), Functions: camelCase (handleKeyPress), Private members: _prefixed (_shortcuts), Interfaces: PascalCase (ShortcutHandler).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Performance Considerations (lines 511-572)</section>
+        <snippet>Target <16ms response time. KeyboardManager.handle() must complete in <5ms. Map-based lookup is O(1). No async operations in KeyboardManager. All operations synchronous.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>service</kind>
+        <symbol>TodoStore</symbol>
+        <lines>1-152</lines>
+        <reason>Reference implementation for vanilla TypeScript class pattern. Shows proper structure: private properties, constructor, public methods (alphabetical), JSDoc comments, strict typing.</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.test.ts</path>
+        <kind>test</kind>
+        <symbol>TodoStore tests</symbol>
+        <lines>1-283</lines>
+        <reason>Reference for Vitest test patterns. Shows describe/it structure, beforeEach setup, edge case testing, error handling tests, type assertion patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/Todo.ts</path>
+        <kind>type</kind>
+        <symbol>Todo</symbol>
+        <lines>all</lines>
+        <reason>Reference for interface definition pattern. ShortcutHandler interface should follow same structure (exported interface in src/types/).</reason>
+      </artifact>
+      <artifact>
+        <path>tsconfig.json</path>
+        <kind>config</kind>
+        <symbol>paths</symbol>
+        <lines>15-18</lines>
+        <reason>Import alias configuration. Use @/keyboard/KeyboardManager and @/types/Shortcut for imports.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <typescript>
+        <package>typescript</package>
+        <version>~5.9.2</version>
+        <usage>Strict mode enabled. All code uses strict typing with no 'any' types.</usage>
+      </typescript>
+      <testing>
+        <package>vitest</package>
+        <version>^4.0.13</version>
+        <usage>Unit testing framework. Test files co-located with source (*.test.ts).</usage>
+      </testing>
+      <types>
+        <package>@types/node</package>
+        <version>^24.10.1</version>
+        <usage>Node.js type definitions for crypto.randomUUID and browser APIs.</usage>
+      </types>
+      <runtime>
+        <note>No external keyboard libraries (per ADR-003). Uses native browser KeyboardEvent API and Map data structure.</note>
+      </runtime>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <architectural>
+      <constraint>ADR-003: Custom KeyboardManager class without external libraries (Mousetrap, hotkeys-js rejected)</constraint>
+      <constraint>Vanilla TypeScript only - no frameworks, direct DOM manipulation patterns</constraint>
+      <constraint>File location: src/keyboard/KeyboardManager.ts (new directory)</constraint>
+      <constraint>Test co-location: src/keyboard/KeyboardManager.test.ts (same directory)</constraint>
+      <constraint>Import aliases: Use @/keyboard/ and @/types/ paths (configured in tsconfig.json)</constraint>
+    </architectural>
+    <typing>
+      <constraint>TypeScript strict mode enabled (noImplicitAny, strictNullChecks)</constraint>
+      <constraint>No 'any' types allowed - use explicit types or 'unknown' with type guards</constraint>
+      <constraint>All public method parameters and return types explicitly typed</constraint>
+      <constraint>Interface for public contracts (ShortcutHandler), type for internal structures</constraint>
+    </typing>
+    <naming>
+      <constraint>Class: PascalCase → KeyboardManager</constraint>
+      <constraint>File: PascalCase → KeyboardManager.ts</constraint>
+      <constraint>Private properties: _prefixed → _shortcuts, _normalizeKey</constraint>
+      <constraint>Public methods: camelCase → register(), handle(), getHints()</constraint>
+      <constraint>Interface: PascalCase → ShortcutHandler</constraint>
+    </naming>
+    <structure>
+      <constraint>Class organization: 1) Private properties, 2) Constructor, 3) Public methods (alphabetical), 4) Private methods (alphabetical)</constraint>
+      <constraint>Follow TodoStore.ts pattern for class structure and JSDoc comments</constraint>
+      <constraint>Export class as default export from KeyboardManager.ts</constraint>
+      <constraint>Export ShortcutHandler interface from src/types/Shortcut.ts</constraint>
+    </structure>
+    <performance>
+      <constraint>KeyboardManager.handle() must complete in <5ms (leaves 11ms for render in 16ms budget)</constraint>
+      <constraint>Map-based shortcut lookup for O(1) constant-time performance</constraint>
+      <constraint>All operations synchronous - no async/await, no setTimeout, no Promise</constraint>
+      <constraint>Maximum ~50 shortcuts supported (well below Map performance degradation)</constraint>
+    </performance>
+    <functionality>
+      <constraint>Key normalization: lowercase, handle modifiers (ctrl+d), special keys (space, arrowdown)</constraint>
+      <constraint>Conflict detection: throw Error if duplicate key registered</constraint>
+      <constraint>Event handling: preventDefault() and stopPropagation() for matched keys</constraint>
+      <constraint>Return boolean: true if handled, false if not</constraint>
+      <constraint>Hints format: "Description: Key | Description: Key" (pipe separator with spaces)</constraint>
+    </functionality>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ShortcutHandler</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+        export interface ShortcutHandler {
+          key: string              // Normalized key string (e.g., "enter", "ctrl+d", "j")
+          handler: () => void      // Action function to execute
+          description: string      // Human-readable description for help/hints
+        }
+      </signature>
+      <path>src/types/Shortcut.ts (new file to create)</path>
+    </interface>
+    <interface>
+      <name>KeyboardManager._shortcuts</name>
+      <kind>Map data structure</kind>
+      <signature>private _shortcuts: Map&lt;string, ShortcutHandler&gt;</signature>
+      <path>src/keyboard/KeyboardManager.ts</path>
+      <note>Key is normalized string (lowercase, modifiers), value is ShortcutHandler object</note>
+    </interface>
+    <interface>
+      <name>browser KeyboardEvent API</name>
+      <kind>Browser native API</kind>
+      <signature>KeyboardEvent properties: key, ctrlKey, shiftKey, altKey, metaKey, preventDefault(), stopPropagation()</signature>
+      <path>Native browser API (no polyfills needed)</path>
+      <note>Use for event handling in handle() method and _normalizeKey() helper</note>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      The project uses Vitest (^4.0.13) as the unit testing framework. Tests are co-located with source files using the *.test.ts naming convention. Follow the pattern established in src/store/TodoStore.test.ts: use describe() for test suites, it() for individual tests, beforeEach() for setup, and explicit type assertions with expect(). Target >90% code coverage for all core classes. All tests must pass before story completion (npm test). Tests should cover happy paths, edge cases, error conditions, and boundary values. Use vi.fn() for mocking handlers and new KeyboardEvent() for creating test events.
+    </standards>
+    <locations>
+      <location>src/keyboard/KeyboardManager.test.ts (new file to create, co-located with KeyboardManager.ts)</location>
+      <location>Test execution: npm test or npm test src/keyboard/</location>
+      <location>Coverage report: npm test -- --coverage</location>
+    </locations>
+    <ideas>
+      <test id="AC-1" criterion="KeyboardManager class structure">
+        <description>Test class instantiation, verify private _shortcuts Map initialized, verify all public methods exist</description>
+        <approach>Unit test: const km = new KeyboardManager(); expect(km.register).toBeDefined(); etc.</approach>
+      </test>
+      <test id="AC-2" criterion="Key normalization">
+        <description>Test "Enter" → "enter", "KeyJ" → "j", ctrlKey=true key="d" → "ctrl+d", " " → "space", "ArrowDown" → "arrowdown"</description>
+        <approach>Unit test: Register keys, verify normalization in Map. Test via register() calls with different key formats.</approach>
+      </test>
+      <test id="AC-2" criterion="Conflict detection">
+        <description>Test registering same key twice throws Error with message "Shortcut 'key' already registered"</description>
+        <approach>Unit test: km.register('enter', handler1, 'desc1'); expect(() => km.register('enter', handler2, 'desc2')).toThrow('Shortcut \'enter\' already registered')</approach>
+      </test>
+      <test id="AC-3" criterion="Handler invocation">
+        <description>Test handle() calls correct handler for matching KeyboardEvent, returns true, calls preventDefault/stopPropagation</description>
+        <approach>Unit test: Mock handler with vi.fn(), create KeyboardEvent, call handle(), verify handler called and return value true</approach>
+      </test>
+      <test id="AC-3" criterion="Unhandled events">
+        <description>Test handle() returns false for unregistered keys, handler NOT called, preventDefault NOT called</description>
+        <approach>Unit test: Create event for unregistered key, verify handle() returns false, verify no side effects</approach>
+      </test>
+      <test id="AC-4" criterion="Hints generation">
+        <description>Test getHints() returns "Description: key | Description: key" format, includes all shortcuts, handles empty Map</description>
+        <approach>Unit test: Register multiple shortcuts, call getHints(), verify format and content. Test empty case returns empty string.</approach>
+      </test>
+      <test id="AC-5" criterion="Unregister functionality">
+        <description>Test unregister() removes shortcut, handler no longer called, idempotent (no error if key doesn't exist)</description>
+        <approach>Unit test: Register, unregister, verify handle() returns false. Unregister non-existent key, verify no error.</approach>
+      </test>
+      <test id="edge-cases" criterion="Edge cases">
+        <description>Test modifier-only keys (Shift alone), empty string registration, multiple modifiers (ctrl+shift+d), case sensitivity</description>
+        <approach>Unit tests for boundary conditions and error scenarios to achieve >90% coverage</approach>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

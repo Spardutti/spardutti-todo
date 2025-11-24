@@ -1,0 +1,415 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>3</storyId>
+    <title>Implement Error Handling and Recovery</title>
+    <status>done</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-3-implement-error-handling-and-recovery.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>graceful error handling if file operations fail</iWant>
+    <soThat>I don't lose my current session data and understand what went wrong</soThat>
+    <tasks>
+- [ ] Create error display component in render.ts (AC: #1)
+  - [ ] Add `displayError(message: string, duration?: number)` function to `src/ui/render.ts`
+  - [ ] Create error container element below input field (or reuse existing element)
+  - [ ] Set error text content and styling: color `#FF0000`, font Consolas 14px
+  - [ ] Implement auto-hide with `setTimeout(hideError, duration)`
+  - [ ] Add `hideError()` function to remove error from DOM
+  - [ ] Handle multiple calls: clear previous timeout, replace error text
+  - [ ] Test: Call displayError() multiple times, verify last message shown
+
+- [ ] Add error styling to styles.css (AC: #8)
+  - [ ] Add `.error-message` class to `src/ui/styles.css`
+  - [ ] Set color: `var(--color-error)` (#FF0000)
+  - [ ] Set font: Consolas monospace, 14px
+  - [ ] Set margin-top: 0.5rem (spacing from input)
+  - [ ] Set word-wrap: break-word (handle long errors)
+  - [ ] No background, border, or shadow (terminal constraint)
+  - [ ] No transitions or animations
+
+- [ ] Integrate error display into TodoStore.save() failure (AC: #2)
+  - [ ] Open `src/store/TodoStore.ts`
+  - [ ] Import displayError: `import { displayError } from '@/ui/render'`
+  - [ ] In save() catch block, call `displayError('Failed to save. Try again.', 5000)`
+  - [ ] Verify error message appears in UI when save fails
+  - [ ] Test: Mock ToonStorage.save to throw error, verify inline error shown
+
+- [ ] Implement corrupt file backup in ToonStorage.load() (AC: #3, #7)
+  - [ ] Open `electron/storage.ts`
+  - [ ] In load() method, wrap decode() in try-catch
+  - [ ] On decode error, backup file: `fs.rename(filePath, filePath + '.corrupt.' + Date.now())`
+  - [ ] Log backup: `log.error('Corrupt file', { error, path: filePath, backupPath })`
+  - [ ] Re-throw error with descriptive message: "Corrupt file backed up to [path]"
+  - [ ] Test: Create corrupt .toon file, verify backup created and error thrown
+
+- [ ] Handle corrupt file error in renderer.ts (AC: #3)
+  - [ ] Open `src/renderer.ts` (or main entry point)
+  - [ ] In try-catch around `await todoStore.load()`
+  - [ ] On error, call `displayError('Data file corrupted. Starting fresh.')`
+  - [ ] Log error: `log.error('Failed to load todos', { error: e.message, path: filePath })`
+  - [ ] Continue app initialization with empty todo list
+  - [ ] Test: Manually corrupt todos.toon, verify error shown and app starts fresh
+
+- [ ] Verify missing file handling is silent (AC: #4)
+  - [ ] Verify ToonStorage.load() returns empty array when file missing (Story 5.1)
+  - [ ] Verify no error thrown when file doesn't exist
+  - [ ] Add log: `log.info('No todos file found, starting fresh', { path: filePath })`
+  - [ ] Test: Delete todos.toon, launch app, verify no error message shown
+
+- [ ] Test save errors don't block UI (AC: #5)
+  - [ ] Manual test: Make todos.toon read-only
+  - [ ] Create a todo, verify it appears instantly in UI
+  - [ ] Verify input clears and stays focused
+  - [ ] Create another todo immediately, verify no lag or freeze
+  - [ ] Verify inline error appears
+
+- [ ] Test multiple save failures (AC: #6)
+  - [ ] Manual test: Make disk read-only or todos.toon read-only
+  - [ ] Create 3 todos in quick succession
+  - [ ] Verify all 3 appear in UI
+  - [ ] Check electron-log: verify 3 error entries
+  - [ ] Verify only latest error message displayed (not 3 stacked messages)
+
+- [ ] Test error recovery on disk space restoration (AC: #9)
+  - [ ] Manual test: Simulate disk full, create todo (error appears)
+  - [ ] Fix disk space issue
+  - [ ] Create another todo
+  - [ ] Verify no error shown (save succeeds)
+  - [ ] Close and reopen app
+  - [ ] Verify all todos persisted (including retried saves)
+
+- [ ] Test error handling during app close (AC: #10)
+  - [ ] Manual test: Make save fail (read-only file)
+  - [ ] Create 5 todos (all show in UI, saves fail)
+  - [ ] Press Esc to close app
+  - [ ] Verify app closes immediately without hang
+  - [ ] Reopen app
+  - [ ] Verify only successfully saved todos are present (if any)
+
+- [ ] Update error handling tests in TodoStore.test.ts (AC: #2, #6)
+  - [ ] Verify existing test: save() catches errors and logs (from Story 5.2)
+  - [ ] Add test: Verify displayError() called when save fails
+  - [ ] Mock displayError function
+  - [ ] Verify error message: "Failed to save. Try again."
+  - [ ] Run all tests: `npm test`
+
+- [ ] Add corrupt file backup tests to ToonStorage.test.ts (AC: #3, #7)
+  - [ ] Add test: load() with corrupt file creates backup
+  - [ ] Mock fs.rename to verify backup filename pattern
+  - [ ] Verify error thrown after backup
+  - [ ] Verify log.error called with backup path
+  - [ ] Test: Backup filename includes timestamp (regex match)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Inline error display component exists** - displayError(message: string, duration?: number) function renders red text below input field using color #FF0000, auto-hides after duration (default: 5 seconds), and replaces previous error messages
+
+2. **Save failure shows inline error** - When save fails (disk full/no write permissions), error text "Failed to save. Try again." appears below input in red, auto-hides after 5 seconds, todo remains in UI (in-memory state preserved), and error is logged
+
+3. **Load failure (corrupt file) shows error and backs up file** - ToonStorage.load() detects corruption, backs up file to todos.toon.corrupt.TIMESTAMP, throws error caught in renderer.ts, displays "Data file corrupted. Starting fresh.", app starts with empty list, and error is logged
+
+4. **Load failure (missing file) is silent** - ToonStorage.load() returns empty array when file doesn't exist, no error message shown to user, app displays empty todo list, input field focused and ready, and log entry created
+
+5. **Save errors don't propagate to UI rendering** - Todo appears instantly in list, UI doesn't freeze or become unresponsive, input clears and stays focused, user can immediately create another todo, inline error message is only indication of failure
+
+6. **Multiple save failures accumulate in logs** - All todos appear in UI, each failed save creates log entry with error message/todo count/file path, inline error message updated each time (replaces previous), only most recent error displayed
+
+7. **Corrupt file backup preserves original data** - Original file renamed (not deleted), backup filename includes timestamp (todos.toon.corrupt.1732456789012), backup in same directory, user can manually inspect/repair, new empty todos.toon created on first save
+
+8. **Error messages follow terminal aesthetic** - Error text color #FF0000 (red), font Consolas monospace 14px, appears below input field with margin-top: 0.5rem, no animations or transitions (instant appearance/disappearance), text wraps if long, no background or border
+
+9. **Error recovery on next mutation** - After save failure, when disk space issue resolved, next todo creation triggers save retry, if retry succeeds no error shown, all todos (including previously failed) are saved, previous error message has auto-hidden
+
+10. **Error handling doesn't break app lifecycle** - App closes normally without hanging when saves failing, no "save changes?" prompt appears, no additional error messages on close, reopen shows only successfully saved todos
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- PRD: Persistence and error handling requirements -->
+      <doc path="docs/prd.md">
+        <title>Product Requirements Document</title>
+        <section>Data Persistence (FR7-FR10)</section>
+        <snippet>FR8: Todo data persists between application sessions (survives app close/reopen). FR9: Users can access their todos without an internet connection. FR10: The application stores data in a human-readable format (for potential manual editing/backup). Performance requirements: Todo creation saves instantly, todo list loads instantly on launch, operations appear synchronous to user.</snippet>
+      </doc>
+
+      <!-- Tech Spec Epic 5: Complete error handling workflows and patterns -->
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md">
+        <title>Epic 5 Technical Specification: Data Persistence (TOON Storage)</title>
+        <section>Workflows: Sequences 5 & 6 - Save Failure Recovery and Corrupt File Recovery</section>
+        <snippet>Sequence 5 (lines 248-257): Save failure preserves in-memory state, logs error, displays inline message "Failed to save. Try again." with 5-second auto-hide, next mutation retries save. Sequence 6 (lines 259-271): Corrupt file triggers backup to .corrupt.TIMESTAMP, throws error to TodoStore, displays "Data file corrupted. Starting fresh.", app starts with empty list, corrupt file preserved for manual inspection.</snippet>
+      </doc>
+
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md">
+        <title>Epic 5 Technical Specification</title>
+        <section>NFR Observability (lines 384-390)</section>
+        <snippet>User-Facing Signals: Save success = silent (no notification, success implicit). Save failure = inline red error text "Failed to save. Try again." (5 second auto-hide). Load failure = inline red error "Data file corrupted. Starting fresh." (persistent until dismissed). No spinners or loading indicators - all operations appear instant to user.</snippet>
+      </doc>
+
+      <!-- Architecture: Error handling patterns and format specifications -->
+      <doc path="docs/architecture.md">
+        <title>Architecture Document</title>
+        <section>Implementation Patterns: Error Messages (lines 236-243)</section>
+        <snippet>Error format: "Action failed. Suggestion." (2 sentences max, actionable). Examples: "Failed to save. Try again.", "Data file corrupted. Backup and reset?". Never: "An error occurred" (too vague). Color: Red (#FF0000), inline placement, no modal dialogs.</snippet>
+      </doc>
+
+      <doc path="docs/architecture.md">
+        <title>Architecture Document</title>
+        <section>Lifecycle Patterns: Error Recovery (lines 291-301)</section>
+        <snippet>try { await todoStore.save() } catch (error) { showError('Failed to save. Try again.'); log.error('Save failed', error); // State remains in memory, retry available }. No Confirmations (lines 307-311): All actions auto-save immediately (EXCEPT bulk delete with Y/n prompt). No "Do you want to save?" prompts. Errors logged and displayed but don't block workflow.</snippet>
+      </doc>
+
+      <!-- UX Design: Terminal aesthetic constraints for error display -->
+      <doc path="docs/ux-design-specification.md">
+        <title>UX Design Specification</title>
+        <section>Core Experience Principles: Feedback (line 162)</section>
+        <snippet>Feedback: Crisp and Visual. Immediate visual state changes (no "loading" states). Color-coded status (green input focus, gray completed todos). Terminal-style feedback (state changes, not notifications). Errors are inline and clear (red text, simple message). Success is implicit (todo appears in list = success).</snippet>
+      </doc>
+
+      <doc path="docs/ux-design-specification.md">
+        <title>UX Design Specification</title>
+        <section>Visual Foundation: Color System (lines 260-261)</section>
+        <snippet>Error text color: #FF0000 (red), font Consolas monospace 14px, appears below input field with margin-top: 0.5rem, no animations or transitions (instant appearance/disappearance), text wraps if long (word-wrap: break-word), no background or border (just text).</snippet>
+      </doc>
+
+      <doc path="docs/ux-design-specification.md">
+        <title>UX Design Specification</title>
+        <section>UX Pattern Decisions: Feedback Patterns (lines 888-918)</section>
+        <snippet>Success Feedback: Implicit success (state change = success), no toast notifications needed. Error Feedback: Inline red text below failed element, no modal dialogs, user can retry immediately. Loading Feedback: No loading states - everything is instant. Info/Status: Footer text (dimmed green) for temporary messages (2 seconds).</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- TodoStore: Existing save() method with error logging (needs displayError integration) -->
+      <code path="src/store/TodoStore.ts">
+        <kind>class</kind>
+        <symbol>TodoStore.save()</symbol>
+        <lines>72-81</lines>
+        <reason>Current save() implementation has try-catch with console.error logging. Story 5.3 adds displayError() call in catch block to show inline error message to user. Fire-and-forget pattern already implemented.</reason>
+      </code>
+
+      <!-- TodoStore: load() method that throws errors for corrupt files (needs error handling in renderer) -->
+      <code path="src/store/TodoStore.ts">
+        <kind>class</kind>
+        <symbol>TodoStore.load()</symbol>
+        <lines>48-56</lines>
+        <reason>load() method throws errors for corrupt files. Story 5.3 adds error handling in renderer.ts to catch corrupt file errors, display inline message, and start with empty list.</reason>
+      </code>
+
+      <!-- ToonStorage: load() method in main process (needs corrupt file backup logic) -->
+      <code path="electron/storage.ts">
+        <kind>class</kind>
+        <symbol>ToonStorage.load()</symbol>
+        <lines>9-19</lines>
+        <reason>load() currently returns empty array for missing files (ENOENT), throws for other errors. Story 5.3 adds corrupt file detection and backup logic: wrap decode() in try-catch, backup corrupt file with timestamp, re-throw enhanced error.</reason>
+      </code>
+
+      <!-- ToonStorage: decode() method that throws on invalid TOON format -->
+      <code path="electron/storage.ts">
+        <kind>class</kind>
+        <symbol>ToonStorage.decode()</symbol>
+        <lines>46-92</lines>
+        <reason>decode() throws errors for invalid TOON format (empty content, invalid header, malformed rows). Story 5.3 catches these errors in load(), creates backup file, and provides enhanced error context for user display.</reason>
+      </code>
+
+      <!-- render.ts: Existing footer feedback functions (template for error display) -->
+      <code path="src/ui/render.ts">
+        <kind>function</kind>
+        <symbol>showFeedback()</symbol>
+        <lines>290-311</lines>
+        <reason>showFeedback() displays temporary messages in footer with auto-hide timer. Story 5.3 creates similar displayError() function that renders error text below input field (not in footer) with red styling and auto-hide after 5 seconds.</reason>
+      </code>
+
+      <!-- renderer.ts: initApp() loads todos on startup (needs corrupt file error handling) -->
+      <code path="src/renderer.ts">
+        <kind>function</kind>
+        <symbol>initApp()</symbol>
+        <lines>242-252</lines>
+        <reason>initApp() has try-catch around todoStore.load() that logs errors and proceeds with empty list. Story 5.3 adds displayError() call to show "Data file corrupted. Starting fresh." message when load fails, making error visible to user.</reason>
+      </code>
+
+      <!-- styles.css: Existing color system and footer styling (template for error message styling) -->
+      <code path="src/ui/styles.css">
+        <kind>stylesheet</kind>
+        <symbol>:root color variables</symbol>
+        <lines>11-25</lines>
+        <reason>CSS custom properties define --color-error: #FF0000 for error messages. Story 5.3 adds .error-message class using this variable, with Consolas 14px font, margin-top: 0.5rem, word-wrap: break-word, no background/border/transitions per terminal aesthetic.</reason>
+      </code>
+
+      <!-- styles.css: Footer hints styling (reference for error message placement) -->
+      <code path="src/ui/styles.css">
+        <kind>stylesheet</kind>
+        <symbol>#footer and .footer-hints</symbol>
+        <lines>169-183</lines>
+        <reason>Footer uses dimmed green color, 12px font, and margin spacing. Error message will be positioned below input field (not in footer), using similar spacing patterns but with red color (#FF0000) and 14px font to match input field prominence.</reason>
+      </code>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@toon-format/toon" version="1.0.0" />
+        <package name="electron-log" version="5.4.1" />
+        <package name="electron" version="39.2.3" />
+        <package name="vitest" version="^4.0.13" />
+        <package name="typescript" version="~5.9.2" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- displayError() must render below input field, not in footer area (footer is for keyboard hints)
+- Error text color must be #FF0000 (red) per CSS variable --color-error
+- Font must be Consolas monospace, 14px to match terminal aesthetic
+- No animations or transitions - instant appearance/disappearance (terminal constraint)
+- No background, border, or box-shadow on error message (just text)
+- Error auto-hides after 5 seconds using setTimeout (2 sentences max per architecture)
+- Multiple displayError() calls must replace previous error (clear old timeout, set new)
+- Backup filename format: todos.toon.corrupt.{timestamp} using Date.now()
+- Backup file must be in same directory as original todos.toon file
+- ToonStorage.load() must return empty array for missing files (ENOENT) - no error thrown
+- Save errors must not block UI - todos remain in memory, fire-and-forget pattern preserved
+- All errors logged to electron-log with context (error message, count, file path)
+- renderer.ts error handling must allow app to start with empty list after corrupt file detection
+- No "save changes?" prompts - auto-save already handles persistence (architecture constraint)
+  </constraints>
+
+  <interfaces>
+<!-- displayError function signature to be added to render.ts -->
+<interface>
+  <name>displayError</name>
+  <kind>function</kind>
+  <signature>function displayError(message: string, duration?: number): void</signature>
+  <path>src/ui/render.ts</path>
+</interface>
+
+<!-- hideError function signature to be added to render.ts -->
+<interface>
+  <name>hideError</name>
+  <kind>function</kind>
+  <signature>function hideError(): void</signature>
+  <path>src/ui/render.ts</path>
+</interface>
+
+<!-- TodoStore.save() - existing method, catch block will call displayError -->
+<interface>
+  <name>TodoStore.save</name>
+  <kind>method</kind>
+  <signature>async save(): Promise&lt;void&gt;</signature>
+  <path>src/store/TodoStore.ts</path>
+</interface>
+
+<!-- TodoStore.load() - existing method, throws on corrupt file -->
+<interface>
+  <name>TodoStore.load</name>
+  <kind>method</kind>
+  <signature>async load(): Promise&lt;void&gt;</signature>
+  <path>src/store/TodoStore.ts</path>
+</interface>
+
+<!-- ToonStorage.load() - main process method, will add corrupt file backup -->
+<interface>
+  <name>ToonStorage.load</name>
+  <kind>static method</kind>
+  <signature>static async load(filePath: string): Promise&lt;Todo[]&gt;</signature>
+  <path>electron/storage.ts</path>
+</interface>
+
+<!-- ToonStorage.decode() - main process method, throws on invalid TOON format -->
+<interface>
+  <name>ToonStorage.decode</name>
+  <kind>static method</kind>
+  <signature>static decode(toonString: string): Todo[]</signature>
+  <path>electron/storage.ts</path>
+</interface>
+
+<!-- window.electron.saveTodos - IPC bridge for save operations (referenced by TodoStore) -->
+<interface>
+  <name>window.electron.saveTodos</name>
+  <kind>IPC method</kind>
+  <signature>saveTodos(filePath: string, todos: Todo[]): Promise&lt;void&gt;</signature>
+  <path>electron/preload.ts</path>
+</interface>
+
+<!-- window.electron.loadTodos - IPC bridge for load operations (referenced by TodoStore) -->
+<interface>
+  <name>window.electron.loadTodos</name>
+  <kind>IPC method</kind>
+  <signature>loadTodos(filePath: string): Promise&lt;Todo[]&gt;</signature>
+  <path>electron/preload.ts</path>
+</interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Unit tests use Vitest with co-located test files (*.test.ts). Tests mock file system operations via IPC bridge. Integration tests use temporary file system for end-to-end file I/O validation. Manual tests verify UI error display and recovery workflows. All tests follow AAA pattern (Arrange, Act, Assert) with descriptive test names.
+    </standards>
+
+    <locations>
+- src/store/TodoStore.test.ts (existing - add displayError() call verification)
+- src/ui/render.test.ts (new - test displayError() and hideError() functions)
+- electron/storage.test.ts (new - test ToonStorage corrupt file backup logic)
+    </locations>
+
+    <ideas>
+<!-- Unit tests for displayError() function -->
+<test ac="1">
+  <description>displayError() creates error element below input with red text, auto-hides after duration</description>
+  <approach>Mock DOM, call displayError('Test error', 1000), verify element created with .error-message class, color #FF0000, positioned below input, setTimeout called with 1000ms, element removed after timeout</approach>
+</test>
+
+<test ac="1">
+  <description>Multiple displayError() calls replace previous error message</description>
+  <approach>Call displayError('First error'), verify element created. Call displayError('Second error'), verify first timeout cleared, element text updated to 'Second error', new timeout set</approach>
+</test>
+
+<!-- Unit tests for TodoStore.save() error handling -->
+<test ac="2">
+  <description>TodoStore.save() calls displayError() when save fails</description>
+  <approach>Mock window.electron.saveTodos to throw error, spy on displayError function, call save(), verify displayError called with 'Failed to save. Try again.' and 5000ms duration</approach>
+</test>
+
+<test ac="6">
+  <description>Multiple save failures log each error with context</description>
+  <approach>Mock saveTodos to throw error, mock console.error, call save() 3 times, verify console.error called 3 times with error message, todo count, and file path context</approach>
+</test>
+
+<!-- Integration tests for ToonStorage corrupt file backup -->
+<test ac="3,7">
+  <description>ToonStorage.load() backs up corrupt file with timestamp and throws error</description>
+  <approach>Create temp file with invalid TOON format, mock fs.rename, call load(), verify fs.rename called with pattern .corrupt.{timestamp}, error thrown with descriptive message including backup path</approach>
+</test>
+
+<test ac="3,7">
+  <description>Backup filename includes timestamp and preserves original data</description>
+  <approach>Create corrupt file, call load(), verify backup file exists with format todos.toon.corrupt.1234567890, verify original file renamed (not deleted), verify backup content matches original corrupt data</approach>
+</test>
+
+<!-- Integration tests for renderer.ts error handling -->
+<test ac="3">
+  <description>renderer.ts displays error message when load() fails with corrupt file</description>
+  <approach>Mock todoStore.load() to throw error, spy on displayError, call initApp(), verify displayError called with 'Data file corrupted. Starting fresh.', verify app continues with empty todo list</approach>
+</test>
+
+<!-- Manual tests for error recovery workflows -->
+<test ac="5">
+  <description>Save errors don't block UI - todos appear instantly, input stays focused</description>
+  <approach>Manual: Make todos.toon read-only, launch app, create todo, verify todo appears in list, verify input clears and stays focused, create second todo immediately, verify no lag or freeze, verify error message appears below input</approach>
+</test>
+
+<test ac="9">
+  <description>Error recovery on next mutation after disk space restored</description>
+  <approach>Manual: Simulate disk full, create todo (error appears), fix disk space, create another todo, verify no error shown (save succeeds), close and reopen app, verify all todos persisted</approach>
+</test>
+
+<test ac="10">
+  <description>Error handling doesn't break app close lifecycle</description>
+  <approach>Manual: Make save fail (read-only file), create 5 todos, press Esc to close, verify app closes immediately without hang, reopen app, verify only successfully saved todos present</approach>
+</test>
+    </ideas>
+  </tests>
+</story-context>

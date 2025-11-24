@@ -1,0 +1,189 @@
+<story-context id="4-6-fix-keyboard-navigation-bugs" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4.6</storyId>
+    <title>Fix Keyboard Navigation Bugs</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-6-fix-keyboard-navigation-bugs.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>keyboard shortcuts to work correctly without conflicts or confusion</iWant>
+    <soThat>I can navigate and control the application efficiently without unexpected behavior</soThat>
+    <tasks>
+      - Remove j/k vim navigation shortcuts (AC: #1)
+      - Update footer hints to use arrow icons (AC: #2)
+      - Implement smart input blur navigation (AC: #3)
+      - Implement circular navigation (input focus) (AC: #3)
+      - Implement Esc to blur input (backup) (AC: #3)
+      - Remove Enter toggle shortcut (AC: #4)
+      - Update documentation and hints (AC: #1, #2, #4)
+      - Testing and validation
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    AC #1: Remove j/k vim shortcuts to prevent input typing conflicts
+      - GIVEN I have the input field focused and I'm typing a todo
+      - WHEN I type the letter "j" or "k" as part of my text
+      - THEN the letters appear in the input field (not trigger navigation)
+      - AND no todo selection changes occur
+      - AND only arrow key navigation (Up/Down) remains functional
+
+    AC #2: Replace verbose footer text with arrow icons
+      - GIVEN the footer displays keyboard hints in normal mode
+      - WHEN I view the footer shortcuts
+      - THEN navigation hints use arrow symbols: "↑ Previous" and "↓ Next"
+      - AND the footer text is more compact and readable
+      - AND other shortcuts remain unchanged (Space, Ctrl+D, Ctrl+N, Esc)
+      - AND arrow symbols are Unicode characters (U+2191, U+2193) that render correctly in terminal font
+
+    AC #3: Implement smart input blur navigation with circular focus
+      - Auto-blur on arrow press: When input focused and Up/Down pressed → blur input first, then navigate
+      - Circular navigation: When at first todo and Up pressed → focus input
+      - Esc backup blur: Esc blurs input without navigation (text preserved)
+      - Ctrl+N direct focus: Existing shortcut for immediate input focus
+
+    AC #4: Standardize on single toggle shortcut (Space only)
+      - GIVEN I have navigated to a todo using arrow keys
+      - WHEN I press Space
+      - THEN the selected todo toggles between complete and incomplete
+      - AND the Enter key no longer toggles todos (only creates todos in input)
+      - AND Enter in input field still creates new todos (Story 2.4 behavior preserved)
+      - AND Space in input field still types space character (context-aware)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" section="ADR-003: Custom KeyboardManager">
+        Custom KeyboardManager class implementation for centralized shortcut management with conflict detection and help generation. Full control over key normalization, shortcut registry (Map-based O(1) lookup), and terminal-specific needs (j/k vim navigation).
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" section="Story 4.2: Arrow/Vim Navigation">
+        Original j/k vim shortcuts registered in Story 4.2. Lines 243-247 show j/k registration alongside arrow keys for todo navigation. Implementation uses selectNext/selectPrevious helper functions in renderer.ts.
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" section="Story 4.3: Space/Enter Toggle">
+        Both Space and Enter registered for todo toggle in Story 4.3. Lines 249-266 show context-aware handlers checking if input focused before toggling. Enter has dual purpose: create todo (input focused) or toggle (todo selected).
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" section="Story 4.4: Esc Handler">
+        Esc handler registered in Story 4.4 with context-aware behavior. Lines 330-344 show Esc checks for confirmation showing before closing window. Current implementation has priority: confirmation > window close.
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" section="Story 4.5: Footer Hints System">
+        Footer hints generated dynamically from KeyboardManager.getHints(). Lines 349-358 show initialization of footer with dynamic content. Hints format: "Key: Description | Key: Description".
+      </doc>
+      <doc path="docs/ux-design-specification.md" section="7.1 Keyboard Patterns">
+        Navigation keys (j/k, arrows), Action keys (Enter, Space), Command keys (Ctrl+D, Ctrl+Q, Ctrl+N). Single-key shortcuts for frequent actions. Esc always cancels or exits. Enter always confirms or submits.
+      </doc>
+    </docs>
+
+    <code>
+      <artifact path="src/renderer.ts" kind="main" symbol="selectNext/selectPrevious" lines="65-104" reason="Navigation functions called by j/k/arrow handlers. Need to update arrow handlers to check input focus and blur before navigating.">
+      </artifact>
+      <artifact path="src/renderer.ts" kind="main" symbol="keyboardManager registration" lines="240-267" reason="All keyboard shortcuts registered here. Need to unregister j/k (lines 245, 247), update arrow descriptions (lines 244, 246), remove Enter toggle (lines 259-266).">
+      </artifact>
+      <artifact path="src/renderer.ts" kind="main" symbol="Esc handler" lines="330-344" reason="Context-aware Esc handler. Need to add input blur check between confirmation and window close checks.">
+      </artifact>
+      <artifact path="src/renderer.ts" kind="main" symbol="isInputFocused helper" lines="145-152" reason="Context detection helper checking if input has focus. Used by Space/Enter handlers for context-aware behavior.">
+      </artifact>
+      <artifact path="src/renderer.ts" kind="main" symbol="inputElement reference" lines="48" reason="Module-scoped reference to input element. Used for focus detection and programmatic focus/blur operations.">
+      </artifact>
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="class" symbol="KeyboardManager" lines="19-238" reason="Custom keyboard manager with shortcut registration, conflict detection, and hints generation. Main API: register(), unregister(), handle(), getHints().">
+      </artifact>
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="method" symbol="register" lines="49-61" reason="Registers shortcuts with key normalization and conflict detection. Stores handler and description for hints generation.">
+      </artifact>
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="method" symbol="unregister" lines="75-79" reason="Removes shortcut registration. Idempotent operation used to clean up j/k shortcuts.">
+      </artifact>
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="method" symbol="getHints" lines="141-155" reason="Generates formatted hints string for footer display. Returns "Key: Description | Key: Description" format.">
+      </artifact>
+      <artifact path="src/store/TodoStore.ts" kind="class" symbol="TodoStore" reason="State management for todos. Methods: add(), toggle(), deleteCompleted(), getAll(). Used by keyboard handlers to mutate state.">
+      </artifact>
+      <artifact path="src/ui/render.ts" kind="module" symbol="renderTodoList" reason="Renders todo list with optional selectedIndex parameter. Updates .selected class on todo items for visual feedback.">
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        electron: 39.2.3 (desktop app platform)
+        typescript: ~5.9.2 (strict type checking)
+        vite: ^5.4.21 (build tooling)
+        vitest: ^4.0.13 (unit testing)
+        electron-log: 5.4.1 (logging)
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="performance">All keyboard responses must complete in &lt;16ms (zero perceived lag). Event handlers use synchronous operations only. Auto-blur check must add negligible overhead (&lt;0.5ms).</constraint>
+    <constraint type="terminal-aesthetic">No animations or transitions. Input blur/focus are synchronous DOM operations (&lt;1ms each). Instant state changes only. Footer maintains #008800 color, 12px Consolas font.</constraint>
+    <constraint type="state-management">No new state variables needed. Existing selectedIndex used for circular navigation logic. Existing context-aware handlers (isInputFocused) reused for Esc.</constraint>
+    <constraint type="compatibility">Must preserve existing Stories 4.1-4.5 functionality. No regressions in TodoStore or UI functionality. All existing tests must continue to pass.</constraint>
+    <constraint type="keyboard-patterns">Single-key shortcuts for frequent actions (j/k removal means arrows only). Esc always cancels or exits. Enter always confirms or submits (but not toggle). Context-aware handlers check input focus before executing.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="KeyboardManager.register" kind="method" signature="register(key: string, handler: () => void | boolean, description: string): void" path="src/keyboard/KeyboardManager.ts:49">
+      Registers keyboard shortcut with conflict detection. Handler can return false to allow default browser behavior (context-aware). Description used for footer hints generation.
+    </interface>
+    <interface name="KeyboardManager.unregister" kind="method" signature="unregister(key: string): void" path="src/keyboard/KeyboardManager.ts:75">
+      Removes keyboard shortcut registration. Idempotent operation - no error if key doesn't exist.
+    </interface>
+    <interface name="KeyboardManager.getHints" kind="method" signature="getHints(): string" path="src/keyboard/KeyboardManager.ts:141">
+      Returns formatted hints string for footer display. Format: "Key: Description | Key: Description". Used by setFooterOriginalContent() in Story 4.5.
+    </interface>
+    <interface name="selectNext/selectPrevious" kind="function" signature="selectNext(): void, selectPrevious(): void" path="src/renderer.ts:65,89">
+      Navigation helper functions that increment/decrement selectedTodoIndex with bounds checking. Re-render list with selection and scroll into view.
+    </interface>
+    <interface name="isInputFocused" kind="function" signature="isInputFocused(): boolean" path="src/renderer.ts:150">
+      Context detection helper checking if input element has focus. Used by Space/Enter handlers for context-aware behavior.
+    </interface>
+    <interface name="HTMLInputElement.focus/blur" kind="DOM API" signature="element.focus(): void, element.blur(): void">
+      Native DOM methods for programmatic focus management. focus() sets keyboard focus to element. blur() removes focus. Both synchronous operations.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests use Vitest framework (^4.0.13) with co-located test files (*.test.ts). Test coverage target: >90% for keyboard functionality. Integration tests use JSDOM for DOM manipulation testing. Performance tests measure handler execution time (&lt;5ms target). Manual visual tests verify terminal aesthetic (arrow symbols, selection styling).
+    </standards>
+
+    <locations>
+      src/keyboard/KeyboardManager.test.ts (unit tests for keyboard manager)
+      src/renderer.test.ts (integration tests for app-level keyboard handlers - if exists)
+      npm test (runs all Vitest tests)
+    </locations>
+
+    <ideas>
+      AC#1 Tests:
+        - Unit: Remove j/k registrations, verify unregistered in _shortcuts Map
+        - Integration: Type "just kidding" in input, verify all letters appear (no navigation)
+        - Integration: Press j/k with no input focus, verify nothing happens
+        - Integration: Navigate with arrow keys, verify navigation still works
+
+      AC#2 Tests:
+        - Unit: Update arrow descriptions, verify getHints() includes "↑ Previous | ↓ Next"
+        - Visual: Verify Unicode arrows (U+2191, U+2193) render correctly in Consolas font
+        - Integration: Check footer element textContent matches updated hints
+
+      AC#3 Tests:
+        - Integration: Focus input, press Down, verify input.blur() called + first todo selected
+        - Integration: Focus input with text, press Down, verify text preserved + input blurs
+        - Integration: Select first todo, press Up, verify input.focus() called + selectedIndex = -1
+        - Integration: Focus input, press Esc, verify input blurs (no navigation, no window close)
+        - Unit: Verify Esc priority order: confirmation > input blur > window close
+
+      AC#4 Tests:
+        - Integration: Select todo, press Enter, verify NO toggle occurs (handler removed)
+        - Integration: Select todo, press Space, verify toggle works
+        - Integration: Focus input, type "test", press Enter, verify todo created (Story 2.4 preserved)
+        - Unit: Verify Enter shortcut still registered but only handles input context
+
+      Regression Tests:
+        - All existing Story 4.1-4.5 tests must pass
+        - TodoStore.toggle() still works correctly
+        - renderTodoList() selection styling intact
+        - Bulk delete (Ctrl+D) confirmation workflow unchanged
+    </ideas>
+  </tests>
+</story-context>

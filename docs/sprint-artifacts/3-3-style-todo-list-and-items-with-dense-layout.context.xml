@@ -1,0 +1,278 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Style Todo List and Items with Dense Layout</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-3-style-todo-list-and-items-with-dense-layout.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>todos displayed in a compact, scannable list with clear visual hierarchy</iWant>
+    <soThat>I can see many todos without scrolling and quickly identify what needs attention</soThat>
+    <tasks>
+- [ ] Add todo list container base styles (AC: #1)
+  - [ ] Locate #todo-list selector in styles.css (or create if not exists)
+  - [ ] Set `background: transparent` (inherits black from body)
+  - [ ] Set `overflow-y: auto` (enables vertical scrolling)
+  - [ ] Set `flex-grow: 1` (fills space between input and footer)
+  - [ ] Set `margin-top: 0.75rem` (spacing from input field)
+  - [ ] Set `list-style: none` (removes default bullet points)
+  - [ ] Set `padding: 0` and `margin: 0` for list (reset defaults)
+
+- [ ] Add todo item base styles (AC: #2)
+  - [ ] Create `.todo-item` selector
+  - [ ] Set `display: flex` (horizontal layout for checkbox + text)
+  - [ ] Set `align-items: flex-start` (top-align checkbox for multi-line)
+  - [ ] Set `gap: 0.5rem` (space between checkbox and text)
+  - [ ] Set `padding: 0.35rem 0` (dense vertical spacing only)
+  - [ ] Set `color: var(--color-text-primary)` (#00FF00 bright green)
+  - [ ] Set `cursor: pointer` (indicates clickable)
+  - [ ] Set `list-style: none` (no bullet points on individual items)
+
+- [ ] Add todo item hover state (AC: #3)
+  - [ ] Create `.todo-item:hover` selector
+  - [ ] Set `background: #001100` or `var(--color-hover-bg)` if defined (subtle dark green)
+  - [ ] Verify NO `transition` property exists (instant state change)
+  - [ ] Test hover appearance/disappearance is instant
+
+- [ ] Style completed todos differently (AC: #4)
+  - [ ] Create `.todo-item[data-completed="true"]` attribute selector
+  - [ ] Set `color: var(--color-text-completed)` (#004400 dark green)
+  - [ ] Set `text-decoration: line-through` (strikethrough effect)
+  - [ ] Verify checkbox symbol toggles in render.ts (☐ ↔ ☑) - Epic 2 functionality
+  - [ ] Test completed state visual distinctness from active state
+
+- [ ] Style checkbox component (AC: #6)
+  - [ ] Create `.checkbox` selector (or verify it targets checkbox span)
+  - [ ] Set `flex-shrink: 0` (prevents checkbox from squishing)
+  - [ ] Set `color: inherit` (uses parent todo-item color)
+  - [ ] Verify unicode symbols (☐ U+2610, ☑ U+2611) render correctly
+
+- [ ] Style todo text component (AC: #6)
+  - [ ] Create `.todo-text` selector
+  - [ ] Set `flex: 1` or no explicit width (allows text to wrap naturally)
+  - [ ] Set `word-wrap: break-word` or `overflow-wrap: break-word` (long words wrap)
+  - [ ] Set `color: inherit` (uses parent todo-item color)
+  - [ ] Verify no `overflow: hidden` or `text-overflow: ellipsis` (full text visible)
+
+- [ ] Test long text wrapping behavior (AC: #5)
+  - [ ] Create todo with 100+ character text
+  - [ ] Verify text wraps to multiple lines
+  - [ ] Verify checkbox stays at top (not center-aligned)
+  - [ ] Verify wrapped lines align properly (no overlap with checkbox)
+  - [ ] Test with multiple long todos in list
+
+- [ ] Visual verification and testing
+  - [ ] Start development server: `npm start`
+  - [ ] Add 5-10 todos with varying text lengths
+  - [ ] Toggle some todos to completed
+  - [ ] Inspect list:
+    - [ ] Todos display in compact rows (0.35rem padding visible)
+    - [ ] Checkbox and text side-by-side with 0.5rem gap
+    - [ ] Active todos bright green (#00FF00)
+    - [ ] Completed todos dark green (#004400) with strikethrough
+  - [ ] Hover over todos:
+    - [ ] Background changes to #001100 instantly
+    - [ ] No animation or delay
+  - [ ] Test scrolling:
+    - [ ] Add 20+ todos
+    - [ ] Verify vertical scroll appears
+    - [ ] Scrolling is smooth (no CSS performance issues)
+
+- [ ] DevTools validation
+  - [ ] Open DevTools → Elements → Inspect #todo-list
+  - [ ] Computed Styles should show:
+    - [ ] overflow-y: auto
+    - [ ] flex-grow: 1
+    - [ ] margin-top: [12px ≈ 0.75rem]
+    - [ ] list-style: none
+  - [ ] Inspect .todo-item (active):
+    - [ ] display: flex
+    - [ ] align-items: flex-start
+    - [ ] gap: [8px ≈ 0.5rem]
+    - [ ] padding: [5-6px 0] (0.35rem vertical)
+    - [ ] color: rgb(0, 255, 0) → #00FF00
+    - [ ] cursor: pointer
+  - [ ] Inspect .todo-item[data-completed="true"]:
+    - [ ] color: rgb(0, 68, 0) → #004400
+    - [ ] text-decoration: line-through
+  - [ ] Hover todo item:
+    - [ ] background: rgb(0, 17, 0) → #001100
+
+- [ ] Automated validation
+  - [ ] Run grep search for forbidden CSS:
+    - [ ] `grep -E "\.todo-item.*transition" src/ui/styles.css` → Expect 0 matches
+    - [ ] `grep -E "\.todo-item.*animation" src/ui/styles.css` → Expect 0 matches
+    - [ ] `grep -E "#todo-list.*transition" src/ui/styles.css` → Expect 0 matches
+  - [ ] Verify results: All searches should return exit code 1 (no matches)
+
+- [ ] Edge case testing
+  - [ ] Empty list: Verify styling doesn't break with zero todos
+  - [ ] Single todo: Verify spacing and layout correct
+  - [ ] Very long todo (200+ chars): Verify wrapping and checkbox alignment
+  - [ ] Window resize: List width adjusts, text reflows
+  - [ ] 100+ todos: Scrolling performance remains instant, hover states responsive
+
+- [ ] TypeScript compilation check
+  - [ ] Run `npx tsc --noEmit`
+  - [ ] Verify zero errors (CSS doesn't affect TS, but check build integrity)</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Todo list container has proper styling**
+   - GIVEN the input field is styled (Story 3.2 complete)
+   - WHEN I add todo list container styles to styles.css
+   - THEN the #todo-list element has:
+     - Background: transparent (inherit black from body)
+     - Overflow-y: auto (scrollable if content exceeds viewport)
+     - Flex-grow: 1 (fills available space between input and footer)
+     - Margin-top: `0.75rem` (spacing from input)
+     - No border or visual container (invisible wrapper)
+     - List-style: none (no bullet points)
+
+2. **Todo items have dense layout styling**
+   - GIVEN the list container is styled
+   - WHEN I style individual .todo-item elements
+   - THEN each `<li>` todo item has:
+     - Display: flex
+     - Align-items: flex-start (top-align checkbox with multi-line text)
+     - Gap: `0.5rem` (space between checkbox and text)
+     - Padding: `0.35rem 0` (vertical spacing only, dense layout)
+     - Color: `#00FF00` (bright green for active todos)
+     - Font: Consolas 14px monospace (inherited from body)
+     - Cursor: pointer
+     - List-style: none (no bullets)
+
+3. **Todo items have hover state**
+   - GIVEN todo items are styled
+   - WHEN a user hovers over a todo item with mouse
+   - THEN the hovered item has:
+     - Background: `#001100` (subtle dark green tint)
+     - No transition (instant background change)
+   - AND the hover state appears/disappears instantly
+
+4. **Completed todos have visual differentiation**
+   - GIVEN both active and completed todos exist in the list
+   - WHEN I style todos with `data-completed="true"` attribute
+   - THEN completed todos display:
+     - Color: `#004400` (dark green)
+     - Text-decoration: line-through (strikethrough)
+     - Checkbox: ☑ (checked symbol from Epic 2)
+   - AND active todos display:
+     - Color: `#00FF00` (bright green)
+     - Text-decoration: none
+     - Checkbox: ☐ (empty symbol from Epic 2)
+
+5. **Todo text wraps correctly for long content**
+   - GIVEN a todo has long text exceeding one line
+   - WHEN the todo is rendered in the list
+   - THEN the text wraps to multiple lines
+   - AND the checkbox stays top-aligned (flex-start alignment)
+   - AND wrapped text aligns properly below first line (no overlap with checkbox)
+
+6. **Checkbox and text components are properly styled**
+   - GIVEN todo items contain .checkbox and .todo-text elements
+   - WHEN I style these components
+   - THEN:
+     - .checkbox has flex-shrink: 0 (prevents squishing on long text)
+     - .todo-text allows text wrapping (no overflow: hidden)
+     - Both use bright green color for active todos
+     - Both use dark green color for completed todos</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-3.md</path>
+        <title>Epic Technical Specification: Terminal UI & Visual Identity</title>
+        <section>Todo List Component Specification</section>
+        <snippet>Epic 3.3 implements the dense information layout with tight vertical spacing (0.35rem) and clear active/completed visual differentiation. Todo list container uses overflow-y auto for scrolling, flex-grow 1 to fill space. Todo items use flexbox layout with checkbox + text side-by-side, gap 0.5rem, dense padding.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification - Component Library</title>
+        <section>Component 3: Todo Item</section>
+        <snippet>Todo item layout uses flexbox horizontal with checkbox + text side-by-side. Dense padding (0.35rem vertical only), gap 0.5rem between checkbox and text. Active todos bright green (#00FF00), completed dark green (#004400) with strikethrough. Hover state subtle background (#001100).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Terminal Aesthetic Enforcement</title>
+        <section>Consistency Rules</section>
+        <snippet>Terminal aesthetic constraints: Font Consolas monospace 14px, Colors Matrix Green palette ONLY (#00FF00, #004400, #008800, #000000), No animations or transitions, No box shadows except input focus glow, Borders 1px solid green, Dense spacing 0.35rem padding for todo items.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR28 Visual Differentiation</section>
+        <snippet>FR28 requires application displays completed todos with visual differentiation (strikethrough or color). Completed todos must be immediately distinguishable from active todos using multiple visual cues for accessibility.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/ui/styles.css</path>
+        <kind>stylesheet</kind>
+        <symbol>CSS Variables and Input Styling</symbol>
+        <lines>1-73</lines>
+        <reason>Contains CSS custom properties for Matrix Green color system and existing input field styling. Story 3.3 will add TODO LIST & ITEMS section after input field section.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>module</kind>
+        <symbol>renderTodoItem, renderTodoList</symbol>
+        <lines>44-108</lines>
+        <reason>Existing DOM structure for todo items includes checkbox and text spans with data-completed attribute. CSS selectors must target this structure. Items already have inline styles that will be moved to styles.css.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>electron</package>
+        <version>39.2.3</version>
+      </node>
+      <node>
+        <package>vite</package>
+        <version>^5.4.21</version>
+      </node>
+      <node>
+        <package>typescript</package>
+        <version>~5.9.2</version>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Terminal Aesthetic Enforcement: Font must be Consolas monospace 14px (no exceptions), Colors Matrix Green palette ONLY (#00FF00, #004400, #008800, #000000, #FF0000), No animations or transitions (instant state changes), No box shadows except input focus glow, Borders 1px solid green, Dense spacing 0.35rem padding
+- CSS Organization: Add TODO LIST & ITEMS section after INPUT FIELD section in styles.css. Use section headers for visual separation. Add inline comments explaining each CSS property's purpose.
+- No HTML Changes: Story 3.3 only adds CSS styling. DOM structure from Epic 2 render.ts remains unchanged. Verify existing classes/IDs match CSS selectors.
+- Performance: CSS must not degrade startup time. No expensive properties (no CSS filters, transforms, complex gradients). Box-shadow only on input focus. No reflow triggers in hover/focus states.
+- Accessibility: Maintain existing ARIA attributes from render.ts. Focus indicators must be visible. Color contrast for completed todos (#004400 on #000000) is 3.8:1 (below WCAG AA but acceptable trade-off for terminal aesthetic).</constraints>
+
+  <interfaces>
+- CSS Selector: #todo-list (UL element container)
+- CSS Selector: .todo-item (LI element, requires class attribute in render.ts if missing)
+- CSS Selector: .todo-item:hover (hover state)
+- CSS Selector: .todo-item[data-completed="true"] (completed state via data attribute)
+- CSS Selector: .checkbox (span element for unicode symbol)
+- CSS Selector: .todo-text (span element for todo text content)
+- Data Attribute: data-completed="true|false" (already exists in render.ts:50)
+- DOM Structure: &lt;ul id="todo-list"&gt;&lt;li data-completed="false"&gt;&lt;span&gt;☐&lt;/span&gt;&lt;span&gt;Todo text&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;</interfaces>
+
+  <tests>
+    <standards>Testing approach follows Epic 3 test strategy: Manual visual inspection is primary validation (7 of 8 ACs), Automated validation for forbidden CSS properties (AC-6 via grep), DevTools Computed Styles validation for exact property values, No unit tests needed (CSS-only story).</standards>
+    <locations>
+- src/ui/styles.css (file to be modified)
+- DevTools Elements Inspector (manual validation tool)
+- DevTools Computed Styles panel (property verification)
+    </locations>
+    <ideas>
+- Test Idea 1 (AC-1): Add 15 todos, verify list fills space between input and footer, verify vertical scroll appears when content exceeds viewport, verify transparent background (inherits black)
+- Test Idea 2 (AC-2): Inspect .todo-item in DevTools, verify display: flex, align-items: flex-start, gap: 8px (0.5rem), padding: 5-6px vertical (0.35rem), color: rgb(0,255,0), cursor: pointer
+- Test Idea 3 (AC-3): Hover over todos with mouse, verify background changes to rgb(0,17,0) #001100 instantly, verify no CSS transition property exists
+- Test Idea 4 (AC-4): Toggle todos to completed, verify color changes to rgb(0,68,0) #004400, verify text-decoration: line-through, verify checkbox symbol changes ☐ → ☑
+- Test Idea 5 (AC-5): Create todo with 100+ character text, verify text wraps to multiple lines, verify checkbox stays at top (flex-start alignment), verify no overlap between checkbox and wrapped text
+- Test Idea 6 (AC-6): Verify .checkbox has flex-shrink: 0, verify .todo-text allows text wrapping, verify both inherit color from parent .todo-item
+- Automated Test: grep -E "\.todo-item.*transition" src/ui/styles.css → Expect exit code 1 (no matches), grep -E "\.todo-item.*animation" src/ui/styles.css → Expect exit code 1 (no matches)</ideas>
+  </tests>
+</story-context>

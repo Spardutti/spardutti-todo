@@ -1,0 +1,327 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Implement Basic UI Rendering System</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-3-implement-basic-ui-rendering-system.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a rendering system that displays the input field and todo list in the DOM</iWant>
+    <soThat>users can see the UI and interact with todos</soThat>
+    <tasks>
+- Create src/ui/ directory structure (AC: #1)
+  - Verify src/ directory exists
+  - Create src/ui/ subdirectory
+  - Create src/ui/render.ts file
+  - Verify TypeScript path alias `@/ui` works
+
+- Implement renderInput() function (AC: #2)
+  - Create HTMLInputElement with document.createElement('input')
+  - Set type attribute to "text"
+  - Set placeholder: "Type todo and press Enter..."
+  - Set autofocus attribute to true
+  - Add aria-label: "New todo" (accessibility)
+  - Return the input element
+  - No event handlers yet (added in Story 2.4)
+
+- Implement renderTodoList() function (AC: #3)
+  - Accept todos: Todo[] and container: HTMLElement parameters
+  - Clear container: container.innerHTML = '' (remove old items)
+  - Create DocumentFragment: const fragment = document.createDocumentFragment()
+  - Loop through todos array
+  - Call renderTodoItem(todo) for each todo
+  - Append each item to fragment
+  - Append fragment to container in single operation
+  - Set role="list" on container (accessibility)
+
+- Implement renderTodoItem() function (AC: #4)
+  - Accept todo: Todo parameter
+  - Create list item: const li = document.createElement('li')
+  - Set role="listitem" (accessibility)
+  - Create checkbox span: const checkbox = document.createElement('span')
+  - Set checkbox text: ☐ if !completed, ☑ if completed (Unicode U+2610, U+2611)
+  - Create text span: const text = document.createElement('span')
+  - Set text content: todo.text
+  - Set flex layout on li (CSS will be added in Epic 3)
+  - Add click handler placeholder (actual toggle in Story 2.5)
+  - Set aria-checked attribute based on todo.completed
+  - Set aria-label: "Todo: [text]"
+  - Append checkbox and text to li
+  - Return li element
+
+- Implement renderApp() function (AC: #2)
+  - Accept store: TodoStore and container: HTMLElement parameters
+  - Clear container: container.innerHTML = ''
+  - Create input element: const input = renderInput(container)
+  - Create todo list container: const ul = document.createElement('ul')
+  - Set ul id or class for styling (Epic 3)
+  - Create footer div: const footer = document.createElement('div')
+  - Set footer text: "Enter: Save | Space: Toggle | Esc: Close" (placeholder)
+  - Append input, ul, footer to container
+  - Call renderTodoList(store.getAll(), ul) for initial render
+  - Store references for later updates (consider returning object with refs)
+
+- Update src/main.ts entry point (AC: #5)
+  - Import TodoStore: `import { TodoStore } from '@/store/TodoStore'`
+  - Import renderApp: `import { renderApp } from '@/ui/render'`
+  - Create store instance: `const store = new TodoStore()`
+  - Get root container: `const app = document.querySelector('#app')`
+  - Check if app element exists (defensive coding)
+  - Call renderApp(store, app) on DOMContentLoaded
+  - Or use Vite's module load (if DOMContentLoaded already fired)
+
+- Verify rendering works (AC: #5, #6)
+  - Run dev server: `npm start`
+  - Open app in browser/Electron window
+  - Verify input field appears at top
+  - Verify input field is auto-focused (cursor blinking)
+  - Verify empty todo list container (no items yet)
+  - Verify footer placeholder text appears
+  - Verify no console errors
+
+- Test with mock todos (AC: #3, #4)
+  - Manually add todos to store in main.ts (temporary test)
+  - Example: `store.add('Test todo 1'); store.add('Test todo 2')`
+  - Verify todos appear in list
+  - Verify checkboxes show ☐ (unchecked)
+  - Toggle a todo manually: `store.toggle(id)`
+  - Refresh and verify checkbox changes to ☑
+  - Remove test code after verification
+
+- Verify TypeScript compilation (AC: #1)
+  - Run `npm run build`
+  - Verify no TypeScript errors
+  - Verify strict mode compliance
+  - Verify all imports work: @/store, @/types, @/ui
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Rendering functions exist with correct signatures**
+   - GIVEN the TodoStore is implemented
+   - WHEN I create the rendering utilities in `src/ui/render.ts`
+   - THEN the following functions exist:
+     ```typescript
+     function renderApp(store: TodoStore, container: HTMLElement): void
+     function renderInput(container: HTMLElement): HTMLInputElement
+     function renderTodoList(todos: Todo[], container: HTMLElement): void
+     function renderTodoItem(todo: Todo): HTMLLIElement
+     ```
+
+2. **renderApp() creates basic DOM structure**
+   - WHEN I call `renderApp(store, container)`
+   - THEN the following structure is created:
+     - Input field at top (with placeholder: "Type todo and press Enter...")
+     - Todo list container below (`<ul>` element)
+     - Footer hints at bottom (placeholder text for now)
+   - AND all elements are appended to the container
+
+3. **renderTodoList() uses DocumentFragment for batched updates**
+   - WHEN I call `renderTodoList(todos, container)`
+   - THEN a DocumentFragment is created
+   - AND all todo items are added to the fragment
+   - AND the fragment is appended in a single DOM operation
+   - AND the list container is cleared before rendering new items
+
+4. **renderTodoItem() creates proper todo structure**
+   - WHEN I call `renderTodoItem(todo)`
+   - THEN a list item (`<li>`) is created with:
+     - Unicode checkbox: `☐` (unchecked) or `☑` (checked) based on todo.completed
+     - Todo text that wraps if long
+     - Flex layout (checkbox + text side-by-side)
+     - Click handler on entire item (for toggle functionality)
+   - AND the item has proper accessibility attributes (role="listitem")
+
+5. **Main entry point calls renderApp() on DOM ready**
+   - WHEN I update `src/main.ts`
+   - THEN it creates a TodoStore instance
+   - AND calls `renderApp()` when DOM is ready
+   - AND the app displays an input field and empty list on launch
+
+6. **Input field has autofocus on launch**
+   - WHEN the app launches
+   - THEN the input field is automatically focused
+   - AND the cursor is ready to receive text immediately
+   - AND this meets FR19 (input focused on launch)
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>User Interface Requirements</section>
+        <snippet>FR26: The application displays a terminal-style visual interface (monospace font, simple colors). FR27: The application supports mouse interaction as an optional convenience (all actions keyboard-accessible). FR28: The application displays completed todos with visual differentiation (strikethrough or color).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Application Launch & Performance</section>
+        <snippet>FR18: The application launches quickly (target: under 2 seconds to usable state). FR19: The input field has focus immediately on launch (ready to type). FR20: The application provides immediate visual feedback for all user actions.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Implementation Patterns - Communication Patterns</section>
+        <snippet>Component Interaction Flow: User Input → KeyboardManager → TodoStore → ToonStorage → File System, with TodoStore → render() → DOM for UI updates. State Updates (Unidirectional): TodoStore is single source of truth, all mutations through TodoStore methods, UI re-renders after each mutation, no direct DOM → Store updates.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Performance Discipline</section>
+        <snippet>No setTimeout/setInterval for UI updates (use RAF if needed). Batch DOM updates (DocumentFragment for list rendering). No premature optimization (measure first with DevTools). All operations appear instant (<16ms target).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Component Library - Input Field (Terminal Text Input)</section>
+        <snippet>Auto-focus on app launch. Enter key: Save todo, clear input, stay focused. Esc key: Blur input (or close app if already blurred). Tab key: Move to first todo in list. Always clears after Enter (ready for next todo).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Component Library - Todo Item</section>
+        <snippet>Anatomy: List item element with checkbox (unicode ☐ or ☑), todo text (wraps if long), Display: flex (checkbox + text side-by-side), Gap: 0.5rem between checkbox and text, Padding: 0.35rem vertical. Click anywhere: Toggle complete status, State change is instant (no animation), Text wraps to multiple lines if needed (checkbox stays top-aligned).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Accessibility Strategy - ARIA Labels & Roles</section>
+        <snippet>Input: aria-label="New todo", placeholder="Type todo and press Enter...". Todo List: role="list", aria-label="Todo list". List items: role="listitem", aria-label="Todo: [text]", aria-checked="true/false", tabindex="0". Checkbox span: aria-hidden="true".</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Rendering API</section>
+        <snippet>renderApp(store: TodoStore, container: HTMLElement): void - Initialize app UI in provided container. renderInput(container: HTMLElement): HTMLInputElement - Render input field and return reference. renderTodoList(todos: Todo[], container: HTMLElement): void - Render entire todo list with batch DOM update using DocumentFragment. renderTodoItem(todo: Todo): HTMLLIElement - Create single todo item element with checkbox, text, and click handler.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Workflow 1: Create Todo</section>
+        <snippet>Step 5: Call renderTodoList(todoStore.getAll(), listContainer) - Create DocumentFragment, For each todo call renderTodoItem(todo) and append to fragment, Replace list container innerHTML with fragment (single reflow). Step 6: Clear input field: inputElement.value = ''. Step 7: Focus stays on input (no explicit refocus needed). Step 8: Auto-scroll list to bottom: listContainer.scrollTop = listContainer.scrollHeight.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>service</kind>
+        <symbol>TodoStore</symbol>
+        <lines>entire file</lines>
+        <reason>Already implemented in Story 2-2. This story needs to import TodoStore and call getAll() method to retrieve todos for rendering. The TodoStore provides add(), toggle(), deleteCompleted() methods and getAll(), getActive(), getCompleted() getters.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/Todo.ts</path>
+        <kind>type definition</kind>
+        <symbol>Todo</symbol>
+        <lines>entire file</lines>
+        <reason>Todo interface is needed for type annotations in renderTodoItem(todo: Todo) and renderTodoList(todos: Todo[]). Contains id: string, text: string, completed: boolean, createdAt: string.</reason>
+      </artifact>
+      <artifact>
+        <path>src/main.ts</path>
+        <kind>entry point</kind>
+        <symbol>main entry</symbol>
+        <lines>entire file</lines>
+        <reason>Entry point where TodoStore will be instantiated and renderApp() will be called on DOMContentLoaded or module load. This is where the app initialization happens.</reason>
+      </artifact>
+      <artifact>
+        <path>index.html</path>
+        <kind>html</kind>
+        <symbol>#app container</symbol>
+        <lines>body section</lines>
+        <reason>Contains the #app root element where renderApp() will mount the UI. Need to ensure this element exists before calling renderApp().</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>typescript</package>
+        <version>^5.9.0</version>
+      </node>
+      <node>
+        <package>vite</package>
+        <version>5+</version>
+      </node>
+      <node>
+        <package>electron-forge</package>
+        <version>7+</version>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- **Direct DOM Manipulation (ADR-005)**: No virtual DOM framework. Use vanilla JavaScript DOM APIs (document.createElement, appendChild, innerHTML, textContent).
+- **Unidirectional Data Flow**: Store → render() → DOM. All state changes go through TodoStore methods, then trigger re-render. No DOM → Store updates.
+- **DocumentFragment for Performance**: Use DocumentFragment in renderTodoList() to batch all DOM insertions into a single reflow operation (architecture.md Performance Discipline).
+- **Unicode Checkboxes (UX Design)**: Use U+2610 (☐) for unchecked and U+2611 (☑) for checked. Not form input elements - styled unicode characters (terminal aesthetic).
+- **No Event Handlers Yet**: This story implements rendering only. Event handlers for Enter key (save) and click (toggle) are added in Stories 2.4 and 2.5.
+- **Accessibility Required**: Add role="list", role="listitem", aria-label, aria-checked attributes per WCAG 2.1 Level AA requirements (ux-design-specification.md Section 8.2).
+- **Auto-focus Input on Launch (FR19)**: Set autofocus attribute AND call input.focus() explicitly to ensure cursor is ready immediately.
+- **Terminal Aesthetic Structure**: Minimal HTML structure - no unnecessary divs, borders, or decorative elements. Full styling deferred to Epic 3.
+- **TypeScript Strict Mode**: All code must compile with strict mode enabled. Use explicit types for all function parameters and return values.
+- **Path Aliases**: Use @/ prefix for imports: @/store/TodoStore, @/types/Todo, @/ui/render.
+</constraints>
+
+  <interfaces>
+    <interface>
+      <name>TodoStore.getAll()</name>
+      <kind>class method</kind>
+      <signature>getAll(): Todo[]</signature>
+      <path>src/store/TodoStore.ts</path>
+    </interface>
+    <interface>
+      <name>TodoStore.getActive()</name>
+      <kind>class method</kind>
+      <signature>getActive(): Todo[]</signature>
+      <path>src/store/TodoStore.ts</path>
+    </interface>
+    <interface>
+      <name>TodoStore.getCompleted()</name>
+      <kind>class method</kind>
+      <signature>getCompleted(): Todo[]</signature>
+      <path>src/store/TodoStore.ts</path>
+    </interface>
+    <interface>
+      <name>Todo</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface Todo { id: string; text: string; completed: boolean; createdAt: string; }</signature>
+      <path>src/types/Todo.ts</path>
+    </interface>
+    <interface>
+      <name>document.createElement</name>
+      <kind>Browser API</kind>
+      <signature>createElement(tagName: string): HTMLElement</signature>
+      <path>Browser built-in</path>
+    </interface>
+    <interface>
+      <name>document.createDocumentFragment</name>
+      <kind>Browser API</kind>
+      <signature>createDocumentFragment(): DocumentFragment</signature>
+      <path>Browser built-in</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+This story focuses on visual verification, not automated tests. No unit tests are required for DOM rendering in MVP. Testing strategy: Manual visual inspection in browser/Electron window. TodoStore unit tests (25/25 passing) already exist from Story 2-2 and cover the data layer completely. Future E2E tests (if added in Epic 6) would cover this rendering layer.
+    </standards>
+    <locations>
+- src/store/TodoStore.test.ts (existing - 25 passing tests)
+- Manual testing: npm start → Visual inspection
+- Chrome DevTools for accessibility inspection
+    </locations>
+    <ideas>
+- **Test Idea 1 (AC #1, #2):** Launch app and verify DOM structure exists: input field at top, empty ul below, footer at bottom. Use DevTools Elements tab to inspect structure.
+- **Test Idea 2 (AC #5, #6):** Launch app and verify input field is auto-focused (cursor blinking immediately without clicking). Try typing - characters should appear instantly.
+- **Test Idea 3 (AC #3, #4):** Temporarily add test todos in main.ts: store.add('Test 1'); store.add('Test 2'). Verify todos appear in list with ☐ checkboxes and text. Check that text wraps properly for long todos.
+- **Test Idea 4 (AC #3):** Add 50+ test todos and use Chrome DevTools Performance tab to verify DocumentFragment batching (should see single reflow, not 50 individual reflows).
+- **Test Idea 5 (Accessibility):** Use Chrome DevTools Accessibility Inspector to verify: input has aria-label="New todo", ul has role="list", li items have role="listitem" and aria-checked attributes.
+- **Test Idea 6 (TypeScript):** Run npm run build and verify zero TypeScript errors. Check that path aliases (@/store, @/ui, @/types) resolve correctly.
+- **Test Idea 7 (Edge Case):** Test with very long todo text (500+ characters) and verify checkbox stays top-aligned while text wraps to multiple lines.
+    </ideas>
+  </tests>
+</story-context>

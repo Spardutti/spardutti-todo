@@ -1,0 +1,272 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Implement Bulk Delete Completed Todos with Confirmation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/home/spardutti/Projects/spardutti-todo/docs/sprint-artifacts/2-6-implement-bulk-delete-completed-todos-with-confirmation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>to delete all completed todos with a single action</iWant>
+    <soThat>I can quickly clear my list of finished tasks</soThat>
+    <tasks>
+      - Add temporary "Delete Completed" button to UI (AC: #1)
+      - Implement confirmation prompt UI component (AC: #2)
+      - Add button click handler for delete action (AC: #1)
+      - Implement confirmation keyboard handlers (AC: #3, #4)
+      - Implement delete confirmation logic (AC: #3)
+      - Implement delete cancellation logic (AC: #4)
+      - Implement "No completed todos" message (AC: #5)
+      - Add feedback message system (AC: #3, #5)
+      - Update TodoStore.deleteCompleted() if needed (AC: #3)
+      - Handle edge cases (AC: all)
+      - Manual testing (AC: all)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Bulk delete action is available
+       - GIVEN I have multiple completed todos in the list
+       - WHEN I trigger the bulk delete action (temporary button for now, keyboard shortcut in Epic 4)
+       - THEN a confirmation prompt appears in the footer area
+
+    2. Confirmation prompt displays correct count
+       - WHEN the confirmation prompt appears
+       - THEN it displays: "Delete X completed todos? [Y/n]"
+       - AND X is the actual count of completed todos
+       - AND the prompt uses the footer area (replaces hints temporarily)
+
+    3. Confirm deletion removes completed todos
+       - WHEN I confirm (click Yes or press Y/Enter)
+       - THEN all completed todos are removed from the list
+       - AND active todos remain unchanged in the list
+       - AND the list re-renders to show only active todos
+       - AND a brief message appears: "X todos deleted" (2 seconds)
+       - AND keyboard hints are restored after feedback message
+
+    4. Cancel preserves todos
+       - WHEN I cancel (click No or press N/Esc)
+       - THEN no todos are deleted
+       - AND the confirmation closes immediately
+       - AND the list remains unchanged
+       - AND keyboard hints are restored
+
+    5. No completed todos shows message
+       - WHEN no completed todos exist
+       - AND I trigger the bulk delete action
+       - THEN the action shows a message: "No completed todos"
+       - AND no confirmation prompt appears
+       - AND the message auto-hides after 2 seconds
+
+    6. Deletion is instant with no animation
+       - WHEN deletion is confirmed
+       - THEN the deletion happens instantly with no animation
+       - AND the UI updates synchronously (perceived as instant)
+       - AND the feedback message appears immediately
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Task Management</title>
+        <section>Workflows and Sequencing - Workflow 3: Bulk Delete Completed</section>
+        <snippet>User clicks "Delete Completed" button → Check if completed todos exist → Show confirmation "Delete X completed todos? [Y/n]" → User presses Y/Enter (confirm) or N/Esc (cancel) → If confirm: deleteCompleted() and show feedback, if cancel: close confirmation with no changes</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Task Management</title>
+        <section>APIs and Interfaces - TodoStore Public API</section>
+        <snippet>TodoStore.deleteCompleted() returns number of deleted todos. TodoStore.getCompleted() returns array of completed todos.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Communication Patterns - Event Handling</section>
+        <snippet>Event handling pattern: KeyboardManager captures events → Handlers call TodoStore methods → UI re-renders. No global state, all state flows through TodoStore instance. Pattern: event → store mutation → renderTodoList → DOM update</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Format Patterns - Error Messages</section>
+        <snippet>Error messages format: "Action failed. Suggestion." (2 sentences max, actionable). Feedback messages: Green text (#00FF00), inline placement, 2-second auto-hide using setTimeout.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Performance Discipline</section>
+        <snippet>No setTimeout/setInterval for UI updates (use RAF if needed). Batch DOM updates with DocumentFragment. All operations appear instant (&lt;16ms target). No animations or transitions per terminal aesthetic.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>class</kind>
+        <symbol>TodoStore.deleteCompleted</symbol>
+        <lines>100-105</lines>
+        <reason>Existing method that removes all completed todos and returns count. Already implemented in Story 2.2, no modifications needed.</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>class</kind>
+        <symbol>TodoStore.getCompleted</symbol>
+        <lines>148-150</lines>
+        <reason>Returns array of completed todos, used to check if completed todos exist before showing confirmation and to get count for confirmation message.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>function</kind>
+        <symbol>renderApp</symbol>
+        <lines>127-174</lines>
+        <reason>Main UI initialization. Need to add "Delete Completed" button and return button reference for event handler attachment. Footer element (line 149-156) will be used for confirmation prompts and feedback messages.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>function</kind>
+        <symbol>renderTodoList</symbol>
+        <lines>88-107</lines>
+        <reason>Re-renders entire todo list after bulk delete. Uses DocumentFragment batching for performance (lines 97-106). Called after deleteCompleted() to update UI.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>event-handler</kind>
+        <symbol>input keydown listener</symbol>
+        <lines>43-64</lines>
+        <reason>Example event handler pattern: validate input → call store method → re-render → clear input. Same pattern applies to delete button: validate completed count → show confirmation → deleteCompleted → re-render.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>event-handler</kind>
+        <symbol>listContainer click listener</symbol>
+        <lines>66-81</lines>
+        <reason>Event delegation pattern for todo toggle. Shows guard clauses (lines 72, 76) and store mutation + re-render pattern (lines 79-80). Delete button handler follows similar structure.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>typescript</package>
+        <version>~5.9.2</version>
+        <usage>Type safety, strict mode enabled</usage>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>^4.0.13</version>
+        <usage>Unit testing (TodoStore only, no UI tests in Epic 2)</usage>
+      </node>
+      <node>
+        <package>electron</package>
+        <version>39.2.3</version>
+        <usage>Desktop app runtime, provides crypto.randomUUID()</usage>
+      </node>
+      <node>
+        <package>vite</package>
+        <version>^5.4.21</version>
+        <usage>Build tooling, HMR for development</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Event handling pattern: Button click → Validate state → Show confirmation → User input (Y/N/Enter/Esc) → Store mutation OR cancel → Re-render → Restore footer hints</constraint>
+    <constraint>Unidirectional data flow: TodoStore is single source of truth. All mutations through TodoStore methods. UI re-renders after each mutation. No direct DOM → Store updates.</constraint>
+    <constraint>Footer state management: Three states (hints, confirmation, feedback). Default state shows keyboard hints. Confirmation state shows "Delete X completed todos? [Y/n]". Feedback state shows success/info messages with 2-second auto-hide.</constraint>
+    <constraint>No animations per terminal aesthetic. All state changes are instant (synchronous DOM updates). Deletion happens immediately on confirm with no transition.</constraint>
+    <constraint>DocumentFragment batching for renderTodoList (performance optimization). Single reflow on list re-render.</constraint>
+    <constraint>Keyboard handler lifecycle: Add keydown listener when confirmation shows → Execute callback on Y/N/Enter/Esc → Remove listener immediately after action to prevent leaks.</constraint>
+    <constraint>Timeout management for feedback messages: Store timeout ID, clear previous timeout before new message, prevents overlapping messages or hints not restoring.</constraint>
+    <constraint>Guard clauses for edge cases: If no completed todos → show message, return early. If footer not in hints state → ignore delete button clicks (prevent double confirmations).</constraint>
+    <constraint>TypeScript strict mode: No any types, explicit return types, null safety checks. Use type guards for event targets and element references.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>TodoStore.deleteCompleted</name>
+      <kind>method</kind>
+      <signature>deleteCompleted(): number</signature>
+      <path>src/store/TodoStore.ts:100-105</path>
+      <description>Removes all todos where completed === true. Returns count of deleted todos. Already implemented, no changes needed.</description>
+    </interface>
+    <interface>
+      <name>TodoStore.getCompleted</name>
+      <kind>method</kind>
+      <signature>getCompleted(): Todo[]</signature>
+      <path>src/store/TodoStore.ts:148-150</path>
+      <description>Returns array of completed todos. Use .length to check if completed todos exist and to get count for confirmation message.</description>
+    </interface>
+    <interface>
+      <name>renderApp return value</name>
+      <kind>object</kind>
+      <signature>{ input: HTMLInputElement, listContainer: HTMLUListElement, footer: HTMLDivElement }</signature>
+      <path>src/ui/render.ts:127-174</path>
+      <description>Need to add deleteButton: HTMLButtonElement to returned object for event handler access in renderer.ts</description>
+    </interface>
+    <interface>
+      <name>Footer element</name>
+      <kind>DOM element</kind>
+      <signature>HTMLDivElement with role="status" and aria-live="polite"</signature>
+      <path>src/ui/render.ts:149-156</path>
+      <description>Footer displays keyboard hints by default. Will be used for confirmation prompts (replaces hints) and feedback messages (2-second auto-hide). Has ARIA attributes for accessibility.</description>
+    </interface>
+    <interface>
+      <name>showConfirmation function (NEW)</name>
+      <kind>function</kind>
+      <signature>showConfirmation(message: string, onConfirm: () =&gt; void, onCancel: () =&gt; void): void</signature>
+      <path>src/ui/render.ts (to be added)</path>
+      <description>Shows confirmation in footer, adds keydown listener for Y/N/Enter/Esc, executes callback, removes listener. Replaces hints temporarily.</description>
+    </interface>
+    <interface>
+      <name>showFeedback function (NEW)</name>
+      <kind>function</kind>
+      <signature>showFeedback(message: string, duration?: number): void</signature>
+      <path>src/ui/render.ts (to be added)</path>
+      <description>Shows feedback message in footer, auto-hides after duration (default 2000ms), restores hints. Clears previous timeout if exists.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Manual testing only for Epic 2 UI interactions. Unit tests for TodoStore methods (TodoStore.test.ts) already exist and cover deleteCompleted() and getCompleted(). No automated UI tests (deferred to later epic). TypeScript compilation with npx tsc --noEmit verifies type safety. DevTools console checks for errors and event listener cleanup.</standards>
+    <locations>
+      <location>src/store/TodoStore.test.ts - Unit tests for TodoStore (existing)</location>
+      <location>Manual testing in running app - All UI workflows and edge cases</location>
+      <location>Chrome DevTools - Performance tab for render timing, Console for errors, Event Listeners panel for leak detection</location>
+    </locations>
+    <ideas>
+      <test id="AC1" criteria="Bulk delete action is available">
+        <scenario>Click "Delete Completed" button with completed todos in list</scenario>
+        <expected>Confirmation prompt appears in footer area with correct count</expected>
+      </test>
+      <test id="AC2" criteria="Confirmation prompt displays correct count">
+        <scenario>Create 5 todos, complete 3, click delete button</scenario>
+        <expected>Footer shows: "Delete 3 completed todos? [Y/n]"</expected>
+      </test>
+      <test id="AC3" criteria="Confirm deletion removes completed todos">
+        <scenario>Show confirmation, press Y or Enter</scenario>
+        <expected>Completed todos removed, active remain, feedback "X todos deleted" shows for 2s, hints restored</expected>
+      </test>
+      <test id="AC4" criteria="Cancel preserves todos">
+        <scenario>Show confirmation, press N or Esc</scenario>
+        <expected>No deletion, confirmation closes immediately, hints restored, list unchanged</expected>
+      </test>
+      <test id="AC5" criteria="No completed todos shows message">
+        <scenario>Click delete button with no completed todos</scenario>
+        <expected>Message "No completed todos" appears, no confirmation, auto-hide after 2s</expected>
+      </test>
+      <test id="AC6" criteria="Deletion is instant">
+        <scenario>Confirm deletion with large list</scenario>
+        <expected>Deletion happens instantly with no animation, UI updates synchronously</expected>
+      </test>
+      <test id="EDGE1" criteria="Rapid button clicks">
+        <scenario>Click delete button multiple times quickly</scenario>
+        <expected>Only first click processes, subsequent clicks ignored until confirmation closes</expected>
+      </test>
+      <test id="EDGE2" criteria="All todos completed">
+        <scenario>Complete all todos, delete all</scenario>
+        <expected>List becomes empty after deletion, no errors</expected>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

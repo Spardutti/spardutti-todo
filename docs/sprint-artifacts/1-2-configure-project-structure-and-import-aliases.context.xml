@@ -1,0 +1,162 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Configure Project Structure and Import Aliases</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/home/spardutti/Projects/spardutti-todo/docs/sprint-artifacts/1-2-configure-project-structure-and-import-aliases.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a well-organized project structure with TypeScript import aliases</iWant>
+    <soThat>I can navigate the codebase efficiently and maintain consistent import patterns</soThat>
+    <tasks>
+      <task ac="#1">Create required directories (electron/, src/store/, src/keyboard/, src/storage/, src/ui/, src/types/, src/utils/)</task>
+      <task ac="#1">Add .gitkeep files to empty directories for git tracking</task>
+      <task ac="#4">Move src/main.ts → electron/main.ts</task>
+      <task ac="#4">Move src/preload.ts → electron/preload.ts</task>
+      <task ac="#4">Verify src/renderer.ts remains as renderer entry point</task>
+      <task ac="#4">Update relative imports in moved files</task>
+      <task ac="#1">Create electron/updater.ts placeholder with JSDoc for Epic 6</task>
+      <task ac="#2">Update tsconfig.json with path aliases (@/* and @electron/*)</task>
+      <task ac="#3">Update vite.main.config.ts with resolve.alias</task>
+      <task ac="#3">Update vite.preload.config.ts with resolve.alias</task>
+      <task ac="#3">Update vite.renderer.config.ts with resolve.alias</task>
+      <task ac="#4">Update forge.config.ts entry points (electron/main.ts, electron/preload.ts)</task>
+      <task ac="#2,#3">Verify alias resolution with test imports</task>
+      <task ac="#3">Test dev mode (npm start)</task>
+      <task ac="#3">Verify production build (npm run make)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1" title="Directory structure created">
+      <given>The base Electron project is initialized</given>
+      <when>I configure the project structure</when>
+      <then>The following directory structure exists: electron/ (main.ts, preload.ts, updater.ts), src/ (store/, keyboard/, storage/, ui/, types/, utils/, renderer.ts)</then>
+    </criterion>
+    <criterion id="2" title="TypeScript path aliases configured">
+      <when>I update tsconfig.json</when>
+      <then>Path aliases are defined: "@/*": ["./src/*"] and "@electron/*": ["./electron/*"]</then>
+      <and>Can import using aliases like: import { TodoStore } from '@/store/TodoStore'</and>
+    </criterion>
+    <criterion id="3" title="Vite configs updated for aliases">
+      <when>I update Vite configuration files</when>
+      <then>vite.main.config.ts, vite.preload.config.ts, and vite.renderer.config.ts resolve aliases</then>
+      <and>Aliases work in both development and production builds</and>
+    </criterion>
+    <criterion id="4" title="Files moved and references updated">
+      <when>I reorganize the structure</when>
+      <then>src/main.ts → electron/main.ts (main process)</then>
+      <and>src/preload.ts → electron/preload.ts</and>
+      <and>src/renderer.ts remains as renderer entry</and>
+      <and>All import paths in moved files are updated</and>
+      <and>forge.config.ts references updated to new paths</and>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture" section="Project Structure">
+        Defines target directory structure: electron/ for main process (main.ts, preload.ts, updater.ts), src/ for renderer with subdirectories (store/, keyboard/, storage/, ui/, types/, utils/). Import aliases specified: "@/*": ["./src/*"], "@electron/*": ["./electron/*"]. Vite configs must resolve aliases for bundling.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Implementation Patterns">
+        Naming conventions: PascalCase for classes (TodoStore.ts), camelCase for utilities (render.ts). Path aliases enable clean imports. Import order: external deps, internal modules via aliases, types, relative imports. BaseUrl must be "." for path mapping to work.
+      </doc>
+      <doc path="docs/epics.md" title="Epic 1 Story 1.2" section="Configure Project Structure">
+        Story acceptance criteria detail directory creation, tsconfig.json path configuration, Vite config updates, and file moves (src/main.ts → electron/main.ts, src/preload.ts → electron/preload.ts). Must update forge.config.ts entry points after move.
+      </doc>
+      <doc path="docs/prd.md" title="PRD" section="Success Criteria">
+        Primary metric: Task capture in under 2 seconds. Fast startup time critical (< 2s to usable). Organized structure supports this goal by enabling efficient development and optimal build performance.
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/main.ts" kind="main-process" symbol="createWindow" reason="Main process entry - must move to electron/main.ts, currently at src/main.ts. Security settings (contextIsolation, nodeIntegration) must be preserved during move." />
+      <artifact path="src/preload.ts" kind="preload-script" reason="IPC bridge - must move to electron/preload.ts. Currently minimal, referenced in main.ts:16." />
+      <artifact path="src/renderer.ts" kind="renderer-entry" reason="Renderer entry point - stays in src/ per architecture. Currently imports index.css." />
+      <artifact path="forge.config.ts" kind="config" lines="28-35" reason="Defines entry points for main (src/main.ts) and preload (src/preload.ts). Must update to electron/main.ts and electron/preload.ts after file moves." />
+      <artifact path="vite.main.config.ts" kind="config" reason="Vite config for main process - must add resolve.alias configuration for @electron/* paths." />
+      <artifact path="vite.renderer.config.ts" kind="config" reason="Vite config for renderer - must add resolve.alias configuration for @/* paths." />
+      <artifact path="tsconfig.json" kind="config" lines="11" reason="Has baseUrl set to '.', needs paths configuration added for @/* and @electron/* aliases." />
+      <artifact path="package.json" kind="manifest" reason="Project manifest - version 1.0.0, Electron 39.2.3, TypeScript 5.9.2, Vite 5.4.21. Dependencies already installed from Story 1.1." />
+    </code>
+    <dependencies>
+      <node>
+        <dependency>electron</dependency>
+        <dependency>typescript</dependency>
+        <dependency>vite</dependency>
+        <dependency>@electron-forge/cli</dependency>
+        <dependency>@electron-forge/plugin-vite</dependency>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Files must move: src/main.ts → electron/main.ts, src/preload.ts → electron/preload.ts. Renderer (src/renderer.ts) stays.</constraint>
+    <constraint>forge.config.ts entry points must update to new paths after moves: entry: 'electron/main.ts', entry: 'electron/preload.ts'</constraint>
+    <constraint>All Vite configs (main, preload, renderer) must add resolve.alias configuration for import aliases to work in both dev and production.</constraint>
+    <constraint>tsconfig.json must include paths: "@/*": ["./src/*"], "@electron/*": ["./electron/*"] with baseUrl: "."</constraint>
+    <constraint>Security settings must be preserved: contextIsolation: true, nodeIntegration: false (currently in src/main.ts:17-18)</constraint>
+    <constraint>Empty directories need .gitkeep files for git tracking (src/store/, src/keyboard/, src/storage/, src/ui/, src/types/, src/utils/)</constraint>
+    <constraint>Must verify aliases work in both dev (npm start) and production build (npm run make)</constraint>
+    <constraint>Naming convention: PascalCase for class files, camelCase for utilities per architecture.md</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="Vite resolve.alias configuration" kind="config">
+      <signature>
+        resolve: {
+          alias: {
+            '@': path.resolve(__dirname, 'src'),
+            '@electron': path.resolve(__dirname, 'electron')
+          }
+        }
+      </signature>
+      <path>vite.main.config.ts, vite.preload.config.ts, vite.renderer.config.ts</path>
+    </interface>
+    <interface name="TypeScript paths configuration" kind="config">
+      <signature>
+        "compilerOptions": {
+          "baseUrl": ".",
+          "paths": {
+            "@/*": ["./src/*"],
+            "@electron/*": ["./electron/*"]
+          }
+        }
+      </signature>
+      <path>tsconfig.json</path>
+    </interface>
+    <interface name="Forge entry points" kind="config">
+      <signature>
+        build: [
+          { entry: 'electron/main.ts', config: 'vite.main.config.ts', target: 'main' },
+          { entry: 'electron/preload.ts', config: 'vite.preload.config.ts', target: 'preload' }
+        ]
+      </signature>
+      <path>forge.config.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Story is structural/configuration change. Testing approach: Manual verification that project builds and runs successfully with new structure. Verify npm start launches app, npm run make creates distributable package. Test import aliases work by creating temporary test imports and checking TypeScript compiler accepts them.
+    </standards>
+    <locations>
+      No unit tests required for this story (infrastructure/config changes). Future stories will add tests in co-located *.test.ts files (e.g., TodoStore.test.ts alongside TodoStore.ts per architecture.md).
+    </locations>
+    <ideas>
+      <test ac="1">Verify all directories exist: electron/, src/store/, src/keyboard/, src/storage/, src/ui/, src/types/, src/utils/</test>
+      <test ac="1">Check .gitkeep files present in empty directories</test>
+      <test ac="2">Create test file with alias import: import { } from '@/types/Example' - verify no TypeScript errors</test>
+      <test ac="2">Test @electron/* alias: import { } from '@electron/main' - verify TypeScript resolves</test>
+      <test ac="3">Run npm start - verify dev server launches without errors</test>
+      <test ac="3">Run npm run make - verify production build succeeds</test>
+      <test ac="4">Verify files moved correctly: electron/main.ts and electron/preload.ts exist, src/renderer.ts remains</test>
+      <test ac="4">Check forge.config.ts references updated to electron/ paths</test>
+      <test ac="all">Verify security settings preserved: contextIsolation: true, nodeIntegration: false in electron/main.ts</test>
+    </ideas>
+  </tests>
+</story-context>

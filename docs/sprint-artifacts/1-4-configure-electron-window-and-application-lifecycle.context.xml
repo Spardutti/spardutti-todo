@@ -1,0 +1,418 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Configure Electron Window and Application Lifecycle</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-4-configure-electron-window-and-application-lifecycle.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the Electron main window configured with proper size, behavior, and lifecycle management</iWant>
+    <soThat>the app launches with the correct appearance and handles close/quit properly</soThat>
+    <tasks>
+- Update electron/main.ts window configuration (AC: #1)
+  - Set width: 600, height: 400 (default size)
+  - Set minWidth: 400, minHeight: 300 (minimum resizable)
+  - Set backgroundColor: '#000000' (black background)
+  - Set title: 'spardutti-todo'
+  - Set frame: true (standard OS chrome)
+  - Set resizable: true (allow user resizing)
+
+- Implement ready-to-show pattern (AC: #2)
+  - Set show: false in BrowserWindow constructor
+  - Listen for 'ready-to-show' event
+  - Call window.show() only after ready-to-show fires
+
+- Verify security settings (AC: #3)
+  - Confirm contextIsolation: true in webPreferences
+  - Confirm nodeIntegration: false in webPreferences
+  - Verify preload script path configured
+
+- Configure app lifecycle events (AC: #4)
+  - Implement app.on('ready') → createWindow()
+  - Implement app.on('window-all-closed') → app.quit() on Windows
+  - Implement app.on('activate') → recreate window if none exist (macOS)
+
+- Implement startup time logging (AC: #5)
+  - Import electron-log at top of electron/main.ts
+  - Capture startTime = Date.now() before app.on('ready')
+  - In 'ready' handler, calculate startup time: Date.now() - startTime
+  - Log: log.info('App ready', { version: app.getVersion(), startupMs })
+  - Verify log appears in %APPDATA%/spardutti-todo/logs/main.log
+
+- Verify HMR for main process (AC: #6)
+  - Run npm start (development mode)
+  - Edit electron/main.ts (add console.log or comment)
+  - Verify app automatically restarts
+  - Verify change reflects in running app
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Window created with correct specifications**
+   - GIVEN the project dependencies are installed
+   - WHEN I configure the Electron main process in `electron/main.ts`
+   - THEN the application window is created with these specifications:
+     - Width: 600px (default, user-resizable)
+     - Height: 400px (default, user-resizable)
+     - Minimum width: 400px
+     - Minimum height: 300px
+     - Background color: `#000000` (black)
+     - Title: "spardutti-todo"
+     - Frame: Standard OS window frame
+     - Resizable: true
+
+2. **Window shows without white flash**
+   - WHEN the window is created
+   - THEN `show: false` is set initially
+   - AND the window shows only on 'ready-to-show' event
+   - AND no white flash appears on launch
+
+3. **Security settings configured**
+   - WHEN I configure webPreferences
+   - THEN context isolation is enabled (`contextIsolation: true`)
+   - AND node integration is disabled (`nodeIntegration: false`)
+   - AND preload script is configured
+
+4. **Application lifecycle handled**
+   - WHEN app lifecycle events occur
+   - THEN `app.on('ready')` creates the window
+   - AND `app.on('window-all-closed')` quits the app on Windows
+   - AND `app.on('activate')` recreates window on macOS (for cross-platform consideration)
+
+5. **Startup time logged**
+   - WHEN the app launches
+   - THEN startup time is measured from process start
+   - AND logged with electron-log when 'ready' event fires
+   - AND log includes: app version, startup time in milliseconds
+
+6. **Development server auto-reloads**
+   - WHEN main process code changes in development
+   - THEN the app automatically restarts (HMR for main process)
+   - AND changes reflect without manual restart
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+<!-- Architecture: Electron Window Configuration -->
+<doc>
+  <path>docs/architecture.md</path>
+  <title>Architecture - Deployment Architecture</title>
+  <section>Electron Window Configuration</section>
+  <snippet>Window configuration pattern with exact specifications: width: 600px, height: 400px, minWidth: 400px, minHeight: 300px, backgroundColor: '#000000', title: 'spardutti-todo'. Security settings: contextIsolation: true, nodeIntegration: false. Ready-to-show pattern to prevent white flash.</snippet>
+</doc>
+
+<!-- Architecture: Application Lifecycle -->
+<doc>
+  <path>docs/architecture.md</path>
+  <title>Architecture - Deployment Architecture</title>
+  <section>Application Lifecycle</section>
+  <snippet>App Launch → app.on('ready') fires → createWindow() → BrowserWindow with show: false → window.once('ready-to-show') → window.show(). Startup time logged with electron-log: log.info('App ready', { startupMs }).</snippet>
+</doc>
+
+<!-- Tech Spec Epic 1: Window Configuration Contract -->
+<doc>
+  <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+  <title>Epic 1 Technical Specification</title>
+  <section>Data Models and Contracts - Window Configuration</section>
+  <snippet>Complete window configuration interface with all required properties. Security measures include context isolation and disabled node integration. Startup performance target: &lt;2s cold start, &lt;1s warm start.</snippet>
+</doc>
+
+<!-- Tech Spec Epic 1: Performance Requirements -->
+<doc>
+  <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+  <title>Epic 1 Technical Specification</title>
+  <section>Non-Functional Requirements - Performance</section>
+  <snippet>Startup Performance Critical: Target application startup to usable state in under 2 seconds (goal: under 1 second). Measurement via electron-log: log.info('App ready', { startupMs }). Electron window creation: &lt;100ms.</snippet>
+</doc>
+
+<!-- PRD: Performance Requirements -->
+<doc>
+  <path>docs/prd.md</path>
+  <title>Product Requirements Document</title>
+  <section>Non-Functional Requirements - Performance</section>
+  <snippet>Launch Performance: Application startup to usable state under 2 seconds (target: under 1 second). Input field must be focused and ready immediately on launch. Application should launch from cold start without noticeable delay.</snippet>
+</doc>
+
+<!-- UX Design: App Launch Flow -->
+<doc>
+  <path>docs/ux-design-specification.md</path>
+  <title>UX Design Specification</title>
+  <section>Journey 4: App Launch & Close</section>
+  <snippet>Launch Flow: Windows Launch → App window appears (under 2 seconds) → Input field focused immediately → Previous todos loaded and visible. Close Flow: Press Esc or Ctrl+Q or click window X → App minimizes/closes immediately → All data auto-saved.</snippet>
+</doc>
+    </docs>
+
+    <code>
+<!-- Existing main.ts file -->
+<file>
+  <path>electron/main.ts</path>
+  <kind>main-process</kind>
+  <symbol>createWindow, app lifecycle handlers</symbol>
+  <lines>entire file</lines>
+  <reason>Primary file to modify for window configuration, lifecycle management, and startup time logging</reason>
+</file>
+
+<!-- Vite configuration -->
+<file>
+  <path>vite.main.config.ts</path>
+  <kind>config</kind>
+  <symbol>Vite main process config</symbol>
+  <lines>entire file</lines>
+  <reason>Provides HMR for main process development - confirms AC #6 requirement</reason>
+</file>
+
+<!-- Package.json dependencies -->
+<file>
+  <path>package.json</path>
+  <kind>config</kind>
+  <symbol>dependencies.electron-log</symbol>
+  <lines>dependencies section</lines>
+  <reason>Confirms electron-log 5.4.1 is installed and available for import (Story 1-3 completed)</reason>
+</file>
+    </code>
+
+    <dependencies>
+<!-- Node.js/Electron runtime -->
+<ecosystem>
+  <name>electron</name>
+  <packages>
+    <package name="electron" version="33+" />
+    <package name="electron-log" version="5.4.1" />
+  </packages>
+</ecosystem>
+
+<!-- Build tooling -->
+<ecosystem>
+  <name>build</name>
+  <packages>
+    <package name="@electron-forge/cli" version="7+" />
+    <package name="@electron-forge/plugin-vite" version="7+" />
+    <package name="vite" version="5+" />
+  </packages>
+</ecosystem>
+
+<!-- TypeScript -->
+<ecosystem>
+  <name>typescript</name>
+  <packages>
+    <package name="typescript" version="5.9+" />
+    <package name="@types/node" version="latest" />
+  </packages>
+</ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+<!-- Development Constraints from Dev Notes -->
+- **Window Configuration Already Set (Story 1-2)**: Most window properties (dimensions, backgroundColor, title) were already configured during Story 1-2's code review. This story primarily ADDS: show: false + ready-to-show pattern, startup logging, and explicit lifecycle handlers.
+
+- **Security Settings Preserved**: contextIsolation: true and nodeIntegration: false were set in Stories 1-1/1-2 and MUST be maintained. Never disable these security features.
+
+- **electron-log Ready to Use**: Installed in Story 1-3 (version 5.4.1). No configuration needed - works out of the box with automatic log file creation at %APPDATA%/spardutti-todo/logs/main.log.
+
+- **HMR Provided by Template**: Vite plugin provides HMR for main process automatically (Story 1-1 template setup). Verify it works, don't implement custom solution.
+
+- **Startup Time Critical**: &lt;2 second target is PRIMARY success metric from PRD (FR18). Measure and log startup time. If exceeds 2s, profile and optimize.
+
+- **Black Background Essential**: backgroundColor: '#000000' prevents white flash AND supports Matrix Green terminal theme (Epic 3). Must be set in BrowserWindow constructor.
+
+- **Cross-Platform Consideration**: While Windows-only app, activate handler for macOS pattern is acceptable for potential future expansion. Document as "for cross-platform consideration."
+
+- **No Premature Optimization**: Focus on correctness first. Startup time measurement in this story establishes baseline for future optimization if needed.
+
+- **DevTools Conditional**: Wrapped with `if (process.env.NODE_ENV !== 'production')` check so it only opens in development mode (from Story 1-2).
+
+- **Minimal State**: No global state or complex initialization. Window creation should be simple, direct, and fast.
+
+- **Log Format**: Use electron-log pattern: log.info('Action description', { context }). Include app version and startup time in milliseconds.
+
+- **Architecture Alignment**: All implementation must follow "Implementation Patterns" from architecture.md: PascalCase for classes/functions, camelCase for variables, explicit error handling.
+  </constraints>
+
+  <interfaces>
+<!-- BrowserWindow API -->
+<api>
+  <name>BrowserWindow</name>
+  <kind>Electron API</kind>
+  <signature>new BrowserWindow({ width, height, minWidth, minHeight, backgroundColor, title, show, webPreferences })</signature>
+  <path>electron (built-in module)</path>
+</api>
+
+<!-- BrowserWindow ready-to-show event -->
+<api>
+  <name>BrowserWindow.once('ready-to-show')</name>
+  <kind>Electron Event</kind>
+  <signature>mainWindow.once('ready-to-show', () => { mainWindow.show() })</signature>
+  <path>electron (built-in module)</path>
+</api>
+
+<!-- Electron app lifecycle events -->
+<api>
+  <name>app.on('ready')</name>
+  <kind>Electron Event</kind>
+  <signature>app.on('ready', () => { createWindow(); logStartupTime(); })</signature>
+  <path>electron (built-in module)</path>
+</api>
+
+<api>
+  <name>app.on('window-all-closed')</name>
+  <kind>Electron Event</kind>
+  <signature>app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })</signature>
+  <path>electron (built-in module)</path>
+</api>
+
+<api>
+  <name>app.on('activate')</name>
+  <kind>Electron Event</kind>
+  <signature>app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })</signature>
+  <path>electron (built-in module)</path>
+</api>
+
+<!-- electron-log API -->
+<api>
+  <name>electron-log</name>
+  <kind>Logging Library</kind>
+  <signature>import log from 'electron-log'; log.info(message, context)</signature>
+  <path>electron-log package (installed in Story 1-3)</path>
+</api>
+
+<!-- app.getVersion -->
+<api>
+  <name>app.getVersion()</name>
+  <kind>Electron API</kind>
+  <signature>const version = app.getVersion() // Returns version from package.json</signature>
+  <path>electron (built-in module)</path>
+</api>
+
+<!-- Date.now for timing -->
+<api>
+  <name>Date.now()</name>
+  <kind>JavaScript Standard</kind>
+  <signature>const startTime = Date.now(); const elapsedMs = Date.now() - startTime;</signature>
+  <path>Native JavaScript</path>
+</api>
+  </interfaces>
+
+  <tests>
+    <standards>
+Manual testing for Epic 1 (Foundation) stories. Vitest configured in Story 1-3 but unit tests will be written in Epic 2+ for business logic. Electron window configuration and lifecycle management verified through:
+- Manual inspection (DevTools, window properties)
+- Startup time measurement (electron-log output)
+- Visual verification (window appearance, no white flash)
+- HMR testing (edit main.ts, observe auto-restart)
+    </standards>
+
+    <locations>
+- No unit tests required for this story (infrastructure/configuration only)
+- Log file verification: %APPDATA%/spardutti-todo/logs/main.log
+- Manual testing: Run `npm start` and observe behavior
+    </locations>
+
+    <ideas>
+<!-- AC #1: Window Configuration -->
+<test id="AC-1" type="manual">
+  <name>Verify window created with correct specifications</name>
+  <steps>
+    1. Run `npm start`
+    2. Open Chrome DevTools (F12)
+    3. Execute in console: `[window.innerWidth, window.innerHeight]`
+    4. Verify returns [600, 400] approximately
+    5. Try resizing window smaller than 400×300px
+    6. Verify window respects minimum size
+    7. Check window title bar shows "spardutti-todo"
+    8. Visual: Confirm black background (#000000)
+  </steps>
+  <expected>Window opens at 600×400px, minimum 400×300px, black background, correct title</expected>
+</test>
+
+<!-- AC #2: Ready-to-Show Pattern -->
+<test id="AC-2" type="manual">
+  <name>Verify no white flash on launch</name>
+  <steps>
+    1. Close app if running
+    2. Launch app via `npm start`
+    3. Watch carefully during window appearance
+    4. Verify no white flash before content appears
+    5. Window should appear "instantly" when ready
+  </steps>
+  <expected>No white background flash visible during launch, smooth black appearance</expected>
+</test>
+
+<!-- AC #3: Security Settings -->
+<test id="AC-3" type="manual">
+  <name>Verify security settings preserved</name>
+  <steps>
+    1. Open electron/main.ts
+    2. Find webPreferences section
+    3. Confirm contextIsolation: true
+    4. Confirm nodeIntegration: false
+    5. Confirm preload script path configured
+  </steps>
+  <expected>Security settings unchanged from Stories 1-1/1-2, all three values confirmed</expected>
+</test>
+
+<!-- AC #4: Lifecycle Management -->
+<test id="AC-4" type="manual">
+  <name>Verify app lifecycle events handled correctly</name>
+  <steps>
+    1. Run `npm start`
+    2. Close window (click X)
+    3. Verify app quits completely (no background process)
+    4. Re-launch app
+    5. Verify window recreates properly
+    6. (Optional) Test minimize/restore behavior
+  </steps>
+  <expected>App quits when window closed (Windows), recreates correctly on re-launch</expected>
+</test>
+
+<!-- AC #5: Startup Time Logging -->
+<test id="AC-5" type="manual">
+  <name>Verify startup time logged with electron-log</name>
+  <steps>
+    1. Run `npm start`
+    2. Wait for app to fully load
+    3. Navigate to %APPDATA%/spardutti-todo/logs/
+    4. Open main.log file
+    5. Find most recent "App ready" log entry
+    6. Verify contains: version (from package.json), startupMs (number)
+    7. Check startupMs value is &lt; 2000 (2 seconds)
+  </steps>
+  <expected>Log file exists, contains "App ready" with version and startupMs &lt; 2000</expected>
+</test>
+
+<!-- AC #6: HMR Verification -->
+<test id="AC-6" type="manual">
+  <name>Verify HMR works for main process changes</name>
+  <steps>
+    1. Run `npm start` (development mode)
+    2. Wait for app to load
+    3. Edit electron/main.ts (add console.log('Test HMR'))
+    4. Save file
+    5. Observe terminal output and app window
+    6. Verify app automatically restarts
+    7. Check console for 'Test HMR' log
+  </steps>
+  <expected>App auto-restarts on main.ts change, new console.log appears in terminal</expected>
+</test>
+
+<!-- Performance Baseline -->
+<test id="PERF-BASELINE" type="manual">
+  <name>Establish startup time baseline</name>
+  <steps>
+    1. Close all instances of app
+    2. Run `npm start` (cold start)
+    3. Measure time from command execution to usable window
+    4. Check electron-log for exact startupMs value
+    5. Repeat 3 times, calculate average
+    6. Document baseline for future optimization
+  </steps>
+  <expected>Baseline established, average startup time documented, ideally &lt; 2000ms</expected>
+</test>
+    </ideas>
+  </tests>
+</story-context>

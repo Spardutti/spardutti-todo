@@ -1,0 +1,315 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2</storyId>
+    <title>Style Input Field with Terminal Aesthetic</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/home/spardutti/Projects/spardutti-todo/docs/sprint-artifacts/3-2-style-input-field-with-terminal-aesthetic.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>the input field to have terminal styling with green glow on focus</iWant>
+    <soThat>it feels like a professional command-line tool</soThat>
+    <tasks>
+- [ ] Add input field base styles to styles.css (AC: #1)
+  - [ ] Locate #todo-input selector (or create if not exists)
+  - [ ] Set `background: #000000` (black)
+  - [ ] Set `color: #00FF00` (bright green) or use `var(--color-text-primary)`
+  - [ ] Set `font-family: 'Consolas', 'Courier New', monospace` (inherit from body)
+  - [ ] Set `font-size: 14px` (inherit from body)
+  - [ ] Set `border: 1px solid #00FF00` or use `var(--color-border-default)`
+  - [ ] Set `border-radius: 0` (terminal constraint: sharp corners)
+  - [ ] Set `padding: 0.35rem` (dense layout per UX spec)
+  - [ ] Set `width: 100%` (full-width in container)
+
+- [ ] Add input focus state styling (AC: #2)
+  - [ ] Create `#todo-input:focus` selector
+  - [ ] Set `box-shadow: 0 0 8px #00FF00` (green glow)
+  - [ ] Set `outline: none` (remove default browser blue outline)
+  - [ ] Verify no `transition` property added (instant state change)
+
+- [ ] Style placeholder text (AC: #3)
+  - [ ] Create `#todo-input::placeholder` selector
+  - [ ] Set `color: rgba(0, 255, 0, 0.5)` (50% opacity green)
+  - [ ] Verify text: "Type todo and press Enter..." in HTML (no CSS change needed if already set)
+  - [ ] Check browser compatibility for ::placeholder (Chromium/Electron supports it)
+
+- [ ] Configure cursor color (AC: #4)
+  - [ ] Set `caret-color: #00FF00` on #todo-input (bright green cursor)
+  - [ ] Verify cursor blinks using browser default (no animation override)
+
+- [ ] Verify no animations/transitions (AC: #5)
+  - [ ] Search styles.css for `transition` keyword on input selectors (expect 0 matches)
+  - [ ] Search styles.css for `animation` keyword on input selectors (expect 0 matches)
+  - [ ] Verify focus state change is instant in browser
+
+- [ ] Visual verification and testing
+- [ ] DevTools validation
+- [ ] Edge case testing
+- [ ] TypeScript compilation check
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Input field has terminal styling**
+   - GIVEN the CSS variables are defined (from Story 3.1)
+   - WHEN I add input field styles to styles.css
+   - THEN the #todo-input element has:
+     - Background: `#000000` (black)
+     - Color: `#00FF00` (bright green)
+     - Font: Consolas 14px monospace
+     - Border: `1px solid #00FF00`
+     - Padding: `0.35rem` (dense layout)
+     - Width: 100% (full-width)
+     - Border-radius: `0` (sharp corners, terminal style)
+
+2. **Input has green glow focus state**
+   - GIVEN the input field is styled
+   - WHEN the input receives focus
+   - THEN the input has:
+     - Box-shadow: `0 0 8px #00FF00` (green glow)
+     - Outline: `none` (remove default browser outline)
+   - AND the glow appears instantly (no animation/transition)
+
+3. **Placeholder text is styled**
+   - GIVEN the input has placeholder text
+   - WHEN I view the empty input field
+   - THEN the placeholder has:
+     - Color: `#00FF00` with 50% opacity
+     - Text: "Type todo and press Enter..."
+     - Font: Consolas monospace (inherits from input)
+
+4. **Cursor blinks in bright green**
+   - GIVEN the input is focused
+   - WHEN I position the cursor in the input
+   - THEN the text cursor displays in bright green (#00FF00)
+   - AND the cursor uses system default blink rate (no custom animation)
+
+5. **No animations or transitions**
+   - GIVEN the input styling is complete
+   - WHEN I inspect the input CSS
+   - THEN no `transition`, `animation`, or `@keyframes` properties exist for the input
+   - AND all state changes (focus, blur) are instant
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Technical Specification -->
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-3.md</path>
+        <title>Epic Technical Specification: Terminal UI &amp; Visual Identity</title>
+        <section>Input Field Component (lines 155-170)</section>
+        <snippet>Defines exact CSS specifications for input field: background #000000, color #00FF00, font Consolas 14px, border 1px solid green, border-radius 0, padding 0.35rem, focus box-shadow 0 0 8px green. This is the ONLY allowed shadow in the entire app.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-3.md</path>
+        <title>Epic Technical Specification: Terminal UI &amp; Visual Identity</title>
+        <section>Terminal Aesthetic Constraints (lines 46-54)</section>
+        <snippet>Font: Consolas monospace 14px (no exceptions). Colors: Matrix Green palette ONLY. No animations or transitions (instant focus state change). No box-shadows except input focus glow. Borders: 1px solid green, no border-radius. Padding: Dense 0.35rem.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Terminal Aesthetic Enforcement (lines 332-338)</section>
+        <snippet>Font: Consolas monospace 14px (no exceptions). Colors: Matrix Green palette ONLY. No animations or transitions. No box shadows except input focus glow (0 0 8px #00FF00). Borders: 1px solid green. Background: Pure black. These constraints must be followed exactly.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Component 1: Input Field (lines 644-679)</section>
+        <snippet>Input field is primary text entry. States: Default (green border, black bg), Focused (green glow box-shadow: 0 0 8px #00FF00), Typing (cursor blinking, green text), Error (red border). Auto-focus on app launch. Enter saves, clears, stays focused. Always full-width with 0.35rem padding.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Color System - Matrix Green (lines 231-263)</section>
+        <snippet>--color-bg-primary: #000000 (pure black), --color-text-primary: #00FF00 (bright green), --color-border-default: #00FF00 (green borders), --color-border-focus: #00FF00 with glow. Input uses bright green text on black background with green border and focus glow.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- Existing CSS Foundation from Story 3.1 -->
+      <artifact>
+        <path>src/ui/styles.css</path>
+        <kind>stylesheet</kind>
+        <symbol>CSS custom properties and global styles</symbol>
+        <lines>1-44</lines>
+        <reason>Story 3.1 established CSS variables (--color-text-primary, --color-bg-primary, --color-border-default) and global body styles (Consolas font, black background, green text). Story 3.2 builds on this foundation by adding input-specific selectors.</reason>
+      </artifact>
+
+      <!-- Input element creation in render.ts -->
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>module</kind>
+        <symbol>renderInput()</symbol>
+        <lines>18-26</lines>
+        <reason>Creates the input element that needs styling. Input has placeholder "Type todo and press Enter...", autofocus attribute, and aria-label. This is the DOM element that #todo-input CSS selectors will target. Note: Currently no id attribute set on input.</reason>
+      </artifact>
+
+      <!-- App rendering where input is inserted -->
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>module</kind>
+        <symbol>renderApp()</symbol>
+        <lines>128-189</lines>
+        <reason>Renders the complete app structure including input field. Input is first child of #app container, followed by todo list and footer. Input gets explicit focus() call on line 180. This context shows where the styled input will appear in the DOM hierarchy.</reason>
+      </artifact>
+
+      <!-- HTML structure and CSS link -->
+      <artifact>
+        <path>index.html</path>
+        <kind>html</kind>
+        <symbol>HTML shell with styles.css link</symbol>
+        <lines>1-12</lines>
+        <reason>Links styles.css in head (line 6). This file loads before JavaScript, ensuring CSS is available when input is rendered. Vite bundles this CSS automatically with HMR support for development.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <!-- No external dependencies for CSS styling -->
+      <note>Story 3.2 is pure CSS implementation with zero external dependencies. All styling uses native CSS loaded via Vite bundler.</note>
+
+      <!-- Build/Dev Dependencies (relevant to CSS workflow) -->
+      <ecosystem name="node">
+        <package name="vite" version="^5.4.21" usage="Bundles CSS with renderer process, provides HMR for instant CSS updates during development" />
+        <package name="electron" version="39.2.3" usage="Chromium engine renders CSS with full modern CSS support (pseudo-elements, box-shadow, custom properties)" />
+        <package name="typescript" version="~5.9.2" usage="Type checking (CSS doesn't affect TS, but verify build integrity with npx tsc --noEmit)" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Terminal Aesthetic Constraints from Architecture -->
+    <constraint category="visual" source="architecture.md:332-338">
+      <rule>Font: Consolas monospace, 14px (no exceptions, no font size variations)</rule>
+      <rule>Colors: Matrix Green palette ONLY (#00FF00, #004400, #008800, #000000, #FF0000)</rule>
+      <rule>No animations or transitions (instant state changes only)</rule>
+      <rule>No box shadows except input focus glow: box-shadow: 0 0 8px #00FF00 (this is the ONLY allowed shadow in entire app)</rule>
+      <rule>Borders: 1px solid green (#00FF00), no border-radius (sharp corners only)</rule>
+      <rule>Background: Pure black (#000000)</rule>
+      <rationale>Terminal aesthetic creates professional positioning, speed perception through instant changes, visual consistency, and nostalgic authenticity to classic terminal experience.</rationale>
+    </constraint>
+
+    <constraint category="implementation" source="tech-spec-epic-3.md:46-54">
+      <rule>Input must inherit Consolas font from body (verified via DevTools Computed Styles)</rule>
+      <rule>Use CSS custom properties (var(--color-text-primary)) for maintainability</rule>
+      <rule>Add comprehensive inline comments explaining each style's purpose</rule>
+      <rule>Organize CSS with clear section headers (e.g., /* INPUT FIELD */)</rule>
+      <rule>Padding must be 0.35rem (dense layout) not standard 0.5rem</rule>
+      <rule>Width must be 100% (full-width in container)</rule>
+      <rule>Caret-color must be #00FF00 (green text cursor)</rule>
+      <rule>Placeholder must be rgba(0, 255, 0, 0.5) (50% opacity green)</rule>
+    </constraint>
+
+    <constraint category="forbidden-properties" source="architecture.md:332-338">
+      <rule>NO transition property on input or any pseudo-class</rule>
+      <rule>NO animation property or @keyframes for input</rule>
+      <rule>NO border-radius (must be 0 for sharp corners)</rule>
+      <rule>NO box-shadow except on :focus state (exclusive use case)</rule>
+      <rule>NO background-image or background-gradient (solid colors only)</rule>
+      <rationale>These properties violate terminal aesthetic and instant-response requirements. Automated validation via grep will verify compliance.</rationale>
+    </constraint>
+
+    <constraint category="dev-workflow" source="tech-spec-epic-3.md:306-310">
+      <rule>All changes are pure CSS additions to src/ui/styles.css</rule>
+      <rule>No HTML changes needed (input already exists from Epic 2)</rule>
+      <rule>No JavaScript/TypeScript changes needed (render.ts unchanged)</rule>
+      <rule>Vite auto-bundles CSS (no build config changes)</rule>
+      <rule>HMR works for CSS (instant preview in npm start dev mode)</rule>
+      <note>If input element needs id="todo-input" for CSS selector, must update render.ts line 19 to add input.id = 'todo-input'</note>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- CSS Selectors Contract -->
+    <interface>
+      <name>#todo-input</name>
+      <kind>CSS ID selector</kind>
+      <signature>Targets the input element created by renderInput() in render.ts</signature>
+      <path>src/ui/styles.css (to be added in Story 3.2)</path>
+      <note>Input element currently has no id attribute. Must add input.id = 'todo-input' in render.ts:19 OR use alternative selector like input[type="text"][placeholder*="Type todo"]</note>
+    </interface>
+
+    <interface>
+      <name>#todo-input:focus</name>
+      <kind>CSS pseudo-class selector</kind>
+      <signature>Targets input when focused (green glow state)</signature>
+      <path>src/ui/styles.css (to be added in Story 3.2)</path>
+      <note>Focus state must apply box-shadow: 0 0 8px #00FF00 and outline: none instantly (no transition)</note>
+    </interface>
+
+    <interface>
+      <name>#todo-input::placeholder</name>
+      <kind>CSS pseudo-element selector</kind>
+      <signature>Targets placeholder text "Type todo and press Enter..."</signature>
+      <path>src/ui/styles.css (to be added in Story 3.2)</path>
+      <note>Placeholder color must be rgba(0, 255, 0, 0.5) for 50% opacity green</note>
+    </interface>
+
+    <!-- CSS Custom Properties -->
+    <interface>
+      <name>CSS Color Variables</name>
+      <kind>CSS custom properties</kind>
+      <signature>var(--color-text-primary), var(--color-bg-primary), var(--color-border-default)</signature>
+      <path>src/ui/styles.css:11-25</path>
+      <note>Established in Story 3.1. Input styling should reference these variables for consistency: background: var(--color-bg-primary), color: var(--color-text-primary), border: 1px solid var(--color-border-default)</note>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing for Story 3.2 is primarily manual visual inspection using Chrome DevTools, with one automated validation for forbidden CSS properties. No unit tests needed for pure CSS styling. Success criteria: input background is pure black, text is bright green, border is 1px solid green, focus glow appears instantly, placeholder is dimmed green, cursor is bright green, and no animations exist (verified via grep).
+    </standards>
+
+    <locations>
+      <!-- Manual Testing Locations -->
+      <location type="manual">Chrome DevTools → Elements tab → Inspect input element → Check Computed Styles</location>
+      <location type="manual">Development server: npm start → Visual inspection of input field</location>
+      <location type="automated">Grep search in src/ui/styles.css for forbidden properties (transition, animation, @keyframes)</location>
+    </locations>
+
+    <ideas>
+      <!-- Test Ideas Mapped to Acceptance Criteria -->
+      <test id="AC1" criteria="Input field has terminal styling">
+        <approach>Manual: Launch app (npm start), inspect input element in DevTools</approach>
+        <verification>Computed Styles show: background-color: rgb(0,0,0), color: rgb(0,255,0), border: 1px solid rgb(0,255,0), border-radius: 0px, padding: 5-6px (0.35rem), width: 100%, font-family: Consolas</verification>
+      </test>
+
+      <test id="AC2" criteria="Input has green glow focus state">
+        <approach>Manual: Tab to input or click input, observe glow appearance</approach>
+        <verification>Green glow (box-shadow: 0 0 8px #00FF00) appears instantly when focused. No blue browser outline visible. Glow disappears instantly when blurred. No transition delay.</verification>
+      </test>
+
+      <test id="AC3" criteria="Placeholder text is styled">
+        <approach>Manual: View empty input field</approach>
+        <verification>Placeholder text "Type todo and press Enter..." visible in dimmed green (50% opacity). Disappears when typing starts. Font is Consolas monospace (inherits from input).</verification>
+      </test>
+
+      <test id="AC4" criteria="Cursor blinks in bright green">
+        <approach>Manual: Click in input, observe cursor</approach>
+        <verification>Text cursor is bright green (#00FF00) not black. Cursor blinks at system default rate (no custom animation). DevTools shows caret-color: rgb(0,255,0).</verification>
+      </test>
+
+      <test id="AC5" criteria="No animations or transitions">
+        <approach>Automated: grep -E "(transition|animation|@keyframes)" src/ui/styles.css | grep -i input</approach>
+        <verification>Command returns 0 matches (exit code 1). Manual: Focus/blur input multiple times - all state changes instant (no fade-in/fade-out).</verification>
+      </test>
+
+      <test id="edge-case-1" criteria="Long input text scrolls horizontally">
+        <approach>Manual: Type 100+ characters in input</approach>
+        <verification>Text scrolls horizontally (browser default). No overflow:hidden blocking scroll.</verification>
+      </test>
+
+      <test id="edge-case-2" criteria="Input width scales with window resize">
+        <approach>Manual: Resize app window smaller and larger</approach>
+        <verification>Input maintains 100% width, scales with window. No fixed pixel width breaking layout.</verification>
+      </test>
+
+      <test id="edge-case-3" criteria="Focus glow not clipped by parent">
+        <approach>Manual: Focus input, check if 8px glow extends beyond border</approach>
+        <verification>Glow visible around all edges. Parent #app container doesn't have overflow:hidden clipping the shadow.</verification>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

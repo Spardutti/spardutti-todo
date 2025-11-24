@@ -1,0 +1,231 @@
+/*
+ * spardutti-todo - Terminal UI Styles
+ * Matrix Green color system and global styles
+ * Epic 3: Terminal UI & Visual Identity
+ */
+
+/* ============================================
+   CSS Custom Properties - Color System
+   ============================================ */
+
+:root {
+  /* Background Colors */
+  --color-bg-primary: #000000;      /* Pure black background */
+
+  /* Text Colors */
+  --color-text-primary: #00FF00;    /* Bright terminal green - active todos, input text */
+  --color-text-secondary: #008800;  /* Dimmed green - footer hints, less emphasis */
+  --color-text-completed: #004400;  /* Dark green - completed todos */
+
+  /* Border & UI Colors */
+  --color-border-default: #00FF00;  /* Green borders - input, window chrome */
+
+  /* Status Colors */
+  --color-error: #FF0000;           /* Red - error messages, warnings */
+}
+
+/* ============================================
+   Global Resets & Base Styles
+   ============================================ */
+
+/* Universal box-sizing reset - ensures consistent box model across all elements */
+* {
+  box-sizing: border-box;
+  margin: 0;                                  /* Reset all default margins */
+  padding: 0;                                 /* Reset all default padding */
+}
+
+/* HTML element - full viewport height baseline */
+html {
+  height: 100%;                               /* Ensure HTML takes full viewport */
+  background: var(--color-bg-primary);        /* Black background */
+}
+
+/* Body element - establishes terminal aesthetic foundation */
+body {
+  height: 100%;                               /* Full viewport height */
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;                           /* Prevent body scrollbar (app container handles scroll) */
+}
+
+/* Remove default focus outlines except where explicitly defined */
+*:focus {
+  outline: none;                              /* Remove browser default blue outline */
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;                       /* Use Consolas from body */
+  font-size: inherit;                         /* Use 14px from body */
+  color: inherit;                             /* Use green from context */
+  background: none;                           /* Remove default button background */
+  border: none;                               /* Remove default button border */
+  padding: 0;                                 /* Remove default button padding */
+  cursor: pointer;                            /* Indicate clickable */
+}
+
+/* Remove default list styles (already applied to #todo-list, but ensure global coverage) */
+ul, ol {
+  list-style: none;                           /* No bullets or numbers */
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   INPUT FIELD
+   ============================================ */
+
+/* Base input styling - terminal aesthetic with green border */
+#todo-input {
+  background: var(--color-bg-primary);       /* Black background matches body */
+  color: var(--color-text-primary);          /* Bright green text */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: inherit;                         /* 14px from body */
+  border: 1px solid var(--color-border-default); /* Green border (1px for dense layout) */
+  border-radius: 0;                           /* Sharp corners - terminal constraint */
+  padding: 0.35rem;                           /* Dense layout per UX spec (not standard 0.5rem) */
+  width: 100%;                                /* Full-width in container */
+  caret-color: var(--color-text-primary);     /* Green text cursor (bright green) */
+}
+
+/* Focus state with green glow - ONLY allowed box-shadow in entire app */
+#todo-input:focus {
+  box-shadow: 0 0 8px var(--color-border-default); /* Green glow (8px radius) */
+  outline: none;                              /* Remove default browser blue outline */
+}
+
+/* Placeholder text styling - dimmed green for less emphasis */
+#todo-input::placeholder {
+  color: rgba(0, 255, 0, 0.5);               /* 50% opacity green (dimmed) */
+}
+
+/* ============================================
+   TODO LIST & ITEMS
+   ============================================ */
+
+/* List container - transparent wrapper that fills available space */
+#todo-list {
+  background: transparent;                    /* Inherits black from body */
+  overflow-y: auto;                           /* Enables vertical scrolling for long lists */
+  flex-grow: 1;                               /* Fills space between input and footer */
+  margin-top: 0.75rem;                        /* Spacing from input field */
+  margin-bottom: 0.75rem;                     /* Spacing before footer */
+  list-style: none;                           /* No bullet points */
+  padding: 0;                                 /* Reset default list padding */
+  margin-left: 0;                             /* Reset default list margin */
+  margin-right: 0;                            /* Reset default list margin */
+}
+
+/* Base todo item styling - dense flexbox layout */
+.todo-item {
+  display: flex;                              /* Horizontal layout: checkbox + text */
+  align-items: flex-start;                    /* Top-align checkbox for multi-line text */
+  gap: 0.5rem;                                /* Space between checkbox and text */
+  padding: 0.35rem 0;                         /* Dense vertical spacing ONLY (no horizontal) */
+  color: var(--color-text-primary);           /* Bright green #00FF00 for active todos */
+  cursor: pointer;                            /* Indicates clickable item */
+  list-style: none;                           /* No bullet points on individual items */
+}
+
+/* Hover state - subtle background tint for visual feedback */
+.todo-item:hover {
+  background: #001100;                        /* Subtle dark green tint */
+}
+
+/* Selected state - visual indicator for keyboard navigation (Story 4.2) */
+.todo-item.selected {
+  background: #001100;                        /* Subtle dark green tint (same as hover) */
+}
+
+/* Completed todo state - visual differentiation */
+.todo-item[data-completed="true"] {
+  color: var(--color-text-completed);         /* Dark green #004400 */
+  text-decoration: line-through;              /* Strikethrough effect */
+}
+
+/* Checkbox component - prevents squishing on long text */
+.checkbox {
+  flex-shrink: 0;                             /* Don't squish checkbox when text wraps */
+  color: inherit;                             /* Uses parent todo-item color */
+}
+
+/* Todo text component - allows wrapping for long content */
+.todo-text {
+  flex: 1;                                    /* Take remaining space, allow wrapping */
+  word-wrap: break-word;                      /* Wrap long words to next line */
+  color: inherit;                             /* Uses parent todo-item color */
+}
+
+/* ============================================
+   ERROR MESSAGE
+   ============================================ */
+
+/* Error message display - inline red text below input field */
+.error-message {
+  color: var(--color-error);                      /* Red #FF0000 */
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 14px;                                /* Match input field font size */
+  margin-top: 0.5rem;                             /* Spacing from input field */
+  word-wrap: break-word;                          /* Handle long error messages */
+  background: none;                               /* No background (just text) */
+  border: none;                                   /* No border */
+  box-shadow: none;                               /* No shadow */
+  padding: 0;                                     /* No padding */
+  display: none;                                  /* Hidden by default */
+}
+
+/* ============================================
+   FOOTER HINTS
+   ============================================ */
+
+/* Footer container - keyboard shortcut hints at bottom */
+#footer {
+  border-top: 1px solid #004400;              /* Dark green separator line */
+  padding-top: 0.5rem;                        /* Spacing from border to text */
+  margin-top: 0.75rem;                        /* Spacing from todo list */
+  font-size: 12px;                            /* Smaller than body 14px for de-emphasis */
+  color: var(--color-text-secondary);         /* Dimmed green #008800 */
+  background: transparent;                    /* Inherits black from body */
+  flex-shrink: 0;                             /* Prevent footer from shrinking */
+  /* font-family inherited from body (Consolas monospace) */
+}
+
+/* Footer hints text - keyboard shortcuts display */
+.footer-hints {
+  margin-bottom: 0.5rem;                      /* Space between hints and delete button */
+}
+
+/* ============================================
+   LAYOUT & APP CONTAINER
+   ============================================ */
+
+/* Main app container - flexbox column layout with full viewport height */
+#app {
+  display: flex;                              /* Enable flexbox layout */
+  flex-direction: column;                     /* Vertical stacking: input → list → footer */
+  height: 100vh;                              /* Full viewport height for proper hierarchy */
+  padding: 16px;                              /* Edge breathing room per UX spec */
+  background: var(--color-bg-primary);        /* Pure black #000000 */
+  box-sizing: border-box;                     /* Include padding in height calculation */
+}
+
+/* Delete button temporary styling (will be removed in Epic 4 when Ctrl+D is implemented) */
+#delete-completed-btn {
+  padding: 0.35rem 0.75rem;                   /* Dense padding consistent with terminal aesthetic */
+  border: 1px solid var(--color-border-default); /* Green border matching terminal theme */
+  background: var(--color-bg-primary);        /* Black background */
+  color: var(--color-text-primary);           /* Green text */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: 12px;                            /* Match footer font size */
+  cursor: pointer;                            /* Indicates clickable */
+  border-radius: 0;                           /* Sharp corners - terminal constraint */
+}
+
+#delete-completed-btn:hover {
+  background: #001100;                        /* Subtle dark green tint on hover */
+}

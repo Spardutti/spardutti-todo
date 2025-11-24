@@ -1,0 +1,424 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>1</storyId>
+    <title>Implement ToonStorage Class for File I/O</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-1-implement-toonstorage-class-for-file-io.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a ToonStorage class to encode/decode todos to TOON format and handle file I/O</iWant>
+    <soThat>I can persist todos to disk in a human-readable format</soThat>
+    <tasks>
+- [ ] Create ToonStorage class structure (AC: #1)
+  - [ ] Create file: `src/storage/ToonStorage.ts`
+  - [ ] Import dependencies: `@toon-format/toon`, `fs.promises`, `path`
+  - [ ] Define ToonStorage class with private constructor (static class pattern)
+  - [ ] Add method signatures: load(), save(), encode(), decode()
+  - [ ] Add JSDoc comments for each method
+  - [ ] Verify TypeScript compilation: `npx tsc --noEmit`
+
+- [ ] Implement encode() method (AC: #2, #8)
+  - [ ] Import @toon-format/toon library's encode function
+  - [ ] Create TOON schema: `todos[N]{id,text,completed,createdAt}`
+  - [ ] Map Todo[] to TOON-compatible structure
+  - [ ] Add version metadata: `version: 1.0`
+  - [ ] Handle empty array case (return valid empty TOON)
+  - [ ] Test: Encode 3 todos, verify output structure
+  - [ ] Test: Encode todo with special characters (commas, newlines)
+  - [ ] Test: Encode unicode text (emoji, accented characters)
+
+- [ ] Implement decode() method (AC: #3, #8)
+  - [ ] Import @toon-format/toon library's decode function
+  - [ ] Parse TOON string to object structure
+  - [ ] Map to Todo[] with proper typing
+  - [ ] Validate required fields (id, text, completed, createdAt)
+  - [ ] Convert completed string ("true"/"false") to boolean
+  - [ ] Throw descriptive error on invalid format
+  - [ ] Test: Decode valid TOON, verify Todo[] output
+  - [ ] Test: Decode malformed TOON, verify error thrown with message
+
+- [ ] Implement save() method (AC: #4)
+  - [ ] Accept filePath (string) and todos (Todo[]) parameters
+  - [ ] Call encode() to convert todos to TOON string
+  - [ ] Extract directory path using path.dirname()
+  - [ ] Create directory if needed: `fs.mkdir(dirPath, { recursive: true })`
+  - [ ] Write file using: `fs.writeFile(filePath, toonString, 'utf-8')`
+  - [ ] Use async/await throughout (no callbacks)
+  - [ ] Let errors propagate to caller (no try-catch internally)
+  - [ ] Test: Save 5 todos, verify file exists and content matches
+  - [ ] Test: Save to non-existent directory, verify directory created
+
+- [ ] Implement load() method (AC: #5)
+  - [ ] Accept filePath (string) parameter
+  - [ ] Check if file exists using fs access or try-catch pattern
+  - [ ] If file doesn't exist, return empty array (no error)
+  - [ ] If file exists, read using: `fs.readFile(filePath, 'utf-8')`
+  - [ ] Call decode() to parse TOON string
+  - [ ] Return Todo[] result
+  - [ ] Let decode errors propagate (corrupt file)
+  - [ ] Test: Load existing file, verify Todo[] matches content
+  - [ ] Test: Load non-existent file, verify empty array returned
+  - [ ] Test: Load corrupt file, verify error thrown
+
+- [ ] Verify round-trip encoding (AC: #6)
+  - [ ] Create test fixture with 10 diverse todos (unicode, special chars, mix of completed/active)
+  - [ ] Test: encode → decode → verify deep equality
+  - [ ] Test: Round-trip with empty array
+  - [ ] Test: Round-trip with single todo
+  - [ ] Test: Round-trip with 1000 todos (performance + correctness)
+  - [ ] Test: Todos with commas in text
+  - [ ] Test: Todos with newlines in text
+  - [ ] Test: Todos with emoji and unicode characters
+
+- [ ] Create comprehensive unit tests (AC: #7)
+  - [ ] Create file: `src/storage/ToonStorage.test.ts`
+  - [ ] Import Vitest: `describe`, `it`, `expect`
+  - [ ] Mock fs.promises for save/load tests (use vi.mock())
+  - [ ] Test encode() with various inputs (empty, single, multiple, edge cases)
+  - [ ] Test decode() with valid and invalid TOON strings
+  - [ ] Test save() with mocked file system (verify fs calls)
+  - [ ] Test load() with mocked file system (file exists, missing, corrupt)
+  - [ ] Test round-trip scenarios
+  - [ ] Verify test coverage: All methods covered
+  - [ ] Run tests: `npm test` (all pass)
+
+- [ ] Validate TOON format compliance (AC: #8)
+  - [ ] Manual test: Encode 3 todos, open output in text editor
+  - [ ] Verify format matches architecture.md specification
+  - [ ] Verify human-readability (clear structure, proper indentation)
+  - [ ] Verify UUIDs are valid v4 (36 characters with hyphens)
+  - [ ] Verify timestamps are ISO 8601 with Z suffix
+  - [ ] Verify completed values are "true" or "false" strings
+  - [ ] Verify version metadata is present: `version: 1.0`
+  - [ ] Test manual editing: Edit TOON file in text editor, verify load() works
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **ToonStorage class with static methods exists**
+   - GIVEN the project structure from Epic 1
+   - WHEN I create `src/storage/ToonStorage.ts`
+   - THEN the file exports a ToonStorage class with static methods:
+     - `async load(filePath: string): Promise<Todo[]>`
+     - `async save(filePath: string, todos: Todo[]): Promise<void>`
+     - `encode(todos: Todo[]): string`
+     - `decode(toonString: string): Todo[]`
+   - AND all methods have proper TypeScript typing with strict mode compliance
+   - AND JSDoc comments describe each method's purpose, parameters, and return values
+
+2. **encode() method converts Todo array to TOON format**
+   - GIVEN a Todo array with 3 items (mix of completed and active todos)
+   - WHEN I call `ToonStorage.encode(todos)`
+   - THEN I receive a valid TOON format string
+   - AND the structure is: `todos[3]{id,text,completed,createdAt}: ...`
+   - AND it includes version metadata: `version: 1.0`
+   - AND the string is human-readable
+   - AND special characters in todo text are properly escaped
+
+3. **decode() method parses TOON string to Todo array**
+   - GIVEN a valid TOON format string with 3 todos
+   - WHEN I call `ToonStorage.decode(toonString)`
+   - THEN I receive a Todo array with 3 items
+   - AND each todo has correct id, text, completed, and createdAt properties
+   - AND the array is deeply equal to the original (round-trip test passes)
+   - AND malformed TOON data throws a descriptive Error
+   - AND the error message indicates what's wrong with the format
+
+4. **save() method writes TOON to file asynchronously**
+   - GIVEN a file path and a Todo array
+   - WHEN I call `await ToonStorage.save(filePath, todos)`
+   - THEN a file is created at the specified path
+   - AND the file contains valid TOON format (verified by reading file)
+   - AND the directory is created automatically if it doesn't exist
+   - AND the operation uses Node.js fs.promises for async I/O
+   - AND errors (disk full, permissions) are thrown to the caller for handling
+
+5. **load() method reads TOON from file**
+   - GIVEN a file exists at the specified path with valid TOON content
+   - WHEN I call `await ToonStorage.load(filePath)`
+   - THEN I receive a Todo array matching the file content
+   - AND the todos are decoded correctly
+   - AND when the file doesn't exist, it returns an empty array (no error)
+   - AND when the file is corrupt/invalid TOON, it throws a descriptive Error
+
+6. **Round-trip encoding/decoding preserves data**
+   - GIVEN a Todo array with various data (unicode text, special characters, completed/active mix)
+   - WHEN I call `ToonStorage.decode(ToonStorage.encode(todos))`
+   - THEN the result is deeply equal to the original array
+   - AND no data loss occurs
+   - AND all properties (id, text, completed, createdAt) are preserved exactly
+   - AND the operation works for empty arrays, single todo, and 1000+ todos
+
+7. **Unit tests exist and pass**
+   - GIVEN ToonStorage is implemented
+   - WHEN I create `src/storage/ToonStorage.test.ts`
+   - THEN unit tests cover all methods (encode, decode, save, load)
+   - AND tests include edge cases:
+     - Empty array encoding/decoding
+     - Single todo
+     - Large arrays (1000+ todos)
+     - Special characters (commas, newlines, unicode)
+     - Missing file (load)
+     - Corrupt file (decode error)
+   - AND all tests use proper mocking for file system operations
+   - AND running `npm test` shows all ToonStorage tests passing
+   - AND no regressions in existing tests (TodoStore, KeyboardManager)
+
+8. **File format matches TOON specification**
+   - GIVEN the TOON format specification from architecture.md
+   - WHEN I encode todos and inspect the output
+   - THEN the format matches:
+     ```toon
+     todos[N]{id,text,completed,createdAt}:
+       uuid-1,Task text,false,2025-11-24T10:00:00Z
+       uuid-2,Task text,true,2025-11-24T11:00:00Z
+
+     version: 1.0
+     ```
+   - AND the file is human-readable in a text editor
+   - AND UUIDs are valid v4 format
+   - AND timestamps are valid ISO 8601 format with Z suffix
+   - AND completed is "true" or "false" (string, not boolean)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Functional Requirements - Data Persistence (FR7-FR10)</section>
+        <snippet>FR7: All todo data is stored locally on user's Windows PC. FR8: Todo data persists between application sessions. FR9: Users can access todos without internet connection. FR10: Application stores data in human-readable format for potential manual editing/backup.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-001: TOON Format for Data Persistence</section>
+        <snippet>Decision: Use TOON (Token-Oriented Object Notation) instead of JSON. Rationale: Human-readable (YAML-style + CSV-style), 30-60% more compact than JSON, TypeScript SDK available (@toon-format/toon v1.0.0), future-proof for AI features. Trade-off: Newer format with less ecosystem support than JSON, dependency on @toon-format/toon package.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Data Architecture</title>
+        <section>Data Flow and File Format</section>
+        <snippet>File System (todos.toon) → ToonStorage.decode() → TodoStore._todos[] → CRUD operations → ToonStorage.encode() → File System. TOON format: todos[N]{id,text,completed,createdAt}: uuid-1,Task text,false,2025-11-20T10:00:00Z. Location: %APPDATA%/spardutti-todo/todos.toon. Directory creation: fs.mkdir(dirPath, { recursive: true }).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>ToonStorage API Specification (lines 100-136)</section>
+        <snippet>ToonStorage is a static utility class with no instance state. Methods: static async load(filePath: string): Promise&lt;Todo[]&gt; - loads todos from disk, returns empty array if file doesn't exist, throws on corrupt file; static async save(filePath: string, todos: Todo[]): Promise&lt;void&gt; - saves to disk, throws on file system error; static encode(todos: Todo[]): string - encodes to TOON format; static decode(toonString: string): Todo[] - decodes from TOON, throws on invalid format.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>TOON Format Schema (lines 79-94)</section>
+        <snippet>TOON structure: todos[N]{id,text,completed,createdAt}: followed by CSV-style rows. Field constraints: id (UUID v4, 36 chars with hyphens), text (Unicode, commas escaped by TOON encoder), completed (boolean stored as "true"/"false" strings), createdAt (ISO 8601 with Z suffix), version (format metadata, currently "1.0").</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>Performance Requirements (lines 276-300)</section>
+        <snippet>Load performance: 100 todos in &lt;50ms, 1000 todos in &lt;100ms (async fs.readFile + sync TOON decode). Save performance: 100 todos in &lt;30ms, 1000 todos in &lt;50ms (sync TOON encode + async fs.writeFile, non-blocking). Memory: &lt;1MB RAM for 1000 todos. Startup impact: file load + decode adds &lt;100ms to app launch.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Implementation Patterns</title>
+        <section>Location Patterns (lines 313-320)</section>
+        <snippet>User data directory: app.getPath('userData') → %APPDATA%/spardutti-todo/. Todos file: %APPDATA%/spardutti-todo/todos.toon. Never use relative paths in production code. Directory creation uses fs.mkdir with recursive: true option.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/types/Todo.ts</path>
+        <kind>interface</kind>
+        <symbol>Todo</symbol>
+        <lines>17-54</lines>
+        <reason>Core data model that ToonStorage will encode/decode. Defines the structure: id (UUID v4 string), text (user description), completed (boolean), createdAt (ISO 8601 string). ToonStorage must preserve this exact structure during round-trip encoding.</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>class</kind>
+        <symbol>TodoStore</symbol>
+        <lines>18-151</lines>
+        <reason>State management class that will integrate with ToonStorage in Story 5.2. Currently manages in-memory todos with CRUD operations (add, toggle, deleteCompleted). Provides methods (getAll, getActive, getCompleted) that return Todo[] arrays - the exact format ToonStorage.encode() expects.</reason>
+      </artifact>
+      <artifact>
+        <path>src/storage/.gitkeep</path>
+        <kind>directory</kind>
+        <symbol>storage</symbol>
+        <lines>N/A</lines>
+        <reason>Empty directory created in Story 1.2 where ToonStorage.ts will be created. Project structure already prepared for persistence layer implementation.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <dependency ecosystem="npm">
+        <name>@toon-format/toon</name>
+        <version>1.0.0</version>
+        <reason>Core TOON encoding/decoding library. Provides encode() and decode() functions that ToonStorage wraps with application-specific logic. Already installed in Story 1.3.</reason>
+      </dependency>
+      <dependency ecosystem="nodejs">
+        <name>fs.promises</name>
+        <version>built-in</version>
+        <reason>Node.js async file system operations. Used for readFile(), writeFile(), mkdir() in ToonStorage.load() and ToonStorage.save() methods. Provides non-blocking I/O for performance.</reason>
+      </dependency>
+      <dependency ecosystem="nodejs">
+        <name>path</name>
+        <version>built-in</version>
+        <reason>Node.js path utilities for safe path manipulation. Used in ToonStorage.save() for dirname() and join() to extract directory path and create parent directories safely.</reason>
+      </dependency>
+      <dependency ecosystem="npm">
+        <name>electron-log</name>
+        <version>5.4.1</version>
+        <reason>File-based logging for errors and metrics. Already installed in Story 1.3. Will be used in Story 5.2 for logging save/load failures. Not directly used in ToonStorage (static class), but TodoStore will log ToonStorage errors.</reason>
+      </dependency>
+      <dependency ecosystem="npm-dev">
+        <name>vitest</name>
+        <version>latest</version>
+        <reason>Unit testing framework. Used to test ToonStorage methods (encode, decode, save, load) with mocked file system operations. Already configured in Story 1.3 with co-located test files pattern.</reason>
+      </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architectural">
+      Static class pattern: ToonStorage must use private constructor or no constructor. All methods (load, save, encode, decode) must be static. No instance state allowed. This enforces pure functional approach for persistence layer.
+    </constraint>
+    <constraint type="architectural">
+      No error handling: ToonStorage methods must NOT catch errors internally. All errors (file system errors, decode errors) must propagate to caller. TodoStore (Story 5.2) is responsible for logging and displaying errors.
+    </constraint>
+    <constraint type="architectural">
+      Async file operations: load() and save() must use Node.js fs.promises (async/await pattern). Never use synchronous file operations (fs.readFileSync, fs.writeFileSync) to avoid blocking UI thread.
+    </constraint>
+    <constraint type="data">
+      TOON format compliance: Encoded output must match specification exactly. Structure: todos[N]{id,text,completed,createdAt}: followed by CSV rows, ending with "version: 1.0". Completed must be stored as "true"/"false" strings, not booleans.
+    </constraint>
+    <constraint type="data">
+      Round-trip preservation: decode(encode(todos)) must produce deep equality with original. No data loss allowed. All Todo fields (id, text, completed, createdAt) must be preserved exactly including special characters and unicode.
+    </constraint>
+    <constraint type="implementation">
+      TypeScript strict mode: All code must compile with strict: true in tsconfig.json. No 'any' types allowed. Use proper TypeScript typing for all method signatures and return values.
+    </constraint>
+    <constraint type="implementation">
+      Import paths: Use @/ alias for imports (e.g., import type { Todo } from '@/types/Todo'). Already configured in tsconfig.json. Do NOT use relative paths like '../types/Todo'.
+    </constraint>
+    <constraint type="testing">
+      Co-located tests: ToonStorage.test.ts must be created in same directory as ToonStorage.ts (src/storage/). Follow existing pattern from TodoStore.test.ts and KeyboardManager.test.ts.
+    </constraint>
+    <constraint type="testing">
+      File system mocking: All tests must mock fs.promises using Vitest vi.mock(). Never perform actual file I/O in unit tests to avoid test environment dependencies and ensure test speed.
+    </constraint>
+    <constraint type="performance">
+      Load performance: ToonStorage.load() must load 100 todos in &lt;50ms, 1000 todos in &lt;100ms. Includes both file read and TOON decode time. Measured from method call to Promise resolution.
+    </constraint>
+    <constraint type="performance">
+      Save performance: ToonStorage.save() must save 100 todos in &lt;30ms, 1000 todos in &lt;50ms (async). Includes both TOON encode and file write time. Non-blocking operation.
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ToonStorage.load()</name>
+      <kind>static async method</kind>
+      <signature>static async load(filePath: string): Promise&lt;Todo[]&gt;</signature>
+      <path>src/storage/ToonStorage.ts (to be created)</path>
+      <description>Loads todos from TOON file. Returns empty array if file doesn't exist. Throws Error if file is corrupt or unreadable.</description>
+    </interface>
+    <interface>
+      <name>ToonStorage.save()</name>
+      <kind>static async method</kind>
+      <signature>static async save(filePath: string, todos: Todo[]): Promise&lt;void&gt;</signature>
+      <path>src/storage/ToonStorage.ts (to be created)</path>
+      <description>Saves todos to TOON file. Creates parent directory if it doesn't exist using mkdir with recursive: true. Throws Error on file system failure (disk full, permissions).</description>
+    </interface>
+    <interface>
+      <name>ToonStorage.encode()</name>
+      <kind>static method</kind>
+      <signature>static encode(todos: Todo[]): string</signature>
+      <path>src/storage/ToonStorage.ts (to be created)</path>
+      <description>Encodes Todo array to TOON format string. Returns valid TOON with structure: todos[N]{id,text,completed,createdAt}: followed by CSV rows and version: 1.0.</description>
+    </interface>
+    <interface>
+      <name>ToonStorage.decode()</name>
+      <kind>static method</kind>
+      <signature>static decode(toonString: string): Todo[]</signature>
+      <path>src/storage/ToonStorage.ts (to be created)</path>
+      <description>Decodes TOON format string to Todo array. Converts completed strings ("true"/"false") to booleans. Throws Error with descriptive message if TOON format is invalid.</description>
+    </interface>
+    <interface>
+      <name>Todo</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface Todo { id: string; text: string; completed: boolean; createdAt: string }</signature>
+      <path>src/types/Todo.ts</path>
+      <description>Core data model. Used as input to encode() and output from decode(). All ToonStorage methods operate on Todo or Todo[] types. Must be imported using: import type { Todo } from '@/types/Todo'.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing framework: Vitest (already configured in Story 1.3). Co-located test files (*.test.ts next to source). Use describe/it/expect for test structure. Mock fs.promises using vi.mock() for file operations. Aim for &gt;90% code coverage for ToonStorage. Follow patterns from existing tests: TodoStore.test.ts (25 tests) and KeyboardManager.test.ts (39 tests). All new tests must pass alongside existing tests (no regressions).
+    </standards>
+    <locations>
+      src/storage/ToonStorage.test.ts (to be created, co-located with ToonStorage.ts)
+    </locations>
+    <ideas>
+      <test id="AC1">
+        encode() with empty array: Verify returns valid TOON with todos[0] structure
+      </test>
+      <test id="AC2">
+        encode() with 3 todos: Verify structure matches todos[3]{id,text,completed,createdAt}: with CSV rows and version: 1.0
+      </test>
+      <test id="AC2">
+        encode() with special characters: Todo text contains commas, newlines, quotes - verify @toon-format/toon escapes correctly
+      </test>
+      <test id="AC2">
+        encode() with unicode: Todo text contains emoji (🚀), accented chars (café), asian chars (你好) - verify UTF-8 preservation
+      </test>
+      <test id="AC3">
+        decode() with valid TOON: 3 todos with mix of completed statuses - verify returns correct Todo[] with proper field types
+      </test>
+      <test id="AC3">
+        decode() with malformed TOON: Invalid structure - verify throws Error with descriptive message indicating what's wrong
+      </test>
+      <test id="AC3">
+        decode() boolean conversion: TOON has "true"/"false" strings - verify decode converts to boolean correctly
+      </test>
+      <test id="AC4">
+        save() with mocked fs: Mock fs.writeFile and fs.mkdir - verify called with correct params (path, content, utf-8 encoding)
+      </test>
+      <test id="AC4">
+        save() directory creation: Mock mkdir to verify recursive: true option used when parent directory doesn't exist
+      </test>
+      <test id="AC4">
+        save() error propagation: Mock fs.writeFile to throw ENOSPC (disk full) - verify error propagates without catch
+      </test>
+      <test id="AC5">
+        load() from existing file: Mock fs.readFile to return valid TOON - verify returns decoded Todo[] matching content
+      </test>
+      <test id="AC5">
+        load() file not found: Mock fs.readFile to throw ENOENT - verify returns empty array (no error thrown)
+      </test>
+      <test id="AC5">
+        load() corrupt file: Mock fs.readFile to return invalid TOON - verify decode error propagates with message
+      </test>
+      <test id="AC6">
+        Round-trip with diverse data: 10 todos with unicode, special chars, mix of completed/active - verify deep equality after encode-decode
+      </test>
+      <test id="AC6">
+        Round-trip with empty array: encode([]) then decode - verify returns empty array
+      </test>
+      <test id="AC6">
+        Round-trip with single todo: encode([todo]) then decode - verify single todo preserved exactly
+      </test>
+      <test id="AC6">
+        Round-trip with 1000 todos: Performance + correctness - verify all todos preserved and completes in reasonable time
+      </test>
+      <test id="AC7">
+        Integration with TodoStore: Create TodoStore instance, use ToonStorage to simulate persistence - verify state survives round-trip
+      </test>
+    </ideas>
+  </tests>
+</story-context>

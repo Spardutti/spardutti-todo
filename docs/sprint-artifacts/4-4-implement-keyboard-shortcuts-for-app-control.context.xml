@@ -1,0 +1,194 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4</storyId>
+    <title>Implement Keyboard Shortcuts for App Control</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-4-implement-keyboard-shortcuts-for-app-control.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>keyboard shortcuts to focus the input, close the app, and trigger bulk delete</iWant>
+    <soThat>I can control the application entirely from the keyboard</soThat>
+    <tasks>- Implement input focus shortcut handlers (AC: #1, #8) - Register "ctrl+n" and "home" shortcuts with handlers that call inputElement.focus(), verify shortcuts work regardless of current focus state
+- Implement close window shortcut (AC: #2, #9) - Register "escape" shortcut with context-aware handler that checks if confirmation dialog is open (cancel confirmation if open, otherwise close application window)
+- Implement quit application shortcut (AC: #3, #8) - Register "ctrl+q" shortcut with handler that calls window.close() to terminate app process
+- Implement bulk delete shortcut and confirmation (AC: #4, #5, #6, #7, #9) - Register "ctrl+d" shortcut with handler that checks completed todos count and either shows feedback message or confirmation prompt
+- Implement confirmation handlers (AC: #5, #6, #9) - Create temporary 'y' and 'n' handlers for confirm/cancel actions, handlers call todoStore.deleteCompleted(), renderTodoList(), showFeedback(), and restoreFooterHints()
+- Implement UI helper functions (AC: #4, #5, #6, #7) - Create showConfirmation(), showFeedback(), and restoreFooterHints() functions with footer text updates and temporary handler registration
+- Integration with existing code (AC: #8, #10) - Verify all shortcuts registered in KeyboardManager during app init, verify shortcuts work with existing navigation/toggle, verify no conflicts with browser shortcuts
+- Testing and validation - Manual tests for all keyboard shortcuts (Ctrl+N, Home, Esc, Ctrl+Q, Ctrl+D, Y/n confirmation), run TypeScript compiler and existing tests, performance test for shortcut response time</tasks>
+  </story>
+
+  <acceptanceCriteria>1. Ctrl+N or Home focuses input field - GIVEN application running with focus on todo or elsewhere, WHEN press Ctrl+N or Home, THEN input field receives focus immediately with cursor visible, AND can start typing without clicking
+2. Esc closes/minimizes application - GIVEN application running normally with no confirmation dialogs open, WHEN press Esc, THEN application window closes or minimizes (Electron window.close() behavior), AND unsaved todos remain saved (auto-save from Story 5.2)
+3. Ctrl+Q quits application completely - GIVEN application running, WHEN press Ctrl+Q, THEN application quits completely AND Electron app process terminates
+4. Ctrl+D triggers bulk delete confirmation (with completed todos) - GIVEN at least one completed todo in list, WHEN press Ctrl+D, THEN bulk delete confirmation prompt appears in footer area displaying "Delete X completed todos? [Y/n]" where X is the count
+5. Confirmation prompt accepts Y to delete - GIVEN bulk delete confirmation showing, WHEN press 'y' (lowercase or uppercase), THEN all completed todos deleted from list, AND list re-renders showing only active todos, AND feedback message "Deleted X todos" appears briefly (auto-hide after 2 seconds), AND footer returns to normal hints
+6. Confirmation prompt accepts n to cancel - GIVEN bulk delete confirmation showing, WHEN press 'n' (lowercase or uppercase) or Esc, THEN no todos deleted, AND confirmation prompt closes, AND footer returns to normal hints, AND list remains unchanged
+7. Ctrl+D shows feedback when no completed todos - GIVEN zero completed todos (all active or empty list), WHEN press Ctrl+D, THEN feedback message "No completed todos" appears, AND message auto-hides after 2 seconds, AND no confirmation prompt shown
+8. Shortcuts work globally (regardless of focus) - GIVEN any element has focus (input field, todo item, window), WHEN press Ctrl+N, Ctrl+D, Ctrl+Q, or Esc, THEN shortcut executes correctly AND focus state does not prevent shortcut execution
+9. Esc context-aware behavior - GIVEN bulk delete confirmation showing, WHEN press Esc, THEN confirmation cancels (same as pressing 'n') AND footer returns to normal hints; GIVEN no confirmation showing, WHEN press Esc, THEN application window closes
+10. Shortcuts do not interfere with system/browser shortcuts - GIVEN application running, WHEN press Ctrl+Shift+I (DevTools), THEN browser DevTools open normally AND application shortcuts do not block developer shortcuts AND other critical browser shortcuts remain functional</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>App Control Shortcuts</section>
+        <snippet>Story 4.4 implements application-level control shortcuts for input focus (Ctrl+N, Home), window close (Esc), application quit (Ctrl+Q), and bulk delete with confirmation (Ctrl+D). Shortcut specifications define exact handlers: keyboardManager.register('ctrl+n', () => inputElement.focus(), 'Focus input'). Bulk delete sequence: User presses Ctrl+D → Handler checks completed todos → If none: showFeedback("No completed todos") → If exists: showConfirmation() with Y/n handlers → Delete or cancel → restoreFooterHints(). Context-aware Esc pattern checks confirmation state before executing close or cancel action.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>spardutti-todo Architecture</title>
+        <section>ADR-003: Custom KeyboardManager Over External Library</section>
+        <snippet>Decision to build custom KeyboardManager class instead of using Mousetrap provides full control over normalization logic, built-in conflict detection, help screen generation, and zero dependencies. Terminal-specific needs like j/k vim-style navigation require custom implementation. Performance constraint: All keyboard responses must complete in <16ms for zero perceived lag, using synchronous operations only.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>spardutti-todo Architecture</title>
+        <section>Security Architecture & Electron Integration</section>
+        <snippet>Window Control: Use window.close() for Esc/Ctrl+Q (renderer process API). IPC Optional: If window.close() unavailable, use IPC to main process. Security: No remote code execution, all handlers statically defined. Context Isolation: Renderer shortcuts do not require main process access for window close operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Functional Requirements: Keyboard Navigation & Shortcuts</section>
+        <snippet>FR14: Users can focus input field for new todos using keyboard shortcut. FR15: Users can close/minimize application using keyboard shortcut (Esc or Ctrl+Q). FR16: Users can delete all completed todos using keyboard shortcut. FR17: Users can view all available keyboard shortcuts (help screen or hints). Target interaction: keyboard-driven interface with zero configuration overhead, task capture in under 2 seconds.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>UX Pattern Decisions: Keyboard Patterns & Confirmation Patterns</section>
+        <snippet>Command Keys pattern: Ctrl+D for bulk delete all completed todos (with confirmation), Ctrl+Q to quit/close app, Ctrl+N to focus input field. Confirmation Pattern: Always confirm destructive bulk operations (Ctrl+D deletes multiple items), never confirm reversible actions. Confirmation style: Inline keyboard prompt (not modal), Format: "Delete X completed todos? [Y/n]", Location: Replaces footer hints temporarily, Interaction: Y/Enter confirms, N/Esc cancels, Feedback: "X todos deleted" (2 seconds auto-hide).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/keyboard/KeyboardManager.ts</path>
+        <kind>class</kind>
+        <symbol>KeyboardManager</symbol>
+        <lines>1-213</lines>
+        <reason>Core keyboard shortcut management system - provides register(), unregister(), handle(), and getHints() methods. Story 4.4 uses this class to register app control shortcuts (Ctrl+N, Home, Esc, Ctrl+Q, Ctrl+D). Context-aware handler pattern already implemented: handler can return false to allow default browser behavior, or true/void to prevent default. Conflict detection prevents duplicate key registration.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>file</kind>
+        <symbol>initApp</symbol>
+        <lines>184-321</lines>
+        <reason>Main application initialization - creates KeyboardManager instance and registers existing shortcuts (navigation j/k/arrows, toggle space/enter). Story 4.4 adds app control shortcuts to this initialization. Contains references to inputElement, todoStore, listContainer, and footer needed for new shortcuts. Implements context detection pattern (isInputFocused) and helper functions (selectNext, selectPrevious, toggleSelectedTodo, clearSelection).</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>module</kind>
+        <symbol>showConfirmation, showFeedback, restoreFooterHints</symbol>
+        <lines>224-315</lines>
+        <reason>UI helper functions for confirmation and feedback - showConfirmation() displays inline prompt with Y/n keyboard handlers, showFeedback() shows temporary message with auto-hide, restoreFooterHints() returns footer to normal state. Story 4.4 uses these existing functions for Ctrl+D bulk delete confirmation workflow. Functions already handle footer state management and keyboard listener cleanup.</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>class</kind>
+        <symbol>deleteCompleted, getCompleted</symbol>
+        <lines>existing methods</lines>
+        <reason>TodoStore provides deleteCompleted() method that returns count of deleted todos, and getCompleted() method that returns array of completed todos. Story 4.4 Ctrl+D handler calls getCompleted().length to check if confirmation needed, then calls deleteCompleted() on confirm. No modifications needed to TodoStore - existing methods support bulk delete workflow.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/Shortcut.ts</path>
+        <kind>interface</kind>
+        <symbol>ShortcutHandler</symbol>
+        <lines>existing type</lines>
+        <reason>ShortcutHandler type defines handler signature: () => void | boolean. Story 4.3 updated this to support context-aware handlers that return boolean to control preventDefault behavior. Story 4.4 reuses this pattern for Esc context-aware handling (cancel confirmation vs close window).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <electron>39.2.3 - Desktop application framework, provides window.close() API for Esc/Ctrl+Q shortcuts</electron>
+        <typescript>~5.9.2 - Strict type safety for shortcut handlers and context detection helpers</typescript>
+        <vite>^5.4.21 - Build tooling, fast development with HMR</vite>
+        <vitest>^4.0.13 - Unit testing framework for KeyboardManager tests</vitest>
+        <electron-log>5.4.1 - Logging keyboard events and shortcut execution for debugging</electron-log>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>- All shortcuts execute synchronously (no setTimeout/Promise delays) - Performance requirement <16ms from keypress to action
+- Footer updates via direct DOM manipulation (instant text changes) - Terminal aesthetic constraint: no animations or transitions
+- Confirmation handlers are temporary (registered/unregistered dynamically) - Y/n handlers must be cleaned up after use to avoid conflicts
+- Esc handler checks confirmation state before executing - Context-aware: cancel confirmation if open, otherwise close window
+- Unidirectional data flow pattern: KeyboardManager → Confirmation Check → Action → TodoStore → renderTodoList() → DOM
+- Terminal Aesthetic: Footer text changes are instant (CSS transition: none), no loading states or progress indicators
+- Keyboard-First Discipline: Every action accessible via keyboard shortcut, no mouse-only functionality, focus indicators always visible
+- Type Safety: Strict TypeScript enabled (noImplicitAny, strictNullChecks), no 'any' types allowed, export types for cross-module use</constraints>
+
+  <interfaces>
+    <interface>
+      <name>window.close()</name>
+      <kind>Electron API</kind>
+      <signature>window.close(): void</signature>
+      <path>Electron renderer process global</path>
+    </interface>
+    <interface>
+      <name>KeyboardManager.register</name>
+      <kind>Method</kind>
+      <signature>register(key: string, handler: () => void | boolean, description: string): void</signature>
+      <path>src/keyboard/KeyboardManager.ts:49</path>
+    </interface>
+    <interface>
+      <name>KeyboardManager.unregister</name>
+      <kind>Method</kind>
+      <signature>unregister(key: string): void</signature>
+      <path>src/keyboard/KeyboardManager.ts:76</path>
+    </interface>
+    <interface>
+      <name>showConfirmation</name>
+      <kind>Function</kind>
+      <signature>showConfirmation(footer: HTMLDivElement, message: string, onConfirm: () => void, onCancel: () => void): void</signature>
+      <path>src/ui/render.ts:224</path>
+    </interface>
+    <interface>
+      <name>showFeedback</name>
+      <kind>Function</kind>
+      <signature>showFeedback(footer: HTMLDivElement, message: string, duration?: number): void</signature>
+      <path>src/ui/render.ts:274</path>
+    </interface>
+    <interface>
+      <name>restoreFooterHints</name>
+      <kind>Function</kind>
+      <signature>restoreFooterHints(footer: HTMLDivElement): void</signature>
+      <path>src/ui/render.ts:310</path>
+    </interface>
+    <interface>
+      <name>TodoStore.deleteCompleted</name>
+      <kind>Method</kind>
+      <signature>deleteCompleted(): number</signature>
+      <path>src/store/TodoStore.ts</path>
+    </interface>
+    <interface>
+      <name>TodoStore.getCompleted</name>
+      <kind>Method</kind>
+      <signature>getCompleted(): Todo[]</signature>
+      <path>src/store/TodoStore.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit testing with Vitest framework, co-located test files (*.test.ts next to source), strict TypeScript type checking enforced in tests, mock KeyboardEvent using 'new KeyboardEvent()', mock window.close() with Vitest spy, verify shortcuts registered during app init, performance measurements using performance.now() for <16ms validation</standards>
+    <locations>src/keyboard/KeyboardManager.test.ts - Unit tests for shortcut registration and conflict detection
+src/renderer.test.ts - Integration tests for keyboard shortcut workflow (if created)
+Manual testing in actual Electron window - Required for Esc/Ctrl+Q window close behavior verification</locations>
+    <ideas>Test AC #1: Register Ctrl+N and Home shortcuts, mock inputElement.focus(), verify called on keypress, verify shortcuts work from different focus states
+Test AC #2: Register Esc shortcut, mock window.close(), verify called when no confirmation open, verify NOT called when confirmation showing
+Test AC #3: Register Ctrl+Q shortcut, mock window.close(), verify called on keypress, verify app process terminates
+Test AC #4: Ctrl+D with completed todos → verify showConfirmation called with correct message format "Delete X completed todos? [Y/n]"
+Test AC #5: During confirmation → press 'y' → verify deleteCompleted() called, renderTodoList() called, showFeedback called with "Deleted X todos"
+Test AC #6: During confirmation → press 'n' or Esc → verify no deletion, restoreFooterHints called, list unchanged
+Test AC #7: Ctrl+D with 0 completed todos → verify showFeedback called with "No completed todos", no confirmation shown
+Test AC #8: Test shortcuts from various focus states (input focused, todo selected, no focus) → all work globally
+Test AC #9: Esc context-aware test → confirmation open: cancel only, no confirmation: close window
+Test AC #10: Press Ctrl+Shift+I → verify DevTools open (shortcut NOT blocked by app shortcuts)</ideas>
+  </tests>
+</story-context>

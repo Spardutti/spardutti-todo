@@ -1,0 +1,201 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2</storyId>
+    <title>Implement TodoStore Class for State Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/home/spardutti/Projects/spardutti-todo/docs/sprint-artifacts/2-2-implement-todostore-class-for-state-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a TodoStore class to manage todo state and operations</iWant>
+    <soThat>I have a single source of truth for all todo data with clear mutation methods</soThat>
+    <tasks>
+      <task id="1" ac="1">Create src/store/ directory</task>
+      <task id="2" ac="1">Implement TodoStore class structure</task>
+      <task id="3" ac="2">Implement add() method</task>
+      <task id="4" ac="3">Implement toggle() method</task>
+      <task id="5" ac="4">Implement deleteCompleted() method</task>
+      <task id="6" ac="5">Implement getter methods (getAll, getActive, getCompleted)</task>
+      <task id="7" ac="6">Create unit tests with Vitest</task>
+      <task id="8" ac="1">Verify TypeScript compilation</task>
+      <task id="9" ac="6">Run all tests and verify coverage</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">TodoStore class exists at src/store/TodoStore.ts with correct structure (private _todos array, constructor, 6 public methods)</criterion>
+    <criterion id="2">add() method generates UUID v4, ISO 8601 timestamp, sets completed: false, adds to array, returns created Todo, ignores empty/whitespace text</criterion>
+    <criterion id="3">toggle() method finds todo by ID, flips completed boolean, throws Error if ID not found</criterion>
+    <criterion id="4">deleteCompleted() method removes all completed todos, returns count deleted, preserves active todos</criterion>
+    <criterion id="5">getAll() returns shallow copy of _todos, getActive() returns only incomplete todos, getCompleted() returns only completed todos</criterion>
+    <criterion id="6">Unit tests exist in src/store/TodoStore.test.ts covering all methods and edge cases, all tests pass</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Task Management</title>
+        <section>APIs and Interfaces</section>
+        <snippet>TodoStore Public API with methods: add(text), toggle(id), deleteCompleted(), getAll(), getActive(), getCompleted(). add() generates UUID v4 and ISO 8601 timestamp.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Task Management</title>
+        <section>Workflows and Sequencing</section>
+        <snippet>Workflow 1 (Create Todo): User types → Enter → add(text) generates UUID + timestamp → creates Todo object → adds to _todos array → returns created Todo.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Task Management</title>
+        <section>Test Strategy Summary</section>
+        <snippet>Unit tests required for all TodoStore methods: add() (UUID, timestamp, empty text), toggle() (flip states, invalid ID), deleteCompleted() (count, edge cases), getters (shallow copy).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Architecture</section>
+        <snippet>Todo interface with UUID v4 (crypto.randomUUID), ISO 8601 timestamps (toISOString), flat array structure, no relationships.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns</section>
+        <snippet>Class structure: private properties (_todos), constructor, public methods (alphabetical), private methods. Naming: PascalCase classes, camelCase methods, underscore prefix for private.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>API Contracts</section>
+        <snippet>TodoStore methods: async load/save, add returns Todo, toggle is void and throws on invalid ID, deleteCompleted returns count, getAll returns shallow copy.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/types/Todo.ts</path>
+        <kind>interface</kind>
+        <symbol>Todo</symbol>
+        <lines>17-54</lines>
+        <reason>Core data model that TodoStore will use. Defines id (UUID v4), text, completed, and createdAt (ISO 8601) fields with comprehensive JSDoc.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>entry</kind>
+        <symbol>N/A</symbol>
+        <lines>1-34</lines>
+        <reason>Renderer entry point where TodoStore will be instantiated and used. Currently only imports CSS, will integrate TodoStore in future stories.</reason>
+      </artifact>
+      <artifact>
+        <path>tsconfig.json</path>
+        <kind>config</kind>
+        <symbol>N/A</symbol>
+        <lines>15-18</lines>
+        <reason>Path aliases configured: @/* maps to ./src/*, enabling import { TodoStore } from '@/store/TodoStore' pattern.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <nodejs>
+        <package name="crypto.randomUUID">Built-in (Node.js 14.17+, Electron 33+)</package>
+      </nodejs>
+      <devDependencies>
+        <package name="typescript" version="~5.9.2">Strict mode enabled (noImplicitAny, strictNullChecks)</package>
+        <package name="vitest" version="^4.0.13">Unit testing framework for TodoStore.test.ts</package>
+        <package name="@types/node" version="^24.10.1">Node.js type definitions</package>
+      </devDependencies>
+      <productionDependencies>
+        <package name="None">TodoStore is pure TypeScript with no external runtime dependencies</package>
+      </productionDependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use vanilla TypeScript class (no state management library per ADR-002)</constraint>
+    <constraint>Private properties must be prefixed with underscore: _todos</constraint>
+    <constraint>Unidirectional data flow: TodoStore → render() → DOM (no direct DOM → Store updates)</constraint>
+    <constraint>No async operations in Epic 2 (persistence deferred to Epic 5)</constraint>
+    <constraint>Shallow copy on getAll() to prevent external mutation of internal _todos array</constraint>
+    <constraint>TypeScript strict mode required: noImplicitAny and strictNullChecks enabled</constraint>
+    <constraint>Class structure pattern: private properties, constructor, public methods (alphabetical), private methods</constraint>
+    <constraint>Named export only: export class TodoStore (not default export)</constraint>
+    <constraint>Import path alias: '@/store/TodoStore' using configured tsconfig paths</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Todo</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface Todo { id: string; text: string; completed: boolean; createdAt: string }</signature>
+      <path>src/types/Todo.ts</path>
+    </interface>
+    <interface>
+      <name>TodoStore.add()</name>
+      <kind>Class method</kind>
+      <signature>add(text: string): Todo | null</signature>
+      <path>src/store/TodoStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>TodoStore.toggle()</name>
+      <kind>Class method</kind>
+      <signature>toggle(id: string): void</signature>
+      <path>src/store/TodoStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>TodoStore.deleteCompleted()</name>
+      <kind>Class method</kind>
+      <signature>deleteCompleted(): number</signature>
+      <path>src/store/TodoStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>TodoStore.getAll()</name>
+      <kind>Class method</kind>
+      <signature>getAll(): Todo[]</signature>
+      <path>src/store/TodoStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>TodoStore.getActive()</name>
+      <kind>Class method</kind>
+      <signature>getActive(): Todo[]</signature>
+      <path>src/store/TodoStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>TodoStore.getCompleted()</name>
+      <kind>Class method</kind>
+      <signature>getCompleted(): Todo[]</signature>
+      <path>src/store/TodoStore.ts (to be created)</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Unit tests use Vitest framework (configured in package.json). Tests are co-located with source files (TodoStore.test.ts next to TodoStore.ts). Test structure: describe blocks for class/method organization, beforeEach for setup, expect assertions for validation. Coverage target: 100% of TodoStore public methods. Run with 'npm test' or 'npm test -- --watch' for development.</standards>
+    <locations>
+      <location>src/store/TodoStore.test.ts</location>
+      <location>Run: npm test</location>
+      <location>Watch mode: npm test -- --watch</location>
+    </locations>
+    <ideas>
+      <idea ac="2">Test add() creates todo with valid UUID v4 format (regex: /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)</idea>
+      <idea ac="2">Test add() creates ISO 8601 timestamp (regex: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)</idea>
+      <idea ac="2">Test add() sets completed to false for new todos</idea>
+      <idea ac="2">Test add() returns created Todo object with all fields</idea>
+      <idea ac="2">Test add() adds todo to internal array (verify with getAll())</idea>
+      <idea ac="2">Test add() with empty string returns null</idea>
+      <idea ac="2">Test add() with whitespace-only string returns null</idea>
+      <idea ac="3">Test toggle() changes false to true</idea>
+      <idea ac="3">Test toggle() changes true to false</idea>
+      <idea ac="3">Test toggle() throws Error for invalid/non-existent ID</idea>
+      <idea ac="4">Test deleteCompleted() removes all completed todos</idea>
+      <idea ac="4">Test deleteCompleted() preserves active todos unchanged</idea>
+      <idea ac="4">Test deleteCompleted() returns correct count of deleted todos</idea>
+      <idea ac="4">Test deleteCompleted() on empty list returns 0</idea>
+      <idea ac="4">Test deleteCompleted() with no completed todos returns 0</idea>
+      <idea ac="5">Test getAll() returns shallow copy (mutations don't affect internal _todos)</idea>
+      <idea ac="5">Test getAll() returns all todos in order</idea>
+      <idea ac="5">Test getActive() filters only incomplete todos</idea>
+      <idea ac="5">Test getActive() returns empty array if no active todos</idea>
+      <idea ac="5">Test getCompleted() filters only completed todos</idea>
+      <idea ac="5">Test getCompleted() returns empty array if no completed todos</idea>
+    </ideas>
+  </tests>
+</story-context>

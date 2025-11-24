@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spardutti-todo Design Directions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00FF00;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #008800;
+            font-size: 0.9rem;
+        }
+
+        .navigation {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-btn {
+            background: #000;
+            color: #00FF00;
+            border: 2px solid #00FF00;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            cursor: pointer;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            background: #00FF00;
+            color: #000;
+        }
+
+        .nav-btn.active {
+            background: #00FF00;
+            color: #000;
+        }
+
+        .mockup-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .mockup {
+            display: none;
+            background: #000;
+            border: 2px solid #00FF00;
+            min-height: 500px;
+        }
+
+        .mockup.active {
+            display: block;
+        }
+
+        .mockup-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid #00FF00;
+        }
+
+        .direction-name {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .direction-description {
+            font-size: 0.85rem;
+            color: #008800;
+            line-height: 1.4;
+        }
+
+        .characteristics {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #00FF00;
+        }
+
+        .characteristics span {
+            opacity: 0.7;
+        }
+
+        /* Direction 1: Classic Top Input */
+        .direction-1 .app-window {
+            padding: 1rem;
+        }
+
+        .direction-1 .input-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .direction-1 input {
+            width: 100%;
+            background: #000;
+            color: #00FF00;
+            border: 2px solid #00FF00;
+            padding: 0.5rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .direction-1 input:focus {
+            box-shadow: 0 0 8px #00FF00;
+        }
+
+        .direction-1 .todo-list {
+            list-style: none;
+        }
+
+        .direction-1 .todo-item {
+            padding: 0.5rem 0;
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            align-items: flex-start;
+        }
+
+        .direction-1 .todo-item:hover {
+            opacity: 0.7;
+        }
+
+        .direction-1 .checkbox {
+            color: #00FF00;
+            flex-shrink: 0;
+        }
+
+        .direction-1 .todo-text {
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .direction-1 .completed {
+            color: #004400;
+            text-decoration: line-through;
+        }
+
+        .direction-1 .footer {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #004400;
+            font-size: 12px;
+            color: #008800;
+        }
+
+        /* Direction 2: Bottom Input */
+        .direction-2 .app-window {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 450px;
+        }
+
+        .direction-2 .header {
+            font-size: 12px;
+            color: #008800;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #004400;
+        }
+
+        .direction-2 .todo-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .direction-2 .todo-item {
+            padding: 0.5rem 0;
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            align-items: flex-start;
+        }
+
+        .direction-2 .todo-item:hover {
+            opacity: 0.7;
+        }
+
+        .direction-2 .checkbox {
+            flex-shrink: 0;
+        }
+
+        .direction-2 .todo-text {
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .direction-2 .completed {
+            color: #004400;
+            text-decoration: line-through;
+        }
+
+        .direction-2 .input-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #00FF00;
+        }
+
+        .direction-2 input {
+            width: 100%;
+            background: #000;
+            color: #00FF00;
+            border: 2px solid #00FF00;
+            padding: 0.5rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .direction-2 input:focus {
+            box-shadow: 0 0 8px #00FF00;
+        }
+
+        /* Direction 3: Dense Compact */
+        .direction-3 .app-window {
+            padding: 0.75rem;
+        }
+
+        .direction-3 input {
+            width: 100%;
+            background: #000;
+            color: #00FF00;
+            border: 1px solid #00FF00;
+            padding: 0.35rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 0.75rem;
+        }
+
+        .direction-3 .todo-list {
+            list-style: none;
+        }
+
+        .direction-3 .todo-item {
+            padding: 0.35rem 0;
+            display: flex;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 14px;
+            align-items: flex-start;
+        }
+
+        .direction-3 .todo-item:hover {
+            background: #001100;
+        }
+
+        .direction-3 .checkbox {
+            flex-shrink: 0;
+        }
+
+        .direction-3 .todo-text {
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .direction-3 .completed {
+            color: #004400;
+            text-decoration: line-through;
+        }
+
+        .direction-3 .footer {
+            margin-top: 0.75rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #004400;
+            font-size: 11px;
+            color: #008800;
+        }
+
+        /* Direction 4: Spacious Breathing Room */
+        .direction-4 .app-window {
+            padding: 2rem;
+        }
+
+        .direction-4 input {
+            width: 100%;
+            background: #000;
+            color: #00FF00;
+            border: 2px solid #00FF00;
+            padding: 0.75rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 2rem;
+        }
+
+        .direction-4 input:focus {
+            box-shadow: 0 0 12px #00FF00;
+        }
+
+        .direction-4 .todo-list {
+            list-style: none;
+        }
+
+        .direction-4 .todo-item {
+            padding: 0.75rem 0;
+            display: flex;
+            gap: 1rem;
+            cursor: pointer;
+            font-size: 14px;
+            align-items: flex-start;
+        }
+
+        .direction-4 .todo-item:hover {
+            opacity: 0.7;
+        }
+
+        .direction-4 .checkbox {
+            flex-shrink: 0;
+        }
+
+        .direction-4 .todo-text {
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .direction-4 .completed {
+            color: #004400;
+            text-decoration: line-through;
+        }
+
+        .direction-4 .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #004400;
+            font-size: 12px;
+            color: #008800;
+        }
+
+        /* Direction 5: Separated Sections */
+        .direction-5 .app-window {
+            padding: 1rem;
+        }
+
+        .direction-5 input {
+            width: 100%;
+            background: #000;
+            color: #00FF00;
+            border: 2px solid #00FF00;
+            padding: 0.5rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .direction-5 .section-header {
+            color: #008800;
+            font-size: 12px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .direction-5 .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .direction-5 .todo-list {
+            list-style: none;
+        }
+
+        .direction-5 .todo-item {
+            padding: 0.5rem 0;
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            align-items: flex-start;
+        }
+
+        .direction-5 .todo-item:hover {
+            opacity: 0.7;
+        }
+
+        .direction-5 .checkbox {
+            flex-shrink: 0;
+        }
+
+        .direction-5 .todo-text {
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .direction-5 .completed-section .todo-item {
+            color: #004400;
+            text-decoration: line-through;
+        }
+
+        .direction-5 .footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #004400;
+            font-size: 12px;
+            color: #008800;
+        }
+
+        /* Direction 6: Minimal Borderless */
+        .direction-6 .app-window {
+            padding: 1rem;
+        }
+
+        .direction-6 input {
+            width: 100%;
+            background: #000;
+            color: #00FF00;
+            border: none;
+            border-bottom: 2px solid #00FF00;
+            padding: 0.5rem 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .direction-6 input:focus {
+            border-bottom-color: #00FF00;
+            background: #001100;
+        }
+
+        .direction-6 .todo-list {
+            list-style: none;
+        }
+
+        .direction-6 .todo-item {
+            padding: 0.5rem 0;
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            align-items: flex-start;
+        }
+
+        .direction-6 .todo-item:hover {
+            background: #001100;
+        }
+
+        .direction-6 .checkbox {
+            flex-shrink: 0;
+        }
+
+        .direction-6 .todo-text {
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .direction-6 .completed {
+            color: #004400;
+            text-decoration: line-through;
+        }
+
+        .direction-6 .footer {
+            margin-top: 1.5rem;
+            font-size: 12px;
+            color: #008800;
+        }
+
+        .thumbnails {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 60px;
+            background: #000;
+            border: 2px solid #004400;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #008800;
+        }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            border-color: #00FF00;
+            color: #00FF00;
+        }
+    </style>
+</head>
+<body>
+    <h1>spardutti-todo Design Directions</h1>
+    <p class="subtitle">Exploring layout variations within terminal aesthetic constraints</p>
+
+    <div class="navigation">
+        <button class="nav-btn active" onclick="showDirection(1)">← Previous</button>
+        <span id="current-direction" style="color: #00FF00; margin: 0 1rem;">Direction 1 of 6</span>
+        <button class="nav-btn" onclick="showDirection(2)">Next →</button>
+    </div>
+
+    <div class="thumbnails">
+        <div class="thumbnail active" onclick="setDirection(1)">1</div>
+        <div class="thumbnail" onclick="setDirection(2)">2</div>
+        <div class="thumbnail" onclick="setDirection(3)">3</div>
+        <div class="thumbnail" onclick="setDirection(4)">4</div>
+        <div class="thumbnail" onclick="setDirection(5)">5</div>
+        <div class="thumbnail" onclick="setDirection(6)">6</div>
+    </div>
+
+    <div class="mockup-container">
+        <!-- Direction 1: Classic Top Input -->
+        <div class="mockup direction-1 active">
+            <div class="mockup-header">
+                <div class="direction-name">1. Classic Top Input</div>
+                <div class="direction-description">
+                    Traditional terminal layout - input at top, list below. Familiar pattern from command-line tools.
+                    Input is always visible, focus stays at top of window.
+                </div>
+                <div class="characteristics">
+                    <span>Layout: Top Input | Density: Balanced | Borders: Standard | Completed: Mixed</span>
+                </div>
+            </div>
+            <div class="app-window">
+                <div class="input-section">
+                    <input type="text" placeholder="Type todo and press Enter..." autofocus>
+                </div>
+                <ul class="todo-list">
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Implement keyboard shortcuts for all major actions including j/k navigation and Space to toggle</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Add auto-update mechanism with background download and seamless installation</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Optimize startup time</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Set up Electron project with proper build configuration and Windows packaging</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Design terminal color theme using Matrix green aesthetic with proper contrast ratios</span></li>
+                </ul>
+                <div class="footer">
+                    Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 2: Bottom Input -->
+        <div class="mockup direction-2">
+            <div class="mockup-header">
+                <div class="direction-name">2. Chat-Style Bottom Input</div>
+                <div class="direction-description">
+                    Input at bottom like chat apps. New todos appear above input. List grows upward.
+                    Most recent todos visible without scrolling.
+                </div>
+                <div class="characteristics">
+                    <span>Layout: Bottom Input | Density: Balanced | Borders: Standard | Completed: Mixed</span>
+                </div>
+            </div>
+            <div class="app-window">
+                <div class="header">
+                    Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close
+                </div>
+                <ul class="todo-list">
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Implement keyboard shortcuts for all major actions including j/k navigation and Space to toggle</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Add auto-update mechanism with background download and seamless installation</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Optimize startup time</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Set up Electron project with proper build configuration and Windows packaging</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Design terminal color theme using Matrix green aesthetic with proper contrast ratios</span></li>
+                </ul>
+                <div class="input-section">
+                    <input type="text" placeholder="Type todo and press Enter...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 3: Dense Compact -->
+        <div class="mockup direction-3">
+            <div class="mockup-header">
+                <div class="direction-name">3. Dense Information</div>
+                <div class="direction-description">
+                    Maximum information density. Tight spacing, thin borders, compact padding.
+                    For power users who want to see many todos at once.
+                </div>
+                <div class="characteristics">
+                    <span>Layout: Top Input | Density: Dense | Borders: Thin | Completed: Mixed</span>
+                </div>
+            </div>
+            <div class="app-window">
+                <input type="text" placeholder="Type todo and press Enter...">
+                <ul class="todo-list">
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Implement keyboard shortcuts for all major actions including j/k navigation and Space to toggle</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Add auto-update mechanism with background download and seamless installation</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Optimize startup time</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Write comprehensive documentation covering installation, keyboard shortcuts, and data storage</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Add unit tests</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Set up Electron project with proper build configuration and Windows packaging</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Design terminal color theme using Matrix green aesthetic with proper contrast ratios</span></li>
+                </ul>
+                <div class="footer">
+                    Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 4: Spacious Breathing Room -->
+        <div class="mockup direction-4">
+            <div class="mockup-header">
+                <div class="direction-name">4. Spacious Clarity</div>
+                <div class="direction-description">
+                    Generous spacing and padding. Larger input field, more breathing room.
+                    Emphasizes focus and readability over information density.
+                </div>
+                <div class="characteristics">
+                    <span>Layout: Top Input | Density: Spacious | Borders: Strong | Completed: Mixed</span>
+                </div>
+            </div>
+            <div class="app-window">
+                <input type="text" placeholder="Type todo and press Enter...">
+                <ul class="todo-list">
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Implement keyboard shortcuts for all major actions including j/k navigation and Space to toggle</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Add auto-update mechanism with background download and seamless installation</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Optimize startup time</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Set up Electron project with proper build configuration and Windows packaging</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Design terminal color theme using Matrix green aesthetic with proper contrast ratios</span></li>
+                </ul>
+                <div class="footer">
+                    Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 5: Separated Sections -->
+        <div class="mockup direction-5">
+            <div class="mockup-header">
+                <div class="direction-name">5. Separated Active/Completed</div>
+                <div class="direction-description">
+                    Clear separation between active and completed todos. Section headers for organization.
+                    Makes it easy to focus on active tasks only.
+                </div>
+                <div class="characteristics">
+                    <span>Layout: Top Input | Density: Balanced | Borders: Standard | Completed: Separated</span>
+                </div>
+            </div>
+            <div class="app-window">
+                <input type="text" placeholder="Type todo and press Enter...">
+                <div class="section">
+                    <div class="section-header">Active</div>
+                    <ul class="todo-list">
+                        <li class="todo-item"><span class="checkbox">☐</span> Implement keyboard shortcuts</li>
+                        <li class="todo-item"><span class="checkbox">☐</span> Add auto-update mechanism</li>
+                        <li class="todo-item"><span class="checkbox">☐</span> Optimize startup time</li>
+                    </ul>
+                </div>
+                <div class="section completed-section">
+                    <div class="section-header">Completed</div>
+                    <ul class="todo-list">
+                        <li class="todo-item"><span class="checkbox">☑</span> Set up Electron project</li>
+                        <li class="todo-item"><span class="checkbox">☑</span> Design terminal color theme</li>
+                    </ul>
+                </div>
+                <div class="footer">
+                    Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 6: Minimal Borderless -->
+        <div class="mockup direction-6">
+            <div class="mockup-header">
+                <div class="direction-name">6. Minimal Borderless</div>
+                <div class="direction-description">
+                    Ultra-minimal - no borders except input underline. Clean, distraction-free.
+                    Hover interactions for visual feedback. Maximum focus on content.
+                </div>
+                <div class="characteristics">
+                    <span>Layout: Top Input | Density: Balanced | Borders: Minimal | Completed: Mixed</span>
+                </div>
+            </div>
+            <div class="app-window">
+                <input type="text" placeholder="Type todo and press Enter...">
+                <ul class="todo-list">
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Implement keyboard shortcuts for all major actions including j/k navigation and Space to toggle</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Add auto-update mechanism with background download and seamless installation</span></li>
+                    <li class="todo-item"><span class="checkbox">☐</span><span class="todo-text">Optimize startup time</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Set up Electron project with proper build configuration and Windows packaging</span></li>
+                    <li class="todo-item completed"><span class="checkbox">☑</span><span class="todo-text">Design terminal color theme using Matrix green aesthetic with proper contrast ratios</span></li>
+                </ul>
+                <div class="footer">
+                    Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDirection = 1;
+        const totalDirections = 6;
+
+        function setDirection(num) {
+            currentDirection = num;
+            document.querySelectorAll('.mockup').forEach((m, i) => {
+                m.classList.toggle('active', i + 1 === num);
+            });
+            document.querySelectorAll('.thumbnail').forEach((t, i) => {
+                t.classList.toggle('active', i + 1 === num);
+            });
+            document.getElementById('current-direction').textContent = `Direction ${num} of ${totalDirections}`;
+        }
+
+        function showDirection(delta) {
+            let newDirection = currentDirection + delta;
+            if (newDirection < 1) newDirection = totalDirections;
+            if (newDirection > totalDirections) newDirection = 1;
+            setDirection(newDirection);
+        }
+
+        // Make todos interactive
+        document.querySelectorAll('.todo-item').forEach(todo => {
+            todo.addEventListener('click', () => {
+                todo.classList.toggle('completed');
+                const checkbox = todo.querySelector('.checkbox');
+                checkbox.textContent = todo.classList.contains('completed') ? '☑' : '☐';
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') showDirection(-1);
+            if (e.key === 'ArrowRight') showDirection(1);
+            if (e.key >= '1' && e.key <= '6') setDirection(parseInt(e.key));
+        });
+    </script>
+</body>
+</html>

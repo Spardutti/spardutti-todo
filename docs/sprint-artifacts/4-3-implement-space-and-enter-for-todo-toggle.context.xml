@@ -1,0 +1,471 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>3</storyId>
+    <title>Implement Space and Enter for Todo Toggle</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-23</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-3-implement-space-and-enter-for-todo-toggle.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>to press Space or Enter on a selected todo to toggle its completion</iWant>
+    <soThat>I can mark todos complete without using the mouse</soThat>
+    <tasks>
+- [ ] Implement context detection helper (AC: #5, #6, #8)
+  - [ ] Create `isInputFocused(): boolean` helper function
+  - [ ] Check if `document.activeElement === inputElement`
+  - [ ] Return true if input focused, false otherwise
+  - [ ] Use in Space/Enter handlers to determine context
+
+- [ ] Register Space shortcut with context awareness (AC: #1, #3, #5, #8)
+  - [ ] Register "space" key in KeyboardManager
+  - [ ] Handler checks `isInputFocused()`
+  - [ ] If input focused → return false (allow default space typing)
+  - [ ] If todo selected → call `toggleSelectedTodo()`
+  - [ ] Description: "Toggle todo" (for help hints)
+
+- [ ] Register Enter shortcut with context awareness (AC: #2, #6, #8)
+  - [ ] Register "enter" key in KeyboardManager (if not already registered)
+  - [ ] Handler checks `isInputFocused()`
+  - [ ] If input focused → return false (allow existing todo creation from Story 2.4)
+  - [ ] If todo selected → call `toggleSelectedTodo()`
+  - [ ] Description: "Toggle todo" (for help hints)
+
+- [ ] Implement toggleSelectedTodo() function (AC: #1, #2, #3, #4)
+  - [ ] Check if `selectedTodoIndex` is null → return early (no-op)
+  - [ ] Get all todos from TodoStore
+  - [ ] Get selected todo: `todos[selectedTodoIndex]`
+  - [ ] Call `TodoStore.toggle(selectedTodo.id)`
+  - [ ] Call `renderTodoList(selectedTodoIndex)` to update UI
+  - [ ] Preserve `selectedTodoIndex` (selection persists)
+  - [ ] Ensure synchronous execution (&lt;5ms target)
+
+- [ ] Update KeyboardManager.handle() for context-aware handlers (AC: #8)
+  - [ ] Modify KeyboardManager.handle() to respect handler return value
+  - [ ] If handler returns false → do NOT preventDefault/stopPropagation
+  - [ ] If handler returns true or void → preventDefault/stopPropagation as normal
+  - [ ] Update ShortcutHandler type to support boolean return
+
+- [ ] Integration with existing code
+  - [ ] Ensure existing Enter handler (input todo creation) still works
+  - [ ] Verify Space in input field types space (no interference)
+  - [ ] Verify navigation shortcuts (j/k/arrows) still work
+  - [ ] Test interaction: Navigate (j) → Toggle (Space) → Navigate (j) → Toggle (Space)
+
+- [ ] Testing and validation
+  - [ ] Manual test: Select todo, press Space → verify toggle
+  - [ ] Manual test: Select todo, press Enter → verify toggle
+  - [ ] Manual test: Press Space 10x rapidly → verify rapid toggling
+  - [ ] Manual test: Toggle todo, verify selection stays on same item
+  - [ ] Manual test: Focus input, press Space → verify space character appears
+  - [ ] Manual test: Focus input, type text, press Enter → verify todo created
+  - [ ] Manual test: No selection, press Space/Enter → verify no errors
+  - [ ] Run TypeScript compiler: npx tsc --noEmit (expect zero errors)
+  - [ ] Run existing tests: npm test (ensure no regressions)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Toggle selected todo with Space key**
+   - GIVEN I have navigated to a todo using arrow keys/j/k (todo is selected)
+   - WHEN I press Space
+   - THEN the selected todo toggles between complete and incomplete
+   - AND the checkbox updates (☐ ↔ ☑)
+   - AND the todo style updates (green ↔ dark green strikethrough)
+
+2. **Toggle selected todo with Enter key**
+   - GIVEN I have navigated to a todo using arrow keys/j/k (todo is selected)
+   - WHEN I press Enter
+   - THEN the selected todo toggles between complete and incomplete
+   - AND behavior is identical to Space key
+
+3. **Space repeatable toggling**
+   - GIVEN a todo is selected
+   - WHEN I press Space multiple times in rapid succession
+   - THEN the todo toggles each time (complete → incomplete → complete → ...)
+   - AND each toggle happens instantly (no delay or queue buildup)
+
+4. **Selection persists after toggle**
+   - GIVEN I have toggled a selected todo
+   - WHEN the toggle completes
+   - THEN the selection stays on the same todo (selectedTodoIndex unchanged)
+   - AND the visual selection indicator remains visible
+
+5. **Space in input field types space**
+   - GIVEN the input field has focus (no todo is selected)
+   - WHEN I press Space
+   - THEN a space character is typed into the input field (normal behavior)
+   - AND the todo list is not affected
+
+6. **Enter in input field submits todo**
+   - GIVEN the input field has focus and contains text
+   - WHEN I press Enter
+   - THEN the todo is created and added to the list (existing behavior from Story 2.4)
+   - AND the input field clears and retains focus
+   - AND no todo is toggled
+
+7. **No toggle when no selection**
+   - GIVEN no todo is selected (selectedTodoIndex is null)
+   - WHEN I press Space or Enter
+   - THEN nothing happens to the todo list (no-op)
+   - AND no error is thrown
+
+8. **Context-aware key handling**
+   - GIVEN the KeyboardManager is configured
+   - WHEN Space or Enter is pressed
+   - THEN the handler checks current context (input focused vs todo selected)
+   - AND only triggers toggle if a todo is selected
+   - AND allows default behavior for input field
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- PRD - Speed and keyboard-first philosophy -->
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Functional Requirements</section>
+        <snippet>FR13: Users can toggle todo completion status using keyboard (Space or Enter). FR20: The application provides immediate visual feedback for all user actions. FR21: The application operates without animations or transition delays.</snippet>
+      </doc>
+
+      <!-- Architecture - ADR-003 Custom KeyboardManager -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>ADR-003: Custom KeyboardManager Over External Library</section>
+        <snippet>Implements custom KeyboardManager class without external keyboard libraries, providing full control over normalization logic, conflict detection, and help screen generation. Zero dependencies beyond browser-native KeyboardEvent API.</snippet>
+      </doc>
+
+      <!-- Architecture - Performance Considerations -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Performance Considerations</section>
+        <snippet>Target: &lt;16ms from keypress to visual feedback (zero perceived lag). Toggle Budget: toggleSelectedTodo() must complete in &lt;5ms. Render Budget: renderTodoList() has 11ms to update DOM. No animations: Instant state changes (checkbox ☐ ↔ ☑, strikethrough toggle).</snippet>
+      </doc>
+
+      <!-- Tech Spec Epic 4 - Toggle Action Keys Pattern -->
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Toggle Action Keys (tech-spec:175-189)</section>
+        <snippet>Context-aware handler pattern: isInputFocused() checks document.activeElement === inputElement. Space handler returns false if input focused (allow default space typing), otherwise calls toggleSelectedTodo(). Enter handler returns false if input focused (allow todo creation from Story 2.4), otherwise toggles selected todo.</snippet>
+      </doc>
+
+      <!-- Tech Spec Epic 4 - Toggle Sequence -->
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: Keyboard Navigation System</title>
+        <section>Toggle Sequence (tech-spec:233-244)</section>
+        <snippet>Toggle flow: KeyboardManager.handle(event) → Handler checks isInputFocused() → If input focused, return false (allow default) → Otherwise toggleSelectedTodo() → TodoStore.toggle(id) → renderTodoList() with preserved selection → DOM updated with new completion state → Visual feedback instant (&lt;16ms total).</snippet>
+      </doc>
+
+      <!-- UX Design - Keyboard Patterns -->
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Keyboard Patterns</section>
+        <snippet>Action Keys: Enter (in input: Save todo / on todo: Toggle completion), Space (on todo: Toggle completion / in input: Type space character). Context-aware behavior ensures Space in input field types space, Space with todo selected toggles completion.</snippet>
+      </doc>
+
+      <!-- UX Design - Feedback Patterns -->
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Feedback Patterns</section>
+        <snippet>Success Feedback: Implicit success (state change = success). Checkbox toggles (☐ ↔ ☑) = status changed successfully. No "Success!" toast needed. Loading Feedback: No loading states (everything is instant). All operations complete synchronously or appear synchronous.</snippet>
+      </doc>
+
+      <!-- UX Design - Focus Management -->
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Focus Management</section>
+        <snippet>After Toggling Todo: Focus stays on same todo (selection unchanged). Rationale: Enables bulk toggling (Space, j, Space, j, Space...). Focus Indicators: Input: Green glow (box-shadow: 0 0 8px #00FF00), Todo: Subtle background (#001100), Always visible.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- KeyboardManager class implementation -->
+      <code>
+        <path>src/keyboard/KeyboardManager.ts</path>
+        <kind>class</kind>
+        <symbol>KeyboardManager</symbol>
+        <lines>1-200</lines>
+        <reason>Core keyboard shortcut management system. Provides register(), unregister(), handle(), and getHints() methods. Story 4.3 requires modifying handle() to support context-aware handlers that can return false to allow default browser behavior (Space typing, Enter submitting).</reason>
+      </code>
+
+      <!-- ShortcutHandler interface -->
+      <code>
+        <path>src/types/Shortcut.ts</path>
+        <kind>interface</kind>
+        <symbol>ShortcutHandler</symbol>
+        <lines>4-11</lines>
+        <reason>Current handler type is () =&gt; void. Story 4.3 requires updating to () =&gt; void | boolean to support returning false for context-aware behavior (allow default browser action).</reason>
+      </code>
+
+      <!-- Navigation state and helpers in renderer.ts -->
+      <code>
+        <path>src/renderer.ts</path>
+        <kind>module</kind>
+        <symbol>Navigation State</symbol>
+        <lines>23-124</lines>
+        <reason>Contains selectedTodoIndex state variable, selectNext(), selectPrevious(), getSelectedTodo(), clearSelection(), and scrollSelectedIntoView() helper functions. Story 4.3 will add toggleSelectedTodo() function here and use getSelectedTodo() to retrieve selected todo for toggling.</reason>
+      </code>
+
+      <!-- renderTodoList function -->
+      <code>
+        <path>src/ui/render.ts</path>
+        <kind>function</kind>
+        <symbol>renderTodoList</symbol>
+        <lines>88-108</lines>
+        <reason>Renders todo list with optional selectedIndex parameter for visual selection. Story 4.3 calls this function after toggling to update checkbox (☐ ↔ ☑), strikethrough, and color while preserving selection state.</reason>
+      </code>
+
+      <!-- TodoStore.toggle method -->
+      <code>
+        <path>src/store/TodoStore.ts</path>
+        <kind>method</kind>
+        <symbol>TodoStore.toggle</symbol>
+        <lines>Unknown</lines>
+        <reason>Existing method from Story 2.5 that toggles todo completion status by ID. Story 4.3 calls this method from toggleSelectedTodo() function to perform the actual state mutation.</reason>
+      </code>
+
+      <!-- Input Enter handler in renderer.ts -->
+      <code>
+        <path>src/renderer.ts</path>
+        <kind>event-handler</kind>
+        <symbol>input.addEventListener('keydown')</symbol>
+        <lines>182-203</lines>
+        <reason>Existing Enter key handler for todo creation (Story 2.4). Story 4.3 must not interfere with this handler. Context-aware Enter handler checks if input is focused and returns false to allow this default behavior.</reason>
+      </code>
+
+      <!-- Global keyboard event binding -->
+      <code>
+        <path>src/renderer.ts</path>
+        <kind>event-handler</kind>
+        <symbol>window.addEventListener('keydown')</symbol>
+        <lines>177-179</lines>
+        <reason>Global keyboard event binding that calls keyboardManager.handle(event). Story 4.3 modifies KeyboardManager.handle() to conditionally preventDefault/stopPropagation based on handler return value (false = allow default, true/void = prevent).</reason>
+      </code>
+
+      <!-- Selected todo CSS styling -->
+      <code>
+        <path>src/ui/styles.css</path>
+        <kind>css</kind>
+        <symbol>.todo-item.selected</symbol>
+        <lines>Unknown</lines>
+        <reason>CSS class for visual selection indicator (background: #001100). Story 4.3 relies on this styling to show which todo is selected during toggle operations. Selection persists after toggle (AC #4).</reason>
+      </code>
+    </code>
+
+    <dependencies>
+      <!-- Node ecosystem -->
+      <node>
+        <typescript>~5.9.2</typescript>
+        <electron>39.2.3</electron>
+        <vitest>^4.0.13</vitest>
+      </node>
+
+      <!-- Browser APIs (no external packages) -->
+      <browser>
+        <api>KeyboardEvent</api>
+        <api>document.activeElement</api>
+        <api>Map</api>
+        <api>Element.scrollIntoView</api>
+      </browser>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+**Development Constraints from Architecture:**
+
+1. **Performance Budget:** toggleSelectedTodo() must complete in &lt;5ms. Total toggle response time must be &lt;16ms from keypress to visual feedback (zero perceived lag).
+
+2. **Synchronous operations only:** No setTimeout, no Promise delays. All toggle operations execute synchronously within single frame (&lt;16ms).
+
+3. **Terminal aesthetic:** No animations or CSS transitions. State changes (checkbox, strikethrough) must be instant.
+
+4. **Type safety:** Strict TypeScript mode enabled (noImplicitAny, strictNullChecks). No 'any' types allowed. Update ShortcutHandler interface to support boolean return.
+
+5. **Unidirectional data flow:** TodoStore is single source of truth → mutations through TodoStore methods → UI re-renders after mutation → no direct DOM → Store updates.
+
+6. **Selection state management:** selectedTodoIndex must remain unchanged after toggle (selection persists). Only clear selection on bulk delete or when list becomes empty.
+
+7. **Context detection:** Use document.activeElement to check input focus (O(1) operation). No complex focus tracking or state management needed.
+
+8. **Browser API only:** No external keyboard libraries (ADR-003). Use browser-native KeyboardEvent API exclusively.
+
+9. **Conflict detection:** KeyboardManager must throw error on duplicate key registration. Space and Enter handlers must coexist with existing handlers through context-aware return values.
+
+10. **Accessibility:** Selection state must be preserved for screen reader users. Toggle action must be announced via aria-checked attribute updates.
+
+**Implementation Patterns from Dev Notes:**
+
+- Context-aware handler returns false to allow default browser behavior (Space typing, Enter submitting)
+- Handler returns true or void to prevent default and execute custom behavior
+- isInputFocused() helper: `return document.activeElement === inputElement`
+- toggleSelectedTodo() checks for null selection at start, returns early if null (no-op)
+- Selection index preserved by passing selectedTodoIndex to renderTodoList()
+- Direct DOM manipulation (no virtual DOM) ensures instant visual feedback
+
+**Integration Points:**
+
+- Modify KeyboardManager.handle() to check handler return value before preventDefault
+- Update ShortcutHandler type in src/types/Shortcut.ts to allow boolean return
+- Add isInputFocused() helper function in src/renderer.ts
+- Add toggleSelectedTodo() function in src/renderer.ts
+- Register "space" and "enter" shortcuts with context-aware handlers
+- Ensure existing Enter handler for input todo creation still works (context check returns false)
+  </constraints>
+
+  <interfaces>
+<!-- KeyboardManager.handle() modified signature -->
+<interface>
+  <name>KeyboardManager.handle()</name>
+  <kind>method</kind>
+  <signature>handle(event: KeyboardEvent): boolean</signature>
+  <path>src/keyboard/KeyboardManager.ts:92-109</path>
+  <description>Modified to respect handler return value: if handler returns false, do NOT call preventDefault/stopPropagation (allow default browser behavior). If handler returns true or void, prevent default as before.</description>
+</interface>
+
+<!-- ShortcutHandler updated interface -->
+<interface>
+  <name>ShortcutHandler</name>
+  <kind>interface</kind>
+  <signature>
+interface ShortcutHandler {
+  key: string
+  handler: () =&gt; void | boolean  // Updated to allow boolean return
+  description: string
+}
+  </signature>
+  <path>src/types/Shortcut.ts:4-11</path>
+  <description>Updated handler type to support returning false for context-aware behavior. Void or true = prevent default, false = allow default browser action.</description>
+</interface>
+
+<!-- isInputFocused() helper function -->
+<interface>
+  <name>isInputFocused()</name>
+  <kind>function</kind>
+  <signature>function isInputFocused(): boolean</signature>
+  <path>src/renderer.ts (new function)</path>
+  <description>Context detection helper. Returns true if input field has focus (document.activeElement === inputElement), false otherwise. Used by Space/Enter handlers to determine behavior.</description>
+</interface>
+
+<!-- toggleSelectedTodo() function -->
+<interface>
+  <name>toggleSelectedTodo()</name>
+  <kind>function</kind>
+  <signature>function toggleSelectedTodo(): void</signature>
+  <path>src/renderer.ts (new function)</path>
+  <description>Toggles completion status of currently selected todo. Checks selectedTodoIndex is not null (early return if null). Gets selected todo from TodoStore. Calls TodoStore.toggle(id). Re-renders todo list with preserved selection. Synchronous execution (&lt;5ms target).</description>
+</interface>
+
+<!-- TodoStore.toggle() existing method -->
+<interface>
+  <name>TodoStore.toggle()</name>
+  <kind>method</kind>
+  <signature>toggle(id: string): void</signature>
+  <path>src/store/TodoStore.ts</path>
+  <description>Existing method from Story 2.5. Toggles todo completion status by ID. Synchronous operation (direct array mutation). Used by toggleSelectedTodo() to perform state mutation.</description>
+</interface>
+
+<!-- renderTodoList() with selection parameter -->
+<interface>
+  <name>renderTodoList()</name>
+  <kind>function</kind>
+  <signature>renderTodoList(todos: Todo[], container: HTMLElement, selectedIndex?: number | null): void</signature>
+  <path>src/ui/render.ts:88-108</path>
+  <description>Renders todo list with optional selectedIndex for visual selection. Story 4.3 calls this after toggle to update checkbox (☐ ↔ ☑), strikethrough, and color while preserving selection (pass same selectedTodoIndex).</description>
+</interface>
+
+<!-- Space shortcut registration -->
+<interface>
+  <name>Space Shortcut Handler</name>
+  <kind>keyboard-shortcut</kind>
+  <signature>keyboardManager.register('space', handler, 'Toggle todo')</signature>
+  <path>src/renderer.ts (new registration)</path>
+  <description>Context-aware handler: if isInputFocused() returns false to allow space typing, else calls toggleSelectedTodo() and returns true to prevent default.</description>
+</interface>
+
+<!-- Enter shortcut registration -->
+<interface>
+  <name>Enter Shortcut Handler</name>
+  <kind>keyboard-shortcut</kind>
+  <signature>keyboardManager.register('enter', handler, 'Toggle todo')</signature>
+  <path>src/renderer.ts (new registration)</path>
+  <description>Context-aware handler: if isInputFocused() returns false to allow todo creation (existing Story 2.4 behavior), else calls toggleSelectedTodo() and returns true to prevent default.</description>
+</interface>
+  </interfaces>
+
+  <tests>
+    <standards>Testing framework: Vitest (^4.0.13). Test files co-located with source (*.test.ts). Unit tests for KeyboardManager class modifications. Integration tests for context-aware behavior. Manual testing for visual feedback and edge cases. TypeScript compiler validation (npx tsc --noEmit). Performance validation (&lt;5ms toggle execution).</standards>
+
+    <locations>
+      <location>src/keyboard/KeyboardManager.test.ts</location>
+      <location>src/renderer.test.ts (new tests for toggleSelectedTodo)</location>
+      <location>Manual testing: DevTools console for rapid toggle spam test</location>
+    </locations>
+
+    <ideas>
+      <!-- Test context-aware Space behavior -->
+      <idea ac="AC-5">
+        Test Space in input field: Focus input, press Space, verify space character appears in input.value. Verify TodoStore.toggle() NOT called. Verify todo list unchanged.
+      </idea>
+
+      <!-- Test context-aware Enter behavior -->
+      <idea ac="AC-6">
+        Test Enter in input field: Focus input, type "Test Todo", press Enter, verify todo created (existing Story 2.4 behavior). Verify todo appears in list. Verify input cleared and retains focus. Verify TodoStore.toggle() NOT called.
+      </idea>
+
+      <!-- Test Space toggle on selected todo -->
+      <idea ac="AC-1">
+        Test Space toggle: Navigate to todo (selectNext), press Space, verify todo completion toggled. Verify checkbox changes ☐ → ☑ or ☑ → ☐. Verify strikethrough applied/removed. Verify color changes (green ↔ dark green).
+      </idea>
+
+      <!-- Test Enter toggle on selected todo -->
+      <idea ac="AC-2">
+        Test Enter toggle: Navigate to todo (selectNext), press Enter, verify behavior identical to Space. Verify checkbox, strikethrough, and color update.
+      </idea>
+
+      <!-- Test rapid toggling -->
+      <idea ac="AC-3">
+        Test rapid Space spam: Select todo, press Space 10 times rapidly, verify todo toggles each time. Count checkbox state changes (should be 10). Verify no lag or dropped events. Verify no errors in console.
+      </idea>
+
+      <!-- Test selection persistence -->
+      <idea ac="AC-4">
+        Test selection persists: Navigate to todo #3 (press j 3 times), press Space to toggle, verify selectedTodoIndex still equals 2 (third todo). Verify visual selection indicator (#001100 background) remains on todo #3.
+      </idea>
+
+      <!-- Test no selection edge case -->
+      <idea ac="AC-7">
+        Test no selection: Ensure selectedTodoIndex is null (app startup or clearSelection called), press Space, verify nothing happens. Press Enter, verify nothing happens. Verify no errors in console. Verify TodoStore.toggle() NOT called.
+      </idea>
+
+      <!-- Test context detection accuracy -->
+      <idea ac="AC-8">
+        Test context detection: Create isInputFocused() test cases. Verify returns true when input focused. Verify returns false when input blurred. Verify returns false when todo selected. Test document.activeElement === inputElement logic.
+      </idea>
+
+      <!-- Test KeyboardManager.handle() respects return value -->
+      <idea ac="AC-8">
+        Test KeyboardManager.handle() modifications: Mock handler that returns false, verify preventDefault NOT called. Mock handler that returns true, verify preventDefault called. Mock handler that returns void, verify preventDefault called (existing behavior preserved).
+      </idea>
+
+      <!-- Test integration with existing navigation -->
+      <idea>
+        Integration test: Navigate (press j) → Toggle (press Space) → Navigate (press j) → Toggle (press Space). Verify smooth workflow with no state conflicts. Verify selection moves correctly. Verify toggles apply to correct todos.
+      </idea>
+
+      <!-- Performance test -->
+      <idea>
+        Performance validation: Measure toggleSelectedTodo() execution time using performance.now(). Target: &lt;5ms. Log warning if exceeds threshold. Test with 100+ todos to verify performance scales.
+      </idea>
+    </ideas>
+  </tests>
+</story-context>

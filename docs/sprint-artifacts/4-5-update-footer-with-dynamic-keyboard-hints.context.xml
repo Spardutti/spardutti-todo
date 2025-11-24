@@ -1,0 +1,116 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>5</storyId>
+    <title>Update Footer with Dynamic Keyboard Hints</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-5-update-footer-with-dynamic-keyboard-hints.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>the footer to display current keyboard shortcuts dynamically</iWant>
+    <soThat>I always see relevant actions for my current context</soThat>
+    <tasks>
+      - Verify KeyboardManager.getHints() implementation (AC: #1, #7, #8)
+      - Implement dynamic footer initialization (AC: #1, #5)
+      - Verify showConfirmation() updates footer correctly (AC: #2, #3)
+      - Verify restoreFooterHints() implementation (AC: #6)
+      - Verify hints content and format (AC: #4, #7, #8)
+      - Integration with confirmation workflow (AC: #2, #6)
+      - Performance validation (AC: #3)
+      - Testing and validation
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Footer displays all shortcuts in normal mode: "Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close"
+    2. Footer displays confirmation prompt when bulk delete triggered: "Delete X completed todos? [Y/n]"
+    3. Footer updates are instantaneous (under 16ms with no animations)
+    4. Hints use concise action verbs (under 15 characters each)
+    5. Footer maintains terminal aesthetic (#008800 color, 12px Consolas monospace, black background)
+    6. restoreFooterHints() returns footer to normal hints
+    7. All registered shortcuts appear in hints (non-temporary only)
+    8. getHints() format is consistent: "Key: Description | Key: Description | ..."
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" title="Epic 4 Technical Specification" section="Story 4.5: Footer Hints" snippet="AC-4.5.1: Normal mode footer displays all shortcuts. AC-4.5.2: Confirmation mode shows 'Delete X completed todos? [Y/n]'. AC-4.5.3-8 cover instant updates, concise verbs, terminal aesthetic, restoreFooterHints, all shortcuts displayed, consistent format." />
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" title="KeyboardManager API" section="KeyboardManager.getHints()" snippet="Returns formatted hints string for footer display. Format: 'Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close'. Separator is ' | ' (space-pipe-space), single line, descriptions from shortcut registrations." />
+      <doc path="docs/sprint-artifacts/4-4-implement-keyboard-shortcuts-for-app-control.md" title="Previous Story - App Control" section="Completion Notes" snippet="All shortcuts use existing showConfirmation/showFeedback/restoreFooterHints. Confirmation handlers properly track state lifecycle. No modifications needed to existing UI helper functions. Footer updates are synchronous and meet &lt;16ms performance target." />
+      <doc path="docs/sprint-artifacts/4-4-implement-keyboard-shortcuts-for-app-control.md" title="Story 4.4 Integration Points" section="Footer Utilities" snippet="showConfirmation() updates footer text with confirmation prompt. showFeedback() displays temporary message and auto-hides. restoreFooterHints() uses footerOriginalContent cached variable (better design than calling getHints())." />
+      <doc path="docs/architecture.md" title="Architecture Decision Record" section="ADR-003: Custom KeyboardManager" snippet="Mandates custom KeyboardManager with help generation. Story 4.5 completes this by implementing the getHints() method that provides footer content for all registered shortcuts." />
+      <doc path="docs/architecture.md" title="Performance Considerations" section="Footer Update Performance" snippet="Footer Update Time: &lt;16ms from context change to visual update. getHints() Execution: &lt;5ms (string concatenation only). DOM Update: Direct textContent manipulation (&lt;1ms). No Animations: Footer text changes are instant (CSS: transition: none)." />
+      <doc path="docs/ux-design-specification.md" title="UX Design - Footer Hints Component" section="Component 5: Footer Hints" snippet="Purpose: Display keyboard shortcuts for discoverability. Font: 12px, dimmed green (#008800). Border-top: 1px solid dark green (#004400). Default content: 'Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close'. Confirmation mode: 'Delete X completed todos? [Y/n]'." />
+    </docs>
+    <code>
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="class" symbol="KeyboardManager.getHints()" lines="138-150" reason="Core method to implement/verify - generates formatted hints string from registered shortcuts. Returns format: 'Description: key | Description: key'." />
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="class" symbol="KeyboardManager.register()" lines="49-61" reason="Used to register shortcuts with descriptions. Each registration stores description for help generation. Relevant for understanding how hints are populated." />
+      <artifact path="src/keyboard/KeyboardManager.ts" kind="class" symbol="_shortcuts Map" lines="20" reason="Private Map storing all registered shortcuts with descriptions. Source of data for getHints() method." />
+      <artifact path="src/ui/render.ts" kind="function" symbol="showConfirmation()" lines="224-256" reason="Updates footer to confirmation prompt mode. Replaces hints with 'Delete X completed todos? [Y/n]'. Handles y/n/Enter/Esc keyboard responses." />
+      <artifact path="src/ui/render.ts" kind="function" symbol="showFeedback()" lines="274-295" reason="Shows temporary feedback messages in footer (e.g., 'No completed todos', '3 todos deleted'). Auto-restores hints after timeout." />
+      <artifact path="src/ui/render.ts" kind="function" symbol="restoreFooterHints()" lines="310-314" reason="Restores footer to normal hints display. Uses cached footerOriginalContent variable. Called after confirmations and feedback messages." />
+      <artifact path="src/ui/render.ts" kind="variable" symbol="footerOriginalContent" lines="189" reason="Module-scoped variable storing default footer hints. Used by restoreFooterHints() to return to normal state. Initialized with getHints() on startup." />
+      <artifact path="src/renderer.ts" kind="function" symbol="initApp()" lines="190-411" reason="Application initialization orchestration. Registers all keyboard shortcuts with KeyboardManager. Needs to call keyboardManager.getHints() on startup to initialize footerOriginalContent." />
+      <artifact path="src/renderer.ts" kind="registration" symbol="Shortcut Registrations" lines="222-323" reason="All keyboard shortcuts registered with descriptions. Lines 223-226 (navigation), 229-245 (toggle), 252-323 (app control). These descriptions appear in footer hints." />
+    </code>
+    <dependencies>
+      <node>
+        <package name="electron" version="39.2.3" reason="Desktop application runtime - provides window, DOM, and native APIs" />
+        <package name="typescript" version="~5.9.2" reason="Strict type checking for KeyboardManager and all code. Enables interface definitions and type safety." />
+      </node>
+      <frameworks>
+        <framework name="Vite" version="^5.4.21" reason="Build tooling and dev server. Handles TypeScript compilation and module bundling." />
+        <framework name="Electron Forge" version="^7.10.2" reason="Electron packaging and distribution. Manages build process." />
+      </frameworks>
+      <testing>
+        <package name="vitest" version="^4.0.13" reason="Unit testing framework for KeyboardManager.getHints() tests. Validates output format and content." />
+        <package name="jsdom" version="^27.2.0" reason="DOM environment for testing footer rendering and updates." />
+      </testing>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="performance">Footer updates must complete in &lt;16ms total (getHints() &lt;5ms, DOM update &lt;1ms). Zero animations or CSS transitions (instant state changes only).</constraint>
+    <constraint type="architecture">Use existing showConfirmation/showFeedback/restoreFooterHints utilities from render.ts - no modifications needed per Story 4.4 findings.</constraint>
+    <constraint type="architecture">Initialize footerOriginalContent with keyboardManager.getHints() on app startup. restoreFooterHints() uses cached value (not dynamic calls).</constraint>
+    <constraint type="styling">Footer text must be #008800 (dimmed green), 12px Consolas monospace, on #000000 (black) background. No deviations from terminal aesthetic.</constraint>
+    <constraint type="format">Hints format must be exactly: "Description: key | Description: key | ..." with space-pipe-space separator. Single line, no newlines.</constraint>
+    <constraint type="content">Descriptions must be concise action verbs under 15 characters each (e.g., "Save" not "Save new todo"). No temporary handlers in hints output.</constraint>
+    <constraint type="implementation">No code changes beyond initial setup in renderer.ts. All footer utilities already implemented in Stories 2.6 and 4.4.</constraint>
+    <constraint type="testing">Manual visual testing required for footer color (#008800), font (12px Consolas), pipe separator format, and confirmation mode display.</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="KeyboardManager.getHints()" kind="method" signature="getHints(): string" path="src/keyboard/KeyboardManager.ts:138-150" description="Returns formatted hints string for footer display. Iterates over _shortcuts Map, formats as 'description: key | description: key'. Returns empty string if no shortcuts registered." />
+    <interface name="KeyboardManager.register()" kind="method" signature="register(key: string, handler: () => void | boolean, description: string): void" path="src/keyboard/KeyboardManager.ts:49-61" description="Registers keyboard shortcut with description for help generation. Description parameter is stored in ShortcutHandler and used by getHints()." />
+    <interface name="showConfirmation()" kind="function" signature="showConfirmation(footer: HTMLDivElement, message: string, onConfirm: () => void, onCancel: () => void): void" path="src/ui/render.ts:224-256" description="Updates footer text to confirmation prompt. Registers temporary y/n/Enter/Esc handlers. Stores original footer content for restoration." />
+    <interface name="showFeedback()" kind="function" signature="showFeedback(footer: HTMLDivElement, message: string, duration: number = 2000): void" path="src/ui/render.ts:274-295" description="Displays temporary message in footer. Auto-hides after duration and calls restoreFooterHints(). Clears previous timeout to prevent overlapping messages." />
+    <interface name="restoreFooterHints()" kind="function" signature="restoreFooterHints(footer: HTMLDivElement): void" path="src/ui/render.ts:310-314" description="Restores footer to original hints content. Uses cached footerOriginalContent variable. Called after confirmations and feedback messages." />
+    <interface name="footerOriginalContent" kind="variable" signature="let footerOriginalContent: string" path="src/ui/render.ts:189" description="Module-scoped variable storing default footer hints. Initialized with keyboardManager.getHints() on app startup. Used by restoreFooterHints()." />
+  </interfaces>
+  <tests>
+    <standards>
+      Unit tests using Vitest for KeyboardManager.getHints() method. Integration tests for footer initialization and dynamic updates. Manual visual tests for styling (#008800 color, 12px Consolas, pipe separators). Performance tests using performance.now() to verify &lt;16ms footer updates. TypeScript strict mode validation (npx tsc --noEmit). Regression tests: npm test to ensure no existing functionality broken.
+    </standards>
+    <locations>
+      src/keyboard/KeyboardManager.test.ts (unit tests for getHints() method)
+      src/renderer.test.ts (integration tests for footer initialization)
+      Manual testing: Launch app and verify footer displays all shortcuts
+      Performance testing: Use browser DevTools Performance tab
+    </locations>
+    <ideas>
+      <test ac="AC-4.5.1" description="Unit test: Register multiple shortcuts with descriptions, call getHints(), verify output contains all shortcuts in correct format with pipe separators." />
+      <test ac="AC-4.5.2" description="Integration test: Trigger Ctrl+D with completed todos, verify footer displays 'Delete X completed todos? [Y/n]' format exactly." />
+      <test ac="AC-4.5.3" description="Performance test: Measure getHints() execution time with performance.now(), verify &lt;5ms. Measure footer textContent update, verify &lt;16ms total." />
+      <test ac="AC-4.5.4" description="Unit test: Verify all shortcut descriptions are under 15 characters and use concise action verbs (Save, Toggle, Delete, Close)." />
+      <test ac="AC-4.5.5" description="Visual test: Launch app, inspect footer element, verify color is #008800, font is Consolas 12px, background is #000000. Use browser DevTools." />
+      <test ac="AC-4.5.6" description="Integration test: Trigger confirmation (Ctrl+D), press n to cancel, verify restoreFooterHints() returns footer to normal hints immediately." />
+      <test ac="AC-4.5.7" description="Unit test: Verify getHints() output includes all registered shortcuts from Stories 4.1-4.4 (navigation, toggle, app control). Verify temporary handlers excluded." />
+      <test ac="AC-4.5.8" description="Unit test: Verify getHints() format is exactly 'Description: key | Description: key | ...' with space-pipe-space separator and single line output." />
+      <test ac="Integration" description="End-to-end test: Launch app → verify footer shows hints → press Ctrl+D → verify confirmation → press y → verify feedback → verify hints restored after 2s." />
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,6 @@
+todos[3]{id,text,completed,createdAt}:
+  550e8400-e29b-41d4-a716-446655440001,First todo - Created by script,false,2025-11-24T10:00:00Z
+  550e8400-e29b-41d4-a716-446655440002,Second todo - Also by script,true,2025-11-24T10:05:00Z
+  550e8400-e29b-41d4-a716-446655440003,Third todo - Manually added via text editor,false,2025-11-24T10:10:00Z
+
+version: 1.0

@@ -1,0 +1,352 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>1</storyId>
+    <title>Configure electron-updater and GitHub Releases</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-1-configure-electron-updater-and-github-releases.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>electron-updater configured to check GitHub Releases for updates</iWant>
+    <soThat>the update system has the infrastructure to distribute new versions</soThat>
+    <tasks>
+      - Create electron/updater.ts module (AC: #1, #2, #5)
+        - Import electron-updater and electron-log
+        - Implement `initUpdater(mainWindow: BrowserWindow): void` function
+        - Configure `autoUpdater.logger = log` for logging integration
+        - Add event handler: `autoUpdater.on('checking-for-update')`
+        - Add event handler: `autoUpdater.on('update-available')`
+        - Add event handler: `autoUpdater.on('update-not-available')`
+        - Add event handler: `autoUpdater.on('update-downloaded')`
+        - Add event handler: `autoUpdater.on('error')` with offline handling
+        - Call `autoUpdater.checkForUpdatesAndNotify()` in initUpdater
+        - Export `initUpdater()`, `checkForUpdates()`, `quitAndInstall()` functions
+
+      - Update electron/main.ts to initialize updater (AC: #5)
+        - Import `initUpdater` from `./updater`
+        - Call `initUpdater(mainWindow)` after window ready-to-show
+        - Ensure call is after window creation but before first render
+
+      - Configure package.json repository field (AC: #3)
+        - Add `"repository"` object with `"type": "git"`
+        - Add `"url"` field with GitHub repo URL
+        - Verify `"version"` field is semantic (check current value)
+        - Document: Repository must be public for unauthenticated updates
+
+      - Configure forge.config.ts for NSIS maker (AC: #4)
+        - Locate existing `makers` array in forge.config.ts
+        - Verify `@electron-forge/maker-squirrel` is configured (check existing setup)
+        - Add NSIS-specific options if missing
+        - Verify Forge generates latest.yml
+
+      - Test build and packaging (AC: #4)
+        - Run `npm run make` to generate installer
+        - Verify .exe file is created
+        - Verify latest.yml is generated with version, SHA512 hash, releaseDate, path
+
+      - Test offline mode behavior (AC: #2)
+        - Disconnect internet connection
+        - Launch app with `npm start`
+        - Verify app launches without crash
+        - Check electron-log for error message
+        - Verify app continues functioning
+
+      - Verify logging output (AC: #6)
+        - Launch app with internet connection
+        - Navigate to %APPDATA%/spardutti-todo/logs/main.log
+        - Verify "Checking for updates..." log entry exists
+        - Verify either success or error log entry follows
+        - Check log format: timestamp, level, message
+
+      - Document release process basics
+        - Create docs/release-process.md (placeholder)
+        - Document: `npm version [patch|minor|major]` to bump version
+        - Document: `npm run make` to generate installer
+        - Document: Upload .exe and latest.yml to GitHub Releases
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. electron-updater initialization
+       - autoUpdater.logger set to electron-log
+       - autoUpdater.checkForUpdatesAndNotify() called on initialization
+       - Update check logs appear in electron-log output at %APPDATA%/spardutti-todo/logs/main.log
+
+    2. Offline mode graceful handling
+       - App doesn't crash with no internet connection
+       - Update check failure logged silently
+       - App continues functioning normally
+
+    3. package.json repository configuration
+       - Repository field contains "type": "git" and GitHub repo URL
+       - electron-updater can construct GitHub API URLs correctly
+       - Version field is semantic versioning format (e.g., "1.0.0")
+
+    4. forge.config.ts NSIS maker configuration
+       - Running npm run make generates .exe installer and latest.yml metadata file
+       - Installer supports silent installation
+       - latest.yml includes version, SHA512 hash, and release date
+
+    5. Main process integration
+       - initUpdater(mainWindow) called after window creation in electron/main.ts
+       - BrowserWindow reference passed to updater
+       - Update check runs automatically on launch
+
+    6. Logging verification
+       - Logged events include "Checking for updates...", update status, and errors
+       - All events include timestamps and context
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Auto-Update (FR22-FR25)</section>
+        <snippet>FR22: Application checks for software updates automatically. FR23: Application downloads and installs updates without requiring user action. FR24: Users can manually check for updates if auto-update fails. FR25: Application notifies users when updates are available or installed.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Deployment Architecture → Update Mechanism</section>
+        <snippet>Update Flow: (1) electron-updater checks GitHub Releases on app launch, (2) Downloads update in background, (3) Notifies user: "Update available. Restart to install?", (4) Installs on next restart. Hosting: GitHub Releases (free, no server required). Format: NSIS installer generated by Electron Forge.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Security Architecture</section>
+        <snippet>Update Security: electron-updater validates signatures (if configured), Updates from trusted source (GitHub Releases), HTTPS-only download, Code signing recommended for production to prevent Windows SmartScreen warnings.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>System Architecture Alignment</section>
+        <snippet>Main process: electron/updater.ts (update configuration and event handlers). Dependencies: electron-updater 6.7.1, electron-log 5.4.1, GitHub repository with Releases enabled, Electron Forge NSIS maker configuration. Constraints: No modal dialogs (inline footer notifications only), No blocking UI (background downloads), Terminal aesthetic for all notifications.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>APIs and Interfaces</section>
+        <snippet>UpdaterService manages electron-updater lifecycle with event handlers (checking-for-update, update-available, update-not-available, update-downloaded, error). Logger assignment: autoUpdater.logger = log. Event handlers use arrow functions. Error handler doesn't throw (offline-first design).</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Terminal Aesthetic</section>
+        <snippet>Matrix Green color palette: Background #000000, Primary text #00FF00, Dimmed green #008800, Error #FF0000. Font: Consolas monospace, 14px uniform sizing. No animations or transitions (instant state changes). Inline feedback only, no modal dialogs.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>electron/main.ts</path>
+        <kind>main-process</kind>
+        <symbol>createWindow, app.on('ready')</symbol>
+        <lines>30-87</lines>
+        <reason>Window creation and app lifecycle management. Story 6.1 requires initUpdater() call after window ready-to-show event (line 48-50). Integration point for updater initialization.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/main.ts</path>
+        <kind>logging-pattern</kind>
+        <symbol>log.info, log.warn</symbol>
+        <lines>4, 76-86</lines>
+        <reason>Existing electron-log usage pattern. Shows how to log app events with context (version, startupMs). Story 6.1 updater.ts should follow same logging pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/preload.ts</path>
+        <kind>ipc-bridge</kind>
+        <symbol>contextBridge.exposeInMainWorld</symbol>
+        <lines>8-12</lines>
+        <reason>Existing IPC pattern for exposing main process APIs to renderer. Story 6.2+ may need similar pattern for update status communication (window.updater API).</reason>
+      </artifact>
+      <artifact>
+        <path>electron/storage.ts</path>
+        <kind>file-io-pattern</kind>
+        <symbol>ToonStorage</symbol>
+        <lines>all</lines>
+        <reason>Reference for file operations and error handling patterns. Shows how to handle async file I/O with try-catch. Updater.ts should follow similar error handling approach.</reason>
+      </artifact>
+      <artifact>
+        <path>package.json</path>
+        <kind>config</kind>
+        <symbol>name, version, author, repository (missing)</symbol>
+        <lines>2-4, 17-20</lines>
+        <reason>Story 6.1 AC#3 requires adding repository field with GitHub URL. Current version is 1.0.0 (semantic versioning requirement met).</reason>
+      </artifact>
+      <artifact>
+        <path>forge.config.ts</path>
+        <kind>config</kind>
+        <symbol>makers, MakerSquirrel</symbol>
+        <lines>16-23</lines>
+        <reason>Story 6.1 AC#4 requires NSIS maker configuration. Currently MakerSquirrel is commented out (line 18). Need to verify/enable for Windows installer generation with latest.yml.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/window.d.ts</path>
+        <kind>type-definitions</kind>
+        <symbol>ElectronAPI, Window interface</symbol>
+        <lines>3-13</lines>
+        <reason>Pattern for extending Window interface with IPC APIs. Story 6.2+ will add UpdaterAPI interface here for window.updater.checkForUpdates() and window.updater.onUpdateStatus().</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="electron" version="39.2.3" />
+        <package name="electron-updater" version="6.7.1" />
+        <package name="electron-log" version="5.4.1" />
+        <package name="@electron-forge/cli" version="^7.10.2" />
+        <package name="@electron-forge/maker-squirrel" version="^7.10.2" />
+        <package name="@electron-forge/plugin-vite" version="^7.10.2" />
+        <package name="typescript" version="~5.9.2" />
+        <package name="vite" version="^5.4.21" />
+        <package name="vitest" version="^4.0.13" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <development>
+      - Main-process only story: No renderer UI changes in Story 6.1 (footer notifications come in Story 6.2)
+      - Offline-first design: Update check failures must not crash app or show error UI
+      - Terminal aesthetic: All future UI notifications must use Matrix Green color palette (#00FF00 text on #000000 background)
+      - No modal dialogs: Inline footer notifications only (architecture constraint)
+      - Logging required: All update events must be logged via electron-log for debugging
+      - TypeScript strict mode: No 'any' types, use 'unknown' with type guards if needed
+      - Error handling: All async operations must use try-catch, errors logged but don't throw
+    </development>
+    <architecture>
+      - File structure: New file electron/updater.ts (main process module)
+      - Import pattern: Import external dependencies first, then internal modules, then types
+      - Function exports: Export initUpdater(), checkForUpdates(), quitAndInstall() functions
+      - Logger integration: autoUpdater.logger = log (electron-log integration pattern)
+      - Event handler pattern: Use arrow functions for concise syntax (per architecture.md line 242)
+      - No blocking operations: Update checks and downloads must be non-blocking (background only)
+    </architecture>
+    <testing>
+      - Unit test required: Create electron/updater.test.ts co-located with source
+      - Test framework: Vitest (configured in vitest.config.ts)
+      - Mock autoUpdater: Use vi.mock() to avoid real network calls in tests
+      - Coverage target: 90% line coverage for updater.ts (per tech spec)
+      - Manual testing: Offline mode verification, GitHub API integration, log output validation
+    </testing>
+    <build>
+      - Forge maker: NSIS/Squirrel.Windows maker must generate latest.yml metadata file
+      - Repository URL: package.json must include repository field for electron-updater GitHub API URL construction
+      - Semantic versioning: Version must be in format "MAJOR.MINOR.PATCH" (e.g., "1.0.0")
+      - Build command: npm run make generates .exe installer + latest.yml in out/make/ directory
+    </build>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>autoUpdater (electron-updater)</name>
+      <kind>external-api</kind>
+      <signature>
+        autoUpdater.logger = log
+        autoUpdater.on('checking-for-update', () => void)
+        autoUpdater.on('update-available', (info) => void)
+        autoUpdater.on('update-not-available', (info) => void)
+        autoUpdater.on('update-downloaded', (info) => void)
+        autoUpdater.on('error', (error) => void)
+        autoUpdater.checkForUpdatesAndNotify(): Promise&lt;UpdateCheckResult | null&gt;
+        autoUpdater.checkForUpdates(): Promise&lt;UpdateCheckResult | null&gt;
+        autoUpdater.quitAndInstall(): void
+      </signature>
+      <path>node_modules/electron-updater</path>
+    </interface>
+    <interface>
+      <name>electron-log</name>
+      <kind>external-api</kind>
+      <signature>
+        log.info(message: string, ...args: any[]): void
+        log.error(message: string, ...args: any[]): void
+        log.warn(message: string, ...args: any[]): void
+        log.debug(message: string, ...args: any[]): void
+      </signature>
+      <path>node_modules/electron-log (already used in electron/main.ts)</path>
+    </interface>
+    <interface>
+      <name>BrowserWindow</name>
+      <kind>electron-api</kind>
+      <signature>
+        mainWindow.webContents.send(channel: string, ...args: any[]): void
+      </signature>
+      <path>electron (native API, used for IPC communication in future stories)</path>
+    </interface>
+    <interface>
+      <name>initUpdater (to be created)</name>
+      <kind>function</kind>
+      <signature>
+        export function initUpdater(mainWindow: BrowserWindow): void
+      </signature>
+      <path>electron/updater.ts (new file)</path>
+    </interface>
+    <interface>
+      <name>checkForUpdates (to be created)</name>
+      <kind>function</kind>
+      <signature>
+        export function checkForUpdates(): void
+      </signature>
+      <path>electron/updater.ts (new file)</path>
+    </interface>
+    <interface>
+      <name>quitAndInstall (to be created)</name>
+      <kind>function</kind>
+      <signature>
+        export function quitAndInstall(): void
+      </signature>
+      <path>electron/updater.ts (new file)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing framework: Vitest v4.0.13 configured with jsdom environment for DOM API access. Test files co-located with source (*.test.ts pattern). Mocking strategy: Use vi.mock() for external dependencies (autoUpdater, electron-log). Global test APIs enabled (describe, it, expect). Unit tests verify initialization logic, event handler registration, and error handling. Integration tests use real electron-log to verify logging output. Manual testing required for GitHub API integration and offline mode scenarios. Coverage target: 90% line coverage for epic 6 components per tech-spec-epic-6.md.
+    </standards>
+    <locations>
+      - src/**/*.test.ts (renderer process tests)
+      - electron/**/*.test.ts (main process tests, Story 6.1 will create electron/updater.test.ts)
+      - Test config: vitest.config.ts (jsdom environment, import aliases configured)
+      - Existing test examples: src/store/TodoStore.test.ts (39 tests passing), src/keyboard/KeyboardManager.test.ts (35 tests passing)
+    </locations>
+    <ideas>
+      <test id="AC1-unit">
+        <acceptance_criteria>AC#1 (electron-updater initialization)</acceptance_criteria>
+        <description>Unit test: Verify initUpdater() sets autoUpdater.logger to electron-log and calls checkForUpdatesAndNotify()</description>
+        <approach>Mock autoUpdater and log, call initUpdater(mockMainWindow), assert logger assignment and method call</approach>
+      </test>
+      <test id="AC1-integration">
+        <acceptance_criteria>AC#1 (offline mode graceful handling)</acceptance_criteria>
+        <description>Integration test: Launch app with network disabled, verify no crash and error logged</description>
+        <approach>Manual test: Disconnect internet, run 'npm start', verify app launches normally and check %APPDATA%/spardutti-todo/logs/main.log for error entry</approach>
+      </test>
+      <test id="AC3-manual">
+        <acceptance_criteria>AC#3 (package.json repository configuration)</acceptance_criteria>
+        <description>Manual verification: Check package.json has repository.type and repository.url fields</description>
+        <approach>Read package.json, verify fields exist and URL is valid GitHub repo URL</approach>
+      </test>
+      <test id="AC4-build">
+        <acceptance_criteria>AC#4 (NSIS maker generates .exe and latest.yml)</acceptance_criteria>
+        <description>Build test: Run 'npm run make', verify .exe and latest.yml generated in out/make/ directory</description>
+        <approach>Execute build command, check output directory for files, verify latest.yml contains version, SHA512 hash, releaseDate, and path fields</approach>
+      </test>
+      <test id="AC5-integration">
+        <acceptance_criteria>AC#5 (main process integration)</acceptance_criteria>
+        <description>Integration test: Verify initUpdater(mainWindow) is called after window ready-to-show</description>
+        <approach>Add console.log or electron-log entry in initUpdater(), launch app, verify log shows initialization after window ready</approach>
+      </test>
+      <test id="AC6-manual">
+        <acceptance_criteria>AC#6 (logging verification)</acceptance_criteria>
+        <description>Manual test: Launch app with internet, check main.log for update check events</description>
+        <approach>Run 'npm start', navigate to %APPDATA%/spardutti-todo/logs/main.log, verify "Checking for updates..." and result logged with timestamps</approach>
+      </test>
+      <test id="error-handling">
+        <acceptance_criteria>General error handling</acceptance_criteria>
+        <description>Unit test: Verify error event handler doesn't throw and logs error correctly</description>
+        <approach>Mock autoUpdater.on('error'), trigger error event, verify log.error called with error details and no exception thrown</approach>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

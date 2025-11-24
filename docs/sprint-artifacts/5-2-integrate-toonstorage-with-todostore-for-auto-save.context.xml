@@ -1,0 +1,265 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>2</storyId>
+    <title>Integrate ToonStorage with TodoStore for Auto-Save</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-2-integrate-toonstorage-with-todostore-for-auto-save.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>TodoStore to automatically save todos to disk after every change</iWant>
+    <soThat>data persists without requiring explicit user action</soThat>
+    <tasks>
+      - Modify TodoStore constructor to accept file path
+      - Implement TodoStore.load() method
+      - Implement TodoStore.save() method
+      - Integrate auto-save into add() method
+      - Integrate auto-save into toggle() method
+      - Integrate auto-save into deleteCompleted() method
+      - Update main entry point to load todos on startup
+      - Verify persistence across app restarts
+      - Verify auto-save is non-blocking
+      - Verify error handling doesn't block UI
+      - Update TodoStore tests
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. TodoStore constructor accepts file path parameter (constructor(filePath: string))
+    2. TodoStore has async load() method that loads todos from disk via ToonStorage.load()
+    3. TodoStore has async save() method with error handling (catches errors, logs only, no throw)
+    4. add() method triggers auto-save via fire-and-forget this.save() call
+    5. toggle() method triggers auto-save via fire-and-forget this.save() call
+    6. deleteCompleted() method triggers auto-save via fire-and-forget this.save() call
+    7. Main entry point loads todos on startup using app.getPath('userData')/todos.toon
+    8. Todos persist between app restarts
+    9. Auto-save is fire-and-forget (non-blocking, no await in mutation methods)
+    10. Save errors are logged but don't block UI (silent failure with logging)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Tech Spec Epic 5 -->
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Data Persistence (TOON Storage)</title>
+        <section>TodoStore Enhanced API (lines 139-158)</section>
+        <snippet>TodoStore constructor accepts filePath, async load() and save() methods, add/toggle/deleteCompleted trigger save()</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Data Persistence (TOON Storage)</title>
+        <section>Fire-and-Forget Pattern (lines 196-213)</section>
+        <snippet>Auto-save pattern: mutation updates array immediately, calls this.save() without await, returns immediately while save completes in background</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Data Persistence (TOON Storage)</title>
+        <section>Error Handling Strategy (lines 248-257)</section>
+        <snippet>save() method wraps ToonStorage.save in try-catch, logs errors with electron-log, never throws (silent failure)</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Data Persistence (TOON Storage)</title>
+        <section>Performance Requirements (lines 276-300)</section>
+        <snippet>Save performance: &lt;50ms for 1000 todos (async, non-blocking). Load performance: &lt;100ms for 1000 todos. Fire-and-forget ensures zero UI blocking.</snippet>
+      </doc>
+
+      <!-- Architecture -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Flow (lines 387-399)</section>
+        <snippet>Unidirectional data flow: File System → ToonStorage.decode() → TodoStore._todos[] → CRUD operations → ToonStorage.encode() → File System</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Communication Patterns (lines 257-283)</section>
+        <snippet>TodoStore is single source of truth, all mutations through TodoStore methods, UI re-renders after mutation, save happens in background</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Lifecycle Patterns (lines 285-311)</section>
+        <snippet>No confirmations for auto-save (all actions save immediately). Exception: bulk delete has Y/n prompt (already implemented in Story 2.6)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Location Patterns (lines 313-327)</section>
+        <snippet>File path resolution: app.getPath('userData') returns %APPDATA%/spardutti-todo/, join with 'todos.toon'</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Existing TodoStore Implementation -->
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>class</kind>
+        <symbol>TodoStore</symbol>
+        <lines>1-152</lines>
+        <reason>Main class to modify - add filePath param, load() and save() methods, integrate auto-save into mutations</reason>
+      </artifact>
+
+      <!-- ToonStorage Implementation (Story 5.1) -->
+      <artifact>
+        <path>src/storage/ToonStorage.ts</path>
+        <kind>class</kind>
+        <symbol>ToonStorage</symbol>
+        <lines>1-278</lines>
+        <reason>Persistence layer to integrate - provides static load(), save(), encode(), decode() methods</reason>
+      </artifact>
+
+      <!-- Renderer Entry Point -->
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>entry-point</kind>
+        <symbol>initApp</symbol>
+        <lines>186-426</lines>
+        <reason>Main entry point to modify - add file path resolution, TodoStore instantiation with path, load() call before rendering</reason>
+      </artifact>
+
+      <!-- TodoStore Tests -->
+      <artifact>
+        <path>src/store/TodoStore.test.ts</path>
+        <kind>test</kind>
+        <symbol>TodoStore tests</symbol>
+        <lines>all</lines>
+        <reason>Test suite to update - add filePath param to constructor calls, add tests for load() and save(), test auto-save integration</reason>
+      </artifact>
+
+      <!-- Todo Type Definition -->
+      <artifact>
+        <path>src/types/Todo.ts</path>
+        <kind>interface</kind>
+        <symbol>Todo</symbol>
+        <lines>all</lines>
+        <reason>Type definition used by TodoStore and ToonStorage - no changes needed but referenced for type safety</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>electron-log</package>
+        <version>5.4.1</version>
+        <usage>Logging save/load success and errors</usage>
+      </node>
+      <node>
+        <package>@toon-format/toon</package>
+        <version>1.0.0</version>
+        <usage>TOON encode/decode (via ToonStorage)</usage>
+      </node>
+      <node>
+        <package>electron</package>
+        <version>39.2.3</version>
+        <usage>app.getPath('userData') for file path resolution</usage>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.13</version>
+        <usage>Unit testing TodoStore with mocked ToonStorage</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Fire-and-forget pattern is CRITICAL: Mutation methods (add, toggle, deleteCompleted) must call this.save() WITHOUT await to prevent UI blocking
+    - save() method must NEVER throw errors - wrap ToonStorage.save() in try-catch, log errors only
+    - load() method is awaited only on startup (one-time cost), not during runtime
+    - File path must use app.getPath('userData') API - never hardcode paths
+    - All file paths in TodoStore must be absolute (resolved via Electron API)
+    - TodoStore remains synchronous for all mutation methods - only load() and save() are async
+    - Errors in save() must be logged with electron-log.error() with context (count, error message)
+    - Success in load() logged with electron-log.info() with count and path
+    - Missing file on load is not an error - ToonStorage.load() returns empty array
+    - Corrupt file on load should throw error to caller (handled in renderer entry point)
+  </constraints>
+
+  <interfaces>
+    <!-- ToonStorage API (Story 5.1) -->
+    <interface>
+      <name>ToonStorage.load</name>
+      <kind>static method</kind>
+      <signature>static async load(filePath: string): Promise&lt;Todo[]&gt;</signature>
+      <path>src/storage/ToonStorage.ts</path>
+      <behavior>Loads todos from TOON file. Returns empty array if file doesn't exist (ENOENT). Throws error if file is corrupt or unreadable.</behavior>
+    </interface>
+    <interface>
+      <name>ToonStorage.save</name>
+      <kind>static method</kind>
+      <signature>static async save(filePath: string, todos: Todo[]): Promise&lt;void&gt;</signature>
+      <path>src/storage/ToonStorage.ts</path>
+      <behavior>Saves todos to TOON file. Creates directory if needed (recursive: true). Throws error on file system failures (disk full, permissions).</behavior>
+    </interface>
+
+    <!-- TodoStore New API (to implement) -->
+    <interface>
+      <name>TodoStore constructor</name>
+      <kind>constructor</kind>
+      <signature>constructor(filePath: string)</signature>
+      <path>src/store/TodoStore.ts</path>
+      <behavior>Accepts file path parameter, stores as private _filePath property</behavior>
+    </interface>
+    <interface>
+      <name>TodoStore.load</name>
+      <kind>async method</kind>
+      <signature>async load(): Promise&lt;void&gt;</signature>
+      <path>src/store/TodoStore.ts</path>
+      <behavior>Calls ToonStorage.load(_filePath), populates _todos array, logs success. Throws if load fails (corrupt file).</behavior>
+    </interface>
+    <interface>
+      <name>TodoStore.save</name>
+      <kind>async method</kind>
+      <signature>async save(): Promise&lt;void&gt;</signature>
+      <path>src/store/TodoStore.ts</path>
+      <behavior>Calls ToonStorage.save(_filePath, _todos), logs success/failure. NEVER throws - catches all errors and logs silently.</behavior>
+    </interface>
+
+    <!-- Electron API -->
+    <interface>
+      <name>app.getPath</name>
+      <kind>Electron API</kind>
+      <signature>app.getPath('userData'): string</signature>
+      <path>electron (built-in)</path>
+      <behavior>Returns absolute path to user data directory (%APPDATA%/spardutti-todo/ on Windows)</behavior>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests using Vitest with co-located test files (*.test.ts). Mock external dependencies (ToonStorage, electron-log) using vi.mock(). Integration tests use temporary file system for file I/O verification. E2E tests are manual for persistence validation.
+    </standards>
+
+    <locations>
+      - src/store/TodoStore.test.ts (unit tests for TodoStore with mocked ToonStorage)
+      - src/storage/ToonStorage.test.ts (existing tests from Story 5.1)
+    </locations>
+
+    <ideas>
+      <!-- Unit Tests for TodoStore -->
+      - Test TodoStore constructor stores filePath parameter as _filePath property
+      - Test load() calls ToonStorage.load with correct file path and populates _todos array
+      - Test load() logs success with count and path (mock electron-log.info)
+      - Test load() propagates errors from ToonStorage.load (corrupt file scenario)
+      - Test save() calls ToonStorage.save with correct file path and _todos array
+      - Test save() logs success with count (mock electron-log.info)
+      - Test save() catches errors from ToonStorage.save and logs with electron-log.error (no throw)
+      - Test add() calls save() after adding todo (spy on save method)
+      - Test add() returns immediately without awaiting save (fire-and-forget)
+      - Test toggle() calls save() after toggling todo (spy on save method)
+      - Test deleteCompleted() calls save() after deleting todos (spy on save method)
+
+      <!-- Integration Tests (Manual) -->
+      - Test fresh install: Launch app with no todos.toon, create 3 todos, close app, reopen, verify 3 todos persisted
+      - Test persistence: Create 5 todos, complete 2, close app, reopen, verify correct statuses
+      - Test bulk delete persistence: Create 10 todos, complete 5, bulk delete, close app immediately, reopen, verify only 5 remain
+      - Test performance: Create 100 todos rapidly, verify no UI lag, close and reopen, verify all 100 loaded
+      - Test error handling: Make todos.toon read-only, create todo, verify todo appears in UI, check log for error, verify no crash
+    </ideas>
+  </tests>
+</story-context>

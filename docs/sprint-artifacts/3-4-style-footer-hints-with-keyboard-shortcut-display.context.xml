@@ -1,0 +1,463 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>Style Footer Hints with Keyboard Shortcut Display</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-4-style-footer-hints-with-keyboard-shortcut-display.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to see keyboard shortcuts displayed in the footer</iWant>
+    <soThat>I can discover available actions without memorization</soThat>
+    <tasks>- [ ] Add footer container base styles (AC: #1)
+  - [ ] Locate footer element selector in styles.css (or create section)
+  - [ ] Set `border-top: 1px solid #004400` (dark green separator)
+  - [ ] Set `padding-top: 0.5rem` (spacing from border to text)
+  - [ ] Set `margin-top: 0.75rem` (spacing from todo list)
+  - [ ] Set `font-size: 12px` (smaller than body 14px)
+  - [ ] Set `color: var(--color-text-secondary)` (#008800 dimmed green)
+  - [ ] Set `background: transparent` (inherits black from body)
+  - [ ] Verify font-family inherits Consolas from body (no explicit font-family needed)
+
+- [ ] Add placeholder keyboard hints text to footer HTML (AC: #2)
+  - [ ] Locate footer element creation in src/ui/render.ts (or renderApp function)
+  - [ ] Verify footer element exists with ID or class for CSS targeting
+  - [ ] Add text content: "Enter: Save | Space: Toggle | Esc: Close"
+  - [ ] Ensure pipe character `|` is used as separator (not comma or semicolon)
+  - [ ] Test that text renders in dimmed green (#008800) per CSS
+
+- [ ] Verify footer positioning in flexbox layout (AC: #3)
+  - [ ] Check parent container (app container) has `display: flex` and `flex-direction: column`
+  - [ ] Verify footer is last child element in flex container
+  - [ ] Test with varying todo list sizes (0, 10, 50 todos)
+  - [ ] Confirm footer stays at bottom without overlapping content
+  - [ ] If parent flexbox not set up, coordinate with Story 3.5 or add to this story
+
+- [ ] Validate footer typography consistency (AC: #4)
+  - [ ] Open DevTools → Inspect footer element
+  - [ ] Computed Styles should show:
+    - [ ] font-family: Consolas, "Courier New", monospace (inherited)
+    - [ ] font-size: 12px
+    - [ ] color: rgb(136, 136, 0) → #008800
+  - [ ] Verify no custom font-family override in footer CSS
+  - [ ] Verify smaller font size (12px) provides clear de-emphasis
+
+- [ ] Test placeholder hints content and format (AC: #5)
+  - [ ] Visual inspection: Footer displays "Enter: Save | Space: Toggle | Esc: Close"
+  - [ ] Verify concise format: Action first, then colon, then key
+  - [ ] Verify separators: Pipe character `|` with spaces around it (` | `)
+  - [ ] Confirm hints are brief (no extra words like "to save" or "the app")
+  - [ ] Test readability at 12px font size
+
+- [ ] Visual verification and testing
+  - [ ] Start development server: `npm start`
+  - [ ] Inspect footer appearance
+  - [ ] Test with varying content
+  - [ ] Window resize: Footer adjusts width, stays at bottom
+
+- [ ] DevTools validation
+  - [ ] Open DevTools → Elements → Inspect footer
+  - [ ] Verify all computed styles
+
+- [ ] Automated validation
+  - [ ] Run grep search for forbidden CSS on footer
+  - [ ] Verify TypeScript compilation
+
+- [ ] Edge case testing
+  - [ ] Empty hints, long hints, minimum window size, many todos
+
+- [ ] Cross-reference with Story 4.5 requirements
+  - [ ] Verify compatibility with future dynamic updates</tasks>
+  </story>
+
+  <acceptanceCriteria>1. **Footer has proper positioning and visual styling**
+   - GIVEN the todo list is styled (Story 3.3 complete)
+   - WHEN I add footer styles to styles.css
+   - THEN the footer element has:
+     - Position: Fixed at bottom OR margin-top: auto (flexbox approach)
+     - Border-top: `1px solid #004400` (dark green separator)
+     - Padding-top: `0.5rem`
+     - Margin-top: `0.75rem`
+     - Font-size: `12px` (smaller than body 14px)
+     - Color: `#008800` (dimmed green)
+     - Font: Consolas monospace (inherited from body)
+     - Background: transparent (inherits black from body)
+
+2. **Footer displays placeholder keyboard hints**
+   - GIVEN the footer is styled
+   - WHEN the app renders
+   - THEN the footer displays placeholder text: "Enter: Save | Space: Toggle | Esc: Close"
+   - AND the hints use the pipe character `|` as separator between shortcuts
+   - AND the text is readable but de-emphasized compared to main content (dimmed green vs bright green)
+
+3. **Footer is always visible and properly positioned**
+   - GIVEN the app is launched with any number of todos (0, 10, or 50)
+   - WHEN I view the app window
+   - THEN the footer is always visible at the bottom
+   - AND the footer does not overlap with todo list content
+   - AND the border-top provides clear visual separation from the main content area
+
+4. **Footer typography is consistent with terminal aesthetic**
+   - GIVEN the footer is rendered
+   - WHEN I inspect the footer text
+   - THEN it uses Consolas monospace font (inherited from body)
+   - AND the font size is 12px (smaller than main content for less prominence)
+   - AND the color is dimmed green (#008800) to de-emphasize hints
+
+5. **Placeholder hints show standard keyboard shortcuts**
+   - GIVEN the footer is visible
+   - WHEN I read the footer text
+   - THEN I see concise action descriptions:
+     - "Enter: Save" (create todo from input)
+     - "Space: Toggle" (complete/incomplete)
+     - "Esc: Close" (close app)
+   - AND the format is: `Action: Key` with ` | ` separator
+   - AND hints are brief (no verbose descriptions like "Save todo" - just "Save")</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>User Interface - FR26, FR30</section>
+        <snippet>FR26: Terminal-style visual interface (monospace font, simple colors). FR30: Minimal, distraction-free UI (no unnecessary UI chrome). The footer fits this design philosophy - minimal, functional, non-intrusive keyboard hint display.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Component Library - Component 5: Footer Hints</section>
+        <snippet>Position: Fixed at bottom or margin-top auto (flexbox). Border-top: 1px solid #004400. Padding-top: 0.5rem. Margin-top: 0.75rem. Font-size: 12px. Color: #008800 (dimmed green). Content: "Enter: Save | Space: Toggle | Ctrl+D: Delete All | Esc: Close". Always visible, static display in Story 3.4.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Terminal Aesthetic Enforcement</section>
+        <snippet>Font: Consolas monospace, 14px (12px for footer hints). Colors: Matrix Green palette ONLY (#00FF00, #004400, #008800, #000000). No animations or transitions. No box-shadows. Borders: 1px solid green. Footer hints are intentionally de-emphasized: smaller font (12px vs 14px), dimmed color (#008800 vs #00FF00).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Story 3.4 - Footer Component</section>
+        <snippet>Footer hints styling provides keyboard shortcut reference. Border-top: 1px solid #004400 (dark green separator). Padding-top: 0.5rem. Margin-top: 0.75rem. Font-size: 12px. Color: var(--color-text-secondary) #008800 (dimmed green). Background: transparent. Placeholder: "Enter: Save | Space: Toggle | Esc: Close".</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Epic 3 Story 3.4</section>
+        <snippet>Style Footer Hints with Keyboard Shortcut Display. Footer displays placeholder text for keyboard shortcuts. Position fixed at bottom or margin-top auto. De-emphasized styling (12px dimmed green) compared to main content. Part of Terminal UI & Visual Identity epic.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/ui/styles.css</path>
+        <kind>stylesheet</kind>
+        <symbol>CSS custom properties and footer styles section</symbol>
+        <lines>Entire file</lines>
+        <reason>Story 3.4 adds FOOTER HINTS section to existing styles.css. Must use existing CSS custom properties like --color-text-secondary (#008800) and ensure Consolas font inheritance from body.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>rendering module</kind>
+        <symbol>renderApp function and footer element creation</symbol>
+        <lines>Entire file</lines>
+        <reason>Need to verify footer element exists with proper ID/class selector for CSS targeting. If footer doesn't exist or lacks placeholder text, must add to render.ts. Footer should be last child in app container for flexbox positioning.</reason>
+      </artifact>
+      <artifact>
+        <path>index.html</path>
+        <kind>HTML shell</kind>
+        <symbol>HTML structure and stylesheet link</symbol>
+        <lines>Entire file</lines>
+        <reason>Verify styles.css is properly linked and app container structure supports flexbox layout for footer positioning at bottom.</reason>
+      </artifact>
+      <artifact>
+        <path>src/index.css</path>
+        <kind>stylesheet</kind>
+        <symbol>Global styles if separate from styles.css</symbol>
+        <lines>Entire file</lines>
+        <reason>Check if global styles are in index.css vs styles.css. Epic 3 uses src/ui/styles.css as primary stylesheet per architecture.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>vite</package>
+        <version>5.4.21</version>
+        <reason>Bundles CSS with renderer process, provides HMR for rapid styling iteration</reason>
+      </node>
+      <package>electron</package>
+        <version>39.2.3</version>
+        <reason>Renders Chromium with CSS support for terminal aesthetic styles</reason>
+      </node>
+      <package>typescript</package>
+        <version>5.9.2</version>
+        <reason>Type safety for render.ts modifications if footer element needs updates</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>**Development Constraints (from Dev Notes):**
+
+1. **CSS Organization Pattern** (from Story 3.3):
+   - Add FOOTER HINTS section after TODO LIST & ITEMS section (~line 125)
+   - Use section header: `/* ======== FOOTER HINTS ======== */`
+   - Follow inline comment pattern for property explanations
+   - Maintain alphabetical order of selectors within section
+
+2. **Terminal Aesthetic Enforcement** (from Architecture):
+   - Font: Consolas monospace ONLY, 12px for footer (inherited, not explicit)
+   - Colors: Use CSS custom property `var(--color-text-secondary)` for #008800
+   - NO animations or transitions (forbidden)
+   - NO box-shadows (only input focus glow allowed)
+   - NO border-radius (terminal constraint - sharp corners only)
+   - Border: 1px solid #004400 (dark green separator line)
+   - Background: transparent (inherits black from body)
+
+3. **CSS Custom Properties Usage** (from Story 3.1):
+   - Must use `var(--color-text-secondary)` for dimmed green footer text
+   - Already defined in :root from Story 3.1 as #008800
+   - Do NOT hardcode #008800 - use CSS variable for maintainability
+
+4. **Flexbox Layout Dependency** (from UX Design):
+   - Footer positioning relies on parent container flexbox layout
+   - App container must have `display: flex`, `flex-direction: column`
+   - Footer should have `margin-top: auto` OR be last child with flex-grow on list
+   - Story 3.5 handles full layout setup - Story 3.4 focuses on footer-specific styling
+
+5. **No JavaScript Changes** (from Tech Spec):
+   - Epic 3 is CSS-only styling
+   - Footer element structure from Epic 2 (Story 2.3) should exist
+   - Only verify/confirm footer element exists in render.ts
+   - If footer missing, minimal HTML addition only (text content)
+
+6. **Validation Requirements** (from Tech Spec):
+   - Run automated grep: `grep -E "footer.*transition" src/ui/styles.css` → Expect 0 matches (exit code 1)
+   - Run automated grep: `grep -E "footer.*animation" src/ui/styles.css` → Expect 0 matches (exit code 1)
+   - TypeScript compilation: `npx tsc --noEmit` → Expect zero errors
+   - DevTools inspection: Verify all computed styles match spec exactly
+
+7. **File Size Target** (from Tech Spec):
+   - Footer section should add ~0.5KB to styles.css
+   - Total styles.css after Story 3.4: ~4.5-5KB (well under 10KB target)
+
+8. **Accessibility Considerations** (from UX Design):
+   - Footer should have `role="status"` (for dynamic updates in Story 4.5)
+   - Footer should have `aria-live="polite"` (announces changes in Story 4.5)
+   - Story 3.4 focuses on static placeholder - dynamic updates in Epic 4
+
+9. **Cross-Story Dependencies**:
+   - **Depends on Story 3.3**: Todo list styled (provides visual context for footer separation)
+   - **Depends on Story 3.1**: CSS custom properties defined (--color-text-secondary)
+   - **Depends on Story 2.3**: Footer element created in render.ts (DOM structure exists)
+   - **Prepares for Story 4.5**: Footer structure must support content replacement (dynamic hints)
+
+10. **Browser Compatibility**:
+    - Target: Electron/Chromium only (no cross-browser concerns)
+    - CSS Grid/Flexbox fully supported
+    - CSS custom properties fully supported
+    - No vendor prefixes needed</constraints>
+
+  <interfaces>**CSS Selectors Contract (render.ts ↔ styles.css):**
+
+Expected DOM structure for footer (from Epic 2 Story 2.3):
+```html
+<div id="app">
+  <input type="text" id="todo-input" placeholder="Type todo and press Enter..." />
+
+  <ul id="todo-list">
+    <!-- Todo items -->
+  </ul>
+
+  <footer id="footer-hints">
+    Enter: Save | Space: Toggle | Esc: Close
+  </footer>
+</div>
+```
+
+**CSS Selector Used in Story 3.4:**
+- `#footer-hints` or `footer` (element selector)
+- Attribute: No data attributes needed (unlike todo items with data-completed)
+- Pseudo-classes: No hover/focus states (static display)
+
+**CSS Properties Applied:**
+```css
+#footer-hints {
+  border-top: 1px solid #004400;        /* Dark green separator */
+  padding-top: 0.5rem;                  /* Spacing from border to text */
+  margin-top: 0.75rem;                  /* Spacing from todo list */
+  font-size: 12px;                      /* Smaller than body (14px) */
+  color: var(--color-text-secondary);   /* Dimmed green #008800 */
+  background: transparent;              /* Inherits black from body */
+  /* font-family inherited from body (Consolas) */
+}
+```
+
+**Positioning Interface (Story 3.4 ↔ Story 3.5):**
+- Story 3.4 assumes footer exists as last child in #app container
+- Story 3.5 will set up parent flexbox: `#app { display: flex; flex-direction: column; }`
+- Footer positioning: Either `margin-top: auto` OR rely on flex container layout
+- Story 3.4 focuses on visual styling only - positioning finalized in Story 3.5
+
+**API Contract Notes:**
+- No JavaScript API changes (CSS-only story)
+- No event handlers (footer is static display)
+- No state management (placeholder text is hardcoded)
+- Story 4.5 will add dynamic content updates (footer.textContent = ...)
+
+**ARIA Attributes (Future - Story 4.5):**
+```html
+<footer id="footer-hints" role="status" aria-live="polite">
+  Enter: Save | Space: Toggle | Esc: Close
+</footer>
+```
+- Story 3.4: Focus on visual styling
+- Story 4.5: Add ARIA for screen reader announcements when hints change</interfaces>
+
+  <tests>
+    <standards>**Testing Framework:**
+- Primary: Manual visual inspection using Chrome DevTools
+- Automated: Grep validation for forbidden CSS properties
+- Tool: TypeScript compiler (`npx tsc --noEmit`) for type safety verification
+
+**Testing Approach:**
+Epic 3 is CSS-only styling with no unit tests. All validation is visual inspection against UX Design spec and automated grep searches for prohibited properties (animations, transitions).
+
+**Test Coverage Strategy:**
+- Visual QA: 100% of acceptance criteria (all 5 ACs)
+- Automated: Forbidden CSS properties check (AC implicit - no animations)
+- DevTools: Computed styles verification for exact color/size values
+
+**Story 3.4 Specific Standards:**
+1. Footer must be visually inspected in running app (`npm start`)
+2. DevTools inspection required for Computed Styles validation
+3. Grep validation ensures no animations/transitions added to footer
+4. Test with varying todo list sizes (0, 10, 50) to verify positioning
+5. Window resize testing to confirm footer adapts properly</standards>
+    <locations>**Test Execution Locations:**
+
+- **Manual Testing:** Development server (`npm start`)
+  - Browser: Electron/Chromium window
+  - DevTools: F12 → Elements tab → Inspect #footer-hints
+  - Color Picker: Verify #008800 (dimmed green)
+  - Computed Styles: Check font-size, padding, margin, border
+
+- **Automated Validation:** Command line in project root
+  - Grep: `grep -E "footer.*transition" src/ui/styles.css`
+  - Grep: `grep -E "footer.*animation" src/ui/styles.css`
+  - TypeScript: `npx tsc --noEmit`
+
+- **Visual Verification:** Application window at varying sizes
+  - Default: 600×400px window
+  - Minimum: 400×300px window
+  - Resized: Test footer width scaling
+
+- **File Locations for Inspection:**
+  - `src/ui/styles.css` - Footer styles section (~line 125+)
+  - `src/ui/render.ts` - Footer element creation/verification
+  - DevTools → Elements → #footer-hints element</locations>
+    <ideas>**Test Scenario 1: Footer Visual Styling (AC #1, #4)**
+- **Setup:** Launch app with `npm start`
+- **Action:** Inspect #footer-hints element in DevTools
+- **Verify:**
+  - Border-top: 1px solid rgb(0, 68, 0) → #004400 ✓
+  - Padding-top: 8px ≈ 0.5rem ✓
+  - Margin-top: 12px ≈ 0.75rem ✓
+  - Font-size: 12px ✓
+  - Color: rgb(0, 136, 0) → #008800 ✓
+  - Font-family: Consolas, "Courier New", monospace (inherited) ✓
+  - Background: transparent or rgba(0,0,0,0) ✓
+- **Maps to:** AC #1 (positioning and styling), AC #4 (typography)
+
+**Test Scenario 2: Footer Placeholder Content (AC #2, #5)**
+- **Setup:** Launch app
+- **Action:** Visual inspection of footer text
+- **Verify:**
+  - Text displays: "Enter: Save | Space: Toggle | Esc: Close" ✓
+  - Pipe character `|` used as separator ✓
+  - Format: `Action: Key` (concise, no extra words) ✓
+  - Text is readable at 12px size ✓
+  - Color is dimmed green (less bright than main content) ✓
+- **Maps to:** AC #2 (placeholder hints), AC #5 (shortcut format)
+
+**Test Scenario 3: Footer Positioning and Visibility (AC #3)**
+- **Setup:** Launch app with varying todo counts
+- **Test Cases:**
+  - Empty list (0 todos): Footer visible at bottom ✓
+  - Small list (3 todos): Footer visible, proper spacing from list ✓
+  - Medium list (10 todos): Footer at bottom, no overlap ✓
+  - Large list (50 todos, scrolling): Footer remains visible at bottom ✓
+- **Action:** Resize window (width and height)
+- **Verify:**
+  - Footer width scales with window ✓
+  - Footer stays at bottom (doesn't scroll with list) ✓
+  - Border-top provides clear visual separation ✓
+- **Maps to:** AC #3 (visibility and positioning)
+
+**Test Scenario 4: Automated Forbidden Properties Check**
+- **Setup:** Complete footer CSS implementation
+- **Action 1:** `grep -E "footer.*transition" src/ui/styles.css`
+- **Expected:** Exit code 1 (0 matches) ✓
+- **Action 2:** `grep -E "footer.*animation" src/ui/styles.css`
+- **Expected:** Exit code 1 (0 matches) ✓
+- **Verify:** No transitions or animations on footer element ✓
+- **Maps to:** Terminal aesthetic constraint (no animations)
+
+**Test Scenario 5: TypeScript Compilation**
+- **Setup:** Footer CSS complete, render.ts updated (if needed)
+- **Action:** `npx tsc --noEmit`
+- **Expected:** Zero errors ✓
+- **Verify:** All TypeScript types valid, no render.ts regressions ✓
+- **Maps to:** Code quality standard
+
+**Test Scenario 6: Edge Case - Empty Footer Text**
+- **Setup:** Temporarily remove footer text content
+- **Action:** Inspect footer rendering
+- **Verify:**
+  - Border-top still renders ✓
+  - Spacing (padding/margin) still applied ✓
+  - Empty space visible below border ✓
+- **Maps to:** Robustness (CSS works regardless of content)
+
+**Test Scenario 7: Edge Case - Long Hints Text (Future-Proofing)**
+- **Setup:** Manually add very long text to footer: "Enter: Save Todo | Space: Toggle Complete/Incomplete | Ctrl+D: Delete All Completed | Esc: Close Application"
+- **Action:** Inspect text wrapping behavior
+- **Verify:**
+  - Text wraps to multiple lines OR truncates gracefully ✓
+  - No layout breaking (footer doesn't push content) ✓
+  - Readability maintained ✓
+- **Maps to:** Story 4.5 compatibility (dynamic hints may be longer)
+
+**Test Scenario 8: Edge Case - Minimum Window Size**
+- **Setup:** Resize window to 400×300px (minimum from architecture)
+- **Action:** Verify footer visibility and readability
+- **Verify:**
+  - Footer remains visible ✓
+  - 12px text still readable ✓
+  - No overlap with todo list ✓
+  - Border-top visible ✓
+- **Maps to:** Responsive behavior at minimum size
+
+**Test Scenario 9: Cross-Story Integration - Story 3.3 Context**
+- **Setup:** Complete Story 3.3 (todo list styled)
+- **Action:** Add footer styles on top of existing styles.css
+- **Verify:**
+  - Footer section added after TODO LIST section ✓
+  - No CSS conflicts (selectors don't interfere) ✓
+  - Visual hierarchy clear (list → footer separation) ✓
+  - Border-top creates separation from list ✓
+- **Maps to:** Story sequencing and integration
+
+**Test Scenario 10: Cross-Story Integration - Story 4.5 Preparation**
+- **Setup:** Footer structure with placeholder text
+- **Action:** Verify footer element is accessible for dynamic updates
+- **Check in render.ts:**
+  - Footer has ID (#footer-hints) for easy DOM selection ✓
+  - Footer content can be replaced: `footer.textContent = 'New hints'` ✓
+- **Verify:**
+  - No hardcoded text in CSS (content is HTML only) ✓
+  - Footer structure supports content swap ✓
+- **Maps to:** Future Story 4.5 (dynamic keyboard hints)</ideas>
+  </tests>
+</story-context>

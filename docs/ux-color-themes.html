@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spardutti-todo Color Themes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .theme-card {
+            border: 1px solid #333;
+            background: #000;
+        }
+
+        .theme-header {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .theme-name {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-description {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        .color-swatches {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .swatch {
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .swatch-label {
+            opacity: 0.7;
+            margin-bottom: 0.25rem;
+        }
+
+        .swatch-hex {
+            font-weight: bold;
+        }
+
+        .preview {
+            padding: 1.5rem;
+        }
+
+        .preview-input {
+            width: 100%;
+            padding: 0.5rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95rem;
+            border: 2px solid;
+            outline: none;
+            margin-bottom: 1rem;
+        }
+
+        .preview-input::placeholder {
+            opacity: 0.5;
+        }
+
+        .preview-todos {
+            list-style: none;
+        }
+
+        .preview-todo {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .preview-todo:hover {
+            opacity: 0.8;
+        }
+
+        .todo-checkbox {
+            width: 14px;
+            height: 14px;
+            border: 2px solid;
+            display: inline-block;
+            text-align: center;
+            line-height: 10px;
+            font-size: 10px;
+        }
+
+        .todo-text {
+            flex: 1;
+        }
+
+        .todo-completed .todo-text {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .preview-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* Theme 1: Matrix Green */
+        .theme-1 {
+            --bg: #000000;
+            --primary: #00FF00;
+            --text: #00FF00;
+            --text-dim: #008800;
+            --completed: #004400;
+            --border: #00FF00;
+            --error: #FF0000;
+        }
+
+        /* Theme 2: Amber CRT */
+        .theme-2 {
+            --bg: #000000;
+            --primary: #FFB000;
+            --text: #FFB000;
+            --text-dim: #AA7700;
+            --completed: #664400;
+            --border: #FFB000;
+            --error: #FF0000;
+        }
+
+        /* Theme 3: Modern Mono */
+        .theme-3 {
+            --bg: #000000;
+            --primary: #FFFFFF;
+            --text: #FFFFFF;
+            --text-dim: #999999;
+            --completed: #555555;
+            --border: #FFFFFF;
+            --error: #FF5555;
+        }
+
+        /* Theme 4: Cool Blue */
+        .theme-4 {
+            --bg: #000000;
+            --primary: #00FFFF;
+            --text: #00FFFF;
+            --text-dim: #0088AA;
+            --completed: #004455;
+            --border: #00FFFF;
+            --error: #FF0088;
+        }
+
+        .theme-card {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .theme-card .swatch {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .preview-input {
+            background: var(--bg);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .preview-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .todo-checkbox {
+            border-color: var(--border);
+            color: var(--primary);
+        }
+
+        .todo-completed {
+            color: var(--completed);
+        }
+
+        .preview-footer {
+            border-color: var(--text-dim);
+            color: var(--text-dim);
+        }
+
+        .comparison {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: #111;
+            border: 1px solid #333;
+        }
+
+        .comparison h2 {
+            margin-bottom: 1rem;
+            color: #00FF00;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .comparison-item {
+            text-align: center;
+            padding: 1rem;
+            background: #000;
+            border: 1px solid #333;
+        }
+
+        .comparison-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .comparison-value {
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>spardutti-todo Terminal Color Themes</h1>
+    <p class="subtitle">Choose the terminal aesthetic that feels right for ultra-fast task capture</p>
+
+    <div class="themes-grid">
+        <!-- Theme 1: Matrix Green -->
+        <div class="theme-card theme-1">
+            <div class="theme-header">
+                <div class="theme-name">1. Matrix Green</div>
+                <div class="theme-description">
+                    Classic terminal green-on-black. Iconic, high contrast, instantly recognizable.
+                    Evokes command-line mastery and hacker efficiency.
+                </div>
+            </div>
+            <div class="color-swatches">
+                <div class="swatch" style="background: #000000;">
+                    <div class="swatch-label">Background</div>
+                    <div class="swatch-hex">#000000</div>
+                </div>
+                <div class="swatch" style="background: #00FF00; color: #000;">
+                    <div class="swatch-label">Primary/Active</div>
+                    <div class="swatch-hex">#00FF00</div>
+                </div>
+                <div class="swatch" style="background: #004400;">
+                    <div class="swatch-label">Completed</div>
+                    <div class="swatch-hex">#004400</div>
+                </div>
+            </div>
+            <div class="preview">
+                <input type="text" class="preview-input" placeholder="Type todo and press Enter..." autofocus>
+                <ul class="preview-todos">
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Implement keyboard shortcuts</span>
+                    </li>
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Add terminal color theme</span>
+                    </li>
+                    <li class="preview-todo todo-completed">
+                        <span class="todo-checkbox">☑</span>
+                        <span class="todo-text">Set up Electron project</span>
+                    </li>
+                </ul>
+                <div class="preview-footer">
+                    Enter: Save | Space: Toggle | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 2: Amber CRT -->
+        <div class="theme-card theme-2">
+            <div class="theme-header">
+                <div class="theme-name">2. Amber CRT</div>
+                <div class="theme-description">
+                    Vintage CRT terminal amber glow. Warm, nostalgic, easy on the eyes.
+                    Reminds of classic monochrome monitors and retro computing.
+                </div>
+            </div>
+            <div class="color-swatches">
+                <div class="swatch" style="background: #000000;">
+                    <div class="swatch-label">Background</div>
+                    <div class="swatch-hex">#000000</div>
+                </div>
+                <div class="swatch" style="background: #FFB000; color: #000;">
+                    <div class="swatch-label">Primary/Active</div>
+                    <div class="swatch-hex">#FFB000</div>
+                </div>
+                <div class="swatch" style="background: #664400;">
+                    <div class="swatch-label">Completed</div>
+                    <div class="swatch-hex">#664400</div>
+                </div>
+            </div>
+            <div class="preview">
+                <input type="text" class="preview-input" placeholder="Type todo and press Enter...">
+                <ul class="preview-todos">
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Implement keyboard shortcuts</span>
+                    </li>
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Add terminal color theme</span>
+                    </li>
+                    <li class="preview-todo todo-completed">
+                        <span class="todo-checkbox">☑</span>
+                        <span class="todo-text">Set up Electron project</span>
+                    </li>
+                </ul>
+                <div class="preview-footer">
+                    Enter: Save | Space: Toggle | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 3: Modern Mono -->
+        <div class="theme-card theme-3">
+            <div class="theme-header">
+                <div class="theme-name">3. Modern Mono</div>
+                <div class="theme-description">
+                    Clean white/gray on black. Contemporary terminal default.
+                    Maximum readability, professional, timeless design.
+                </div>
+            </div>
+            <div class="color-swatches">
+                <div class="swatch" style="background: #000000;">
+                    <div class="swatch-label">Background</div>
+                    <div class="swatch-hex">#000000</div>
+                </div>
+                <div class="swatch" style="background: #FFFFFF; color: #000;">
+                    <div class="swatch-label">Primary/Active</div>
+                    <div class="swatch-hex">#FFFFFF</div>
+                </div>
+                <div class="swatch" style="background: #555555;">
+                    <div class="swatch-label">Completed</div>
+                    <div class="swatch-hex">#555555</div>
+                </div>
+            </div>
+            <div class="preview">
+                <input type="text" class="preview-input" placeholder="Type todo and press Enter...">
+                <ul class="preview-todos">
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Implement keyboard shortcuts</span>
+                    </li>
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Add terminal color theme</span>
+                    </li>
+                    <li class="preview-todo todo-completed">
+                        <span class="todo-checkbox">☑</span>
+                        <span class="todo-text">Set up Electron project</span>
+                    </li>
+                </ul>
+                <div class="preview-footer">
+                    Enter: Save | Space: Toggle | Esc: Close
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 4: Cool Blue -->
+        <div class="theme-card theme-4">
+            <div class="theme-header">
+                <div class="theme-name">4. Cool Blue</div>
+                <div class="theme-description">
+                    Cyan/blue terminal aesthetic. Technical, focused, calm energy.
+                    Less common than green, stands out while staying terminal-authentic.
+                </div>
+            </div>
+            <div class="color-swatches">
+                <div class="swatch" style="background: #000000;">
+                    <div class="swatch-label">Background</div>
+                    <div class="swatch-hex">#000000</div>
+                </div>
+                <div class="swatch" style="background: #00FFFF; color: #000;">
+                    <div class="swatch-label">Primary/Active</div>
+                    <div class="swatch-hex">#00FFFF</div>
+                </div>
+                <div class="swatch" style="background: #004455;">
+                    <div class="swatch-label">Completed</div>
+                    <div class="swatch-hex">#004455</div>
+                </div>
+            </div>
+            <div class="preview">
+                <input type="text" class="preview-input" placeholder="Type todo and press Enter...">
+                <ul class="preview-todos">
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Implement keyboard shortcuts</span>
+                    </li>
+                    <li class="preview-todo">
+                        <span class="todo-checkbox">☐</span>
+                        <span class="todo-text">Add terminal color theme</span>
+                    </li>
+                    <li class="preview-todo todo-completed">
+                        <span class="todo-checkbox">☑</span>
+                        <span class="todo-text">Set up Electron project</span>
+                    </li>
+                </ul>
+                <div class="preview-footer">
+                    Enter: Save | Space: Toggle | Esc: Close
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison">
+        <h2>Quick Comparison</h2>
+        <div class="comparison-grid">
+            <div class="comparison-item">
+                <div class="comparison-label">Matrix Green</div>
+                <div class="comparison-value" style="color: #00FF00;">Iconic, High Energy</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Amber CRT</div>
+                <div class="comparison-value" style="color: #FFB000;">Warm, Nostalgic</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Modern Mono</div>
+                <div class="comparison-value" style="color: #FFFFFF;">Clean, Professional</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Cool Blue</div>
+                <div class="comparison-value" style="color: #00FFFF;">Calm, Technical</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Make todos interactive in preview
+        document.querySelectorAll('.preview-todo').forEach(todo => {
+            todo.addEventListener('click', () => {
+                todo.classList.toggle('todo-completed');
+                const checkbox = todo.querySelector('.todo-checkbox');
+                checkbox.textContent = todo.classList.contains('todo-completed') ? '☑' : '☐';
+            });
+        });
+    </script>
+</body>
+</html>

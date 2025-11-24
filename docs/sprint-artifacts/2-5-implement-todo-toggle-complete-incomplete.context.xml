@@ -1,0 +1,242 @@
+<story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>5</storyId>
+    <title>Implement Todo Toggle (Complete/Incomplete)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-5-implement-todo-toggle-complete-incomplete.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>to toggle a todo between complete and incomplete by clicking it</iWant>
+    <soThat>I can mark tasks as done or undo completion if needed</soThat>
+    <tasks>
+      - Add click event listener to todo items (AC: #1, #6)
+      - Implement toggle logic in event handler (AC: #1, #2, #3)
+      - Update UI after toggle (AC: #4)
+      - Add data-id attribute to todo items (AC: #1)
+      - Add data-completed attribute for styling hooks (AC: #5)
+      - Update checkbox rendering based on state (AC: #1, #2, #5)
+      - Handle edge cases (AC: #3)
+      - Update event handler setup in renderer.ts (AC: all)
+      - Manual testing (AC: all)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Click todo item toggles completion state (checkbox ☐ ↔ ☑, completed property flipped, position unchanged)
+    2. Toggle works in reverse direction (completed → incomplete)
+    3. Toggle is reversible and independent (multiple toggles work, no side effects on other todos)
+    4. State change is instant (no animation or delay, synchronous UI update)
+    5. Visual distinction for completed todos (checkbox ☑, data-completed attribute for Epic 3 styling)
+    6. Click anywhere on item triggers toggle (entire item is clickable target)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Functional Requirements - Task Management</section>
+        <snippet>FR3: Users can mark a todo as complete. FR4: Users can mark a completed todo as incomplete (toggle back to active). FR6: Users can see visual distinction between active and completed todos.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>User Experience Principles - Key Interactions</section>
+        <snippet>Task Management: Arrow keys or j/k (vim-style) to navigate todo list. Space or Enter to toggle complete/incomplete. Visual indicator for completed items (strikethrough or color change).</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Non-Functional Requirements - Performance</section>
+        <snippet>All user actions provide immediate visual feedback (no perceived lag). No animations or transitions that slow down interaction. UI never freezes during any operation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Communication Patterns</section>
+        <snippet>Component Interaction Flow: User Input → KeyboardManager → TodoStore → render() → DOM. State Updates are unidirectional: TodoStore is single source of truth, all mutations through TodoStore methods, UI re-renders after each mutation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Structure Patterns</section>
+        <snippet>Event Handling: window.addEventListener captures events, handlers call TodoStore methods. No Global State: All state flows through TodoStore instance.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Performance Considerations - Runtime Performance</section>
+        <snippet>Input Latency: Zero perceived lag (&lt;16ms response). Immediate feedback on all actions. Rendering 1000+ todos: &lt;100ms initial render using DocumentFragment batching.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>User Journey Flows - Journey 2: Toggle Complete/Incomplete</section>
+        <snippet>User Goal: Mark task as done or undo completion. Flow: Navigate to todo (j/k or mouse) → Press Space/Click → Status toggled instantly. Checkbox changes ☐ ↔ ☑, text color/strikethrough toggles, change happens instantly with no animation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Component Library - Component 3: Todo Item</section>
+        <snippet>States: Active (bright green #00FF00, empty checkbox ☐), Completed (dark green #004400, strikethrough, filled checkbox ☑), Hovered (subtle background #001100). Behavior: Click anywhere triggers toggle, Space/Enter when selected toggles, state change is instant.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>UX Pattern Decisions - Feedback Patterns</section>
+        <snippet>Success Feedback: Implicit success (state change = success). Checkbox toggles = status changed successfully. No "Success!" toast needed. Loading Feedback: No loading states (everything is instant).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Workflows and Sequencing - Workflow 2: Toggle Todo Status</section>
+        <snippet>User clicks todo item → Extract id from data attribute → todoStore.toggle(id) finds todo, flips completed boolean → Re-render (update checkbox ☐↔☑, update text style) → Change is instant (synchronous, no animation).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>APIs and Interfaces - TodoStore Public API</section>
+        <snippet>toggle(id: string): void - Toggle todo completion status by id. Returns void (mutates internal state). Throws Error if id not found.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Acceptance Criteria</section>
+        <snippet>AC14: Clicking anywhere on todo item toggles its completed state (checkbox changes ☐ ↔ ☑). AC15: Completed todos have completed state stored (visual styling deferred to Epic 3).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/types/Todo.ts</path>
+        <kind>interface</kind>
+        <symbol>Todo</symbol>
+        <lines>17-54</lines>
+        <reason>Core data model defining todo structure including id, text, completed boolean, and createdAt timestamp. This story toggles the completed field.</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>service</kind>
+        <symbol>TodoStore.toggle()</symbol>
+        <lines>77-85</lines>
+        <reason>ALREADY IMPLEMENTED in Story 2.2. Finds todo by id and flips completed boolean. This story uses this method in click handler without modification.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>component</kind>
+        <symbol>renderTodoItem()</symbol>
+        <lines>43-70</lines>
+        <reason>NEEDS MODIFICATION. Currently renders static checkbox (☐) and creates list item. Must add: 1) data-id attribute for click targeting, 2) data-completed attribute for Epic 3 styling hooks, 3) conditional checkbox symbol (☐ vs ☑) based on todo.completed state.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>component</kind>
+        <symbol>renderTodoList()</symbol>
+        <lines>87-106</lines>
+        <reason>Re-rendering function using DocumentFragment batching. Works as-is, no changes needed. Called after store.toggle() to update UI with new checkbox states.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>file</kind>
+        <symbol>initApp()</symbol>
+        <lines>42-64</lines>
+        <reason>Main event handler setup location. Currently has Enter key listener for todo creation (lines 43-64). New click event listener will be added after line 64, using event delegation on listContainer.</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>file</kind>
+        <symbol>renderApp() destructuring</symbol>
+        <lines>40</lines>
+        <reason>Returns { input, listContainer, footer } refs. listContainer ref already available for attaching click event listener (event delegation pattern).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <runtime>
+        <package name="crypto.randomUUID()" version="built-in">Browser/Node.js built-in for UUID generation (used by TodoStore, no external dependency)</package>
+        <package name="DOM APIs" version="built-in">Native browser APIs for DOM manipulation (createElement, addEventListener, etc.)</package>
+      </runtime>
+      <development>
+        <package name="TypeScript" version="5.9.2">Strict mode enabled, type safety for all code</package>
+        <package name="Vite" version="5.4.21">Build tooling with HMR for rapid development</package>
+        <package name="Vitest" version="4.0.13">Unit testing framework (TodoStore already tested in Story 2.2)</package>
+        <package name="@types/node" version="24.10.1">TypeScript definitions for Node.js APIs</package>
+      </development>
+      <build>
+        <package name="@electron-forge/plugin-vite" version="7.10.2">Electron Forge Vite plugin for bundling</package>
+        <package name="electron" version="39.2.3">Desktop application framework</package>
+      </build>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Use event delegation: Single click listener on listContainer (ul element), not individual listeners per todo item. Better performance with many todos.
+    - Event targeting: Use event.target.closest('[data-id]') to find clicked todo item, extract id from dataset.id attribute.
+    - Unidirectional data flow: Event → TodoStore.toggle(id) → renderTodoList() → DOM update. No direct DOM-to-store updates.
+    - No animations: State changes must be instant (synchronous). No setTimeout, no CSS transitions for toggle action.
+    - Re-use existing TodoStore.toggle(): Do NOT reimplement toggle logic. Call store.toggle(id) which already exists from Story 2.2.
+    - Full re-render approach: Call renderTodoList(store.getAll(), listContainer) after toggle to update entire list. Simpler than incremental DOM updates for Epic 2.
+    - Data attributes required: renderTodoItem() must add data-id (for click targeting) and data-completed (for Epic 3 styling hooks).
+    - Checkbox symbol conditional: Use ternary: todo.completed ? '☑' : '☐' to render correct checkbox state.
+    - Terminal aesthetic: Maintain existing inline styles (flex layout, gap, padding, cursor pointer). Full styling in Epic 3.
+    - TypeScript strict mode: All code must compile with strict type checking (no any types, proper type annotations).
+    - Architecture alignment: Follow ADR-002 (vanilla classes), ADR-005 (no UI framework), communication patterns (unidirectional flow).
+    - File modification scope: Only modify src/ui/render.ts (renderTodoItem) and src/renderer.ts (add click listener). No changes to TodoStore.
+    - Performance target: Toggle action must feel instant (under 16ms target per architecture performance discipline).
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>TodoStore.toggle()</name>
+      <kind>method</kind>
+      <signature>toggle(id: string): void</signature>
+      <path>src/store/TodoStore.ts:77-85</path>
+      <description>Toggles todo completion status. Finds todo by id, flips completed boolean. Throws Error if id not found. Already implemented and tested in Story 2.2.</description>
+    </interface>
+    <interface>
+      <name>renderTodoItem()</name>
+      <kind>function</kind>
+      <signature>renderTodoItem(todo: Todo): HTMLLIElement</signature>
+      <path>src/ui/render.ts:43-70</path>
+      <description>Renders single todo item. Must be modified to add data-id, data-completed attributes and conditional checkbox symbol. Returns HTMLLIElement with checkbox span and text span in flex layout.</description>
+    </interface>
+    <interface>
+      <name>renderTodoList()</name>
+      <kind>function</kind>
+      <signature>renderTodoList(todos: Todo[], container: HTMLElement): void</signature>
+      <path>src/ui/render.ts:87-106</path>
+      <description>Re-renders entire todo list using DocumentFragment batching. Works as-is, no modifications needed. Call after store.toggle() to update UI.</description>
+    </interface>
+    <interface>
+      <name>Todo.completed</name>
+      <kind>property</kind>
+      <signature>completed: boolean</signature>
+      <path>src/types/Todo.ts:44</path>
+      <description>Completion status field. false = active todo, true = completed todo. This is the field that TodoStore.toggle() flips and renderTodoItem() checks for conditional rendering.</description>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Epic 2 uses manual testing for UI interactions (no automated UI tests). TodoStore.toggle() already has unit test coverage from Story 2.2 (src/store/TodoStore.test.ts). This story adds no new unit tests, only manual verification of click handler and rendering. Testing framework: Vitest for unit tests, manual browser testing for UI workflows.</standards>
+    <locations>
+      - src/store/TodoStore.test.ts (existing unit tests for TodoStore.toggle from Story 2.2)
+      - Manual testing: Browser DevTools, visual inspection, user interaction testing
+      - No new test files created for this story (UI testing deferred to later epic)
+    </locations>
+    <ideas>
+      <test ac="AC1, AC6">Manual: Click todo item → Verify checkbox changes ☐ → ☑ and todo.completed property becomes true. Inspect element in DevTools to verify data-completed="true" attribute.</test>
+      <test ac="AC2">Manual: Click completed todo → Verify checkbox changes ☑ → ☐ and text style reverts. Verify data-completed="false" in DevTools.</test>
+      <test ac="AC3">Manual: Rapid-click same todo 10 times → Verify checkbox alternates correctly each time with no visual glitches or console errors.</test>
+      <test ac="AC3">Manual: Toggle multiple different todos in random order → Verify each toggles independently with no side effects on other todos.</test>
+      <test ac="AC4">Manual: Toggle todo and verify change happens instantly with no animation delay. Use DevTools Performance tab to verify under 16ms.</test>
+      <test ac="AC5">Manual: Toggle todo to completed → Inspect element → Verify data-completed="true" attribute exists (for Epic 3 styling hooks). Verify checkbox symbol is ☑.</test>
+      <test ac="AC6">Manual: Click on checkbox span, text span, and list item padding area → Verify all trigger toggle (entire item is clickable target).</test>
+      <test ac="Edge case">Manual: Click on list container background (not on a todo) → Verify no action taken, no console errors (event delegation guard clause works).</test>
+      <test ac="Performance">Manual: Create 20 todos, toggle each one rapidly → Verify UI stays responsive, no freezing or lag.</test>
+      <test ac="Integration">Manual: Create todo with Enter → Click to toggle → Verify state persists in TodoStore.getAll() array (completed field updated).</test>
+      <test ac="TypeScript">Run: npx tsc --noEmit → Verify zero TypeScript compilation errors with strict mode enabled.</test>
+      <test ac="DevTools">Manual: Open DevTools Console during toggle operations → Verify no errors or warnings appear.</test>
+    </ideas>
+  </tests>
+</story-context>
