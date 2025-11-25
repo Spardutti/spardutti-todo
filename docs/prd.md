@@ -59,11 +59,83 @@ This is a Windows desktop application with a focus on speed, simplicity, and loc
 
 ### Growth Features (Post-MVP)
 
-[To be defined - keeping scope ruthlessly minimal for MVP]
+#### Major Feature: Projects System
+
+**Purpose:** Organize todos into isolated project containers. Users working on multiple initiatives (e.g., SequenceStack, HomefrontGroup, StealthMetrix) can maintain separate todo lists per project.
+
+**Core Behaviors:**
+
+- **Isolation:** Each project is a completely separate todo list. No cross-project views — ever.
+- **Default Project:** App ships with a "Default" project that users can rename or keep as-is.
+- **Active Project:** One project is active at a time. All new todos go to the active project without prompting.
+
+**Navigation:**
+
+| Method | Behavior |
+|--------|----------|
+| **Keyboard (primary)** | Shortcut opens fuzzy search → type partial project name → Enter to switch |
+| **Mouse (secondary)** | Click project name indicator → dropdown list appears → click to switch |
+
+**Visual Display:**
+
+- Minimal indicator showing current project name (in header or footer area)
+- No tabs, no sidebar — keeps the terminal aesthetic clean
+- Indicator doubles as mouse-clickable dropdown trigger
+
+**Project Management:**
+
+| Operation | Supported | Details |
+|-----------|-----------|---------|
+| Create | Yes | Keyboard shortcut to create new project |
+| Rename | Yes | Edit project name |
+| Delete | Yes | Warning prompt: "Delete project and all X todos inside?" |
+| Reorder | No | Projects appear in creation order |
+
+**Scale:** Designed for ~5-10 active projects. Not intended for dozens of projects.
+
+---
+
+#### Polish & Quality of Life
+
+**P1: Remember Window Size**
+- System remembers window dimensions if user resizes
+- Restored on next launch
+- Default size on first launch remains unchanged
+
+**P2: Todo Ordering — Append to Top**
+- New todos appear at the top of the list (most recent first)
+- Current behavior: todos pushed to bottom
+- Rationale: Recent tasks are usually most relevant
+
+**P3: Version Visibility**
+- Current version display in bottom-right is hard to read
+- Improve contrast/styling for better visibility
+- Keep minimal — don't make it prominent, just readable
+
+**P4: Update Progress Bar**
+- Show download progress when updates are being downloaded
+- Current: No visual feedback during update download
+- Simple progress indicator (percentage or bar)
+
+**P5: Remove ESC Shortcut**
+- ESC key currently mapped but does nothing useful
+- Remove dead shortcut to avoid confusion
+- Clean up keyboard shortcut documentation accordingly
+
+---
+
+#### Distribution: Linux Support
+
+**Linux Installer**
+- Package application for Linux distribution
+- Target: Debian-based (.deb) and/or AppImage for broad compatibility
+- Same feature set as Windows version
+- Auto-update mechanism must work on Linux
+- Rationale: Share with Linux-using friends/colleagues
 
 ### Vision (Future)
 
-[To be defined - focus is on nailing the minimal MVP first]
+[To be defined based on user feedback from Growth features]
 
 ---
 
