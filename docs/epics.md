@@ -1502,63 +1502,934 @@ So that users can reliably receive updates.
 
 ---
 
+## Epic 7: Projects System
+
+**Goal:** Implement multiple isolated project containers with keyboard-first switching and mouse dropdown support
+
+**Value:** Users can organize todos into separate projects (e.g., SequenceStack, HomefrontGroup, StealthMetrix) with complete isolation between them
+
+**Covers:** FR31 (create projects), FR32 (keyboard switch), FR33 (mouse switch), FR34 (active indicator), FR35 (rename), FR36 (delete), FR37 (default project), FR38 (auto-add to active), FR39 (isolation), FR40 (persistence)
+
+---
+
+### Story 7.1: Define Project Data Model and TypeScript Interfaces
+
+As a developer,
+I want the Project data model and Settings interfaces defined,
+So that I have type safety and consistent data structures for the projects system.
+
+**Acceptance Criteria:**
+
+**Given** the MVP codebase is complete
+**When** I create the Project and Settings type definitions
+**Then** a `src/types/Project.ts` file exists with:
+
+```typescript
+interface Project {
+  id: string              // UUID v4
+  name: string            // User-defined name
+  createdAt: string       // ISO 8601 timestamp
+}
+```
+
+**And** a `src/types/Settings.ts` file exists with:
+
+```typescript
+interface AppSettings {
+  activeProjectId: string
+  windowBounds: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+  version: string
+}
+```
+
+**And** TypeScript compilation succeeds with strict mode
+
+**And** I can import the types: `import type { Project } from '@/types/Project'`
+
+**Prerequisites:** Epic 6 complete (MVP done)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Data Models"
+- Use `interface` (not `type`) for public API consistency
+- Settings.version for future migration support
+- windowBounds supports FR41 (remember window size)
+
+---
+
+### Story 7.2: Implement ProjectStore Class
+
+As a developer,
+I want a ProjectStore class to manage project CRUD operations,
+So that I have a single source of truth for all project data.
+
+**Acceptance Criteria:**
+
+**Given** the Project type is defined
+**When** I implement the ProjectStore class in `src/store/ProjectStore.ts`
+**Then** the class has the following structure:
+
+```typescript
+class ProjectStore {
+  private _projects: Project[]
+
+  async load(): Promise<void>
+  async save(): Promise<void>
+  create(name: string): Project
+  rename(id: string, newName: string): void
+  delete(id: string): void
+  getAll(): Project[]
+  findById(id: string): Project | undefined
+  search(query: string): Project[]
+}
+```
+
+**And** the `create()` method:
+- Generates UUID v4 for new project
+- Creates ISO 8601 timestamp
+- Adds project to internal array
+- Returns the created project
+
+**And** the `rename()` method:
+- Finds project by ID
+- Updates name property
+- Throws error if ID not found
+
+**And** the `delete()` method:
+- Removes project from array
+- Also deletes associated `todos-{id}.toon` file
+- Throws error if trying to delete last project
+- Throws error if ID not found
+
+**And** the `search()` method:
+- Uses `name.toLowerCase().includes(query.toLowerCase())`
+- Returns matching projects
+- Returns all projects if query is empty
+
+**And** unit tests exist in `src/store/ProjectStore.test.ts`
+
+**And** all tests pass
+
+**Prerequisites:** Story 7.1 (types defined)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "API Contracts" → ProjectStore
+- ADR-008: Simple includes() search (sufficient for 5-10 projects)
+- Delete cascade: Remove both project entry AND todos file
+- Cannot delete last project (app requires at least one)
+
+---
+
+### Story 7.3: Implement SettingsStore Class
+
+As a developer,
+I want a SettingsStore class to manage app state including active project,
+So that I can persist user preferences between sessions.
+
+**Acceptance Criteria:**
+
+**Given** the AppSettings type is defined
+**When** I implement the SettingsStore class in `src/store/SettingsStore.ts`
+**Then** the class has the following structure:
+
+```typescript
+class SettingsStore {
+  private _settings: AppSettings
+
+  async load(): Promise<void>
+  async save(): Promise<void>
+  getActiveProjectId(): string
+  setActiveProject(projectId: string): void
+  getWindowBounds(): WindowBounds
+  setWindowBounds(bounds: WindowBounds): void
+}
+```
+
+**And** the `load()` method:
+- Loads settings from `settings.toon`
+- Returns default settings if file doesn't exist
+- Validates activeProjectId exists in ProjectStore
+
+**And** the `setActiveProject()` method:
+- Updates activeProjectId
+- Triggers auto-save
+- Does NOT reload TodoStore (caller responsibility)
+
+**And** the `setWindowBounds()` method:
+- Updates windowBounds
+- Triggers auto-save
+
+**And** unit tests exist in `src/store/SettingsStore.test.ts`
+
+**And** all tests pass
+
+**Prerequisites:** Story 7.2 (ProjectStore implemented)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "API Contracts" → SettingsStore
+- Default settings: First project as active, default window bounds
+- Window bounds used by main process (IPC communication)
+- Auto-save on every change (fire-and-forget pattern)
+
+---
+
+### Story 7.4: Extend ToonStorage for Multi-File Structure
+
+As a developer,
+I want ToonStorage extended to handle projects and settings files,
+So that I can persist the multi-file data structure.
+
+**Acceptance Criteria:**
+
+**Given** ToonStorage exists for todo persistence
+**When** I extend ToonStorage with new methods
+**Then** the class has these additional static methods:
+
+```typescript
+class ToonStorage {
+  // Existing
+  static async loadTodos(projectId: string): Promise<Todo[]>
+  static async saveTodos(projectId: string, todos: Todo[]): Promise<void>
+
+  // New
+  static async loadProjects(): Promise<Project[]>
+  static async saveProjects(projects: Project[]): Promise<void>
+  static async loadSettings(): Promise<AppSettings>
+  static async saveSettings(settings: AppSettings): Promise<void>
+  static async deleteTodosFile(projectId: string): Promise<void>
+}
+```
+
+**And** `loadTodos()` is updated to accept projectId parameter:
+- Loads from `todos-{projectId}.toon` instead of `todos.toon`
+
+**And** `saveTodos()` is updated to accept projectId parameter:
+- Saves to `todos-{projectId}.toon`
+
+**And** file format matches architecture spec:
+- `projects.toon` format with `projects[N]{id,name,createdAt}:`
+- `settings.toon` format with `activeProjectId:` and `windowBounds{x,y,width,height}:`
+
+**And** unit tests cover all new methods
+
+**Prerequisites:** Story 7.3 (SettingsStore implemented)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "File Format (TOON)"
+- ADR-006: Multi-file storage for projects
+- File paths: `{userData}/projects.toon`, `{userData}/todos-{id}.toon`, `{userData}/settings.toon`
+- deleteTodosFile needed for project deletion cascade
+
+---
+
+### Story 7.5: Implement Data Migration (v1 → v2)
+
+As a user upgrading from MVP,
+I want my existing todos automatically migrated to the projects system,
+So that I don't lose any data when updating the app.
+
+**Acceptance Criteria:**
+
+**Given** a user has existing `todos.toon` file (v1 format)
+**When** the app launches and detects v1 format
+**Then** the migration runs automatically:
+
+1. Backup created: `todos.toon.backup`
+2. Default project created with new UUID
+3. Original `todos.toon` renamed to `todos-{defaultProjectId}.toon`
+4. `projects.toon` created with Default project entry
+5. `settings.toon` created with activeProjectId pointing to Default
+
+**And** migration only runs once (idempotent check)
+
+**And** migration is logged with electron-log
+
+**And** if migration fails:
+- Original file preserved
+- Error logged
+- App shows error: "Migration failed. Contact support."
+
+**And** new installations (no existing data) skip migration
+
+**Prerequisites:** Story 7.4 (multi-file ToonStorage)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Data Migration (v1 → v2)"
+- Create `src/storage/migration.ts`
+- Detection: `todos.toon` exists AND `projects.toon` does NOT exist
+- Backup before any changes
+- Log all steps for debugging
+- Test with actual v1 data file
+
+---
+
+### Story 7.6: Update TodoStore for Project Scoping
+
+As a developer,
+I want TodoStore to work with the active project only,
+So that todos are properly isolated between projects.
+
+**Acceptance Criteria:**
+
+**Given** the multi-file storage is implemented
+**When** I update TodoStore to be project-scoped
+**Then** the class is updated:
+
+```typescript
+class TodoStore {
+  private _projectId: string
+  private _todos: Todo[]
+
+  constructor()
+  async load(projectId: string): Promise<void>
+  async save(): Promise<void>
+  // ... existing methods unchanged
+}
+```
+
+**And** the `load()` method:
+- Accepts projectId parameter
+- Stores projectId for subsequent saves
+- Loads from `todos-{projectId}.toon`
+- Clears existing todos before loading
+
+**And** the `save()` method:
+- Saves to `todos-{projectId}.toon`
+- Uses stored projectId
+
+**And** project switching works:
+- Call `todoStore.load(newProjectId)` to switch
+- Previous project's todos cleared from memory
+- New project's todos loaded
+
+**And** existing tests updated and passing
+
+**Prerequisites:** Story 7.5 (migration implemented)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Data Flow" → Projects Flow
+- ADR-007: Separate store classes
+- Only one project's todos in memory at a time
+- Project switch = full reload (not merge)
+
+---
+
+### Story 7.7: Implement Project Indicator UI Component
+
+As a user,
+I want to see which project is currently active,
+So that I know where my todos are being added.
+
+**Acceptance Criteria:**
+
+**Given** the stores are project-aware
+**When** I create the project indicator component
+**Then** a `src/ui/projectIndicator.ts` file exists with:
+
+```typescript
+function renderProjectIndicator(
+  project: Project,
+  container: HTMLElement,
+  onDropdownClick: () => void
+): void
+```
+
+**And** the indicator displays:
+- Current project name
+- Dropdown arrow (▼)
+- Location: Header area or footer left side
+- Style: Terminal green, monospace, clickable
+
+**And** clicking the indicator triggers onDropdownClick callback
+
+**And** the indicator updates when project changes
+
+**And** styling matches terminal aesthetic:
+- Color: #00FF00
+- Font: Consolas 14px
+- Background: transparent
+- Hover: subtle #001100 tint
+
+**Prerequisites:** Story 7.6 (TodoStore project-scoped)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Project Search UI Pattern"
+- Covers FR34 (see active project indicator)
+- Minimal footprint (doesn't dominate UI)
+- Click triggers dropdown (Story 7.9)
+
+---
+
+### Story 7.8: Implement Keyboard Project Search (Ctrl+P)
+
+As a user,
+I want to switch projects using keyboard fuzzy search,
+So that I can quickly navigate between projects without using the mouse.
+
+**Acceptance Criteria:**
+
+**Given** multiple projects exist
+**When** I press Ctrl+P
+**Then** the footer transforms into search mode:
+- Input prompt appears: `> _`
+- Filtered project list shows below input
+- Normal footer hints hidden
+
+**And** as I type:
+- Projects filtered using includes() matching
+- Matching projects displayed inline
+- First match highlighted
+
+**And** navigation works:
+- Arrow keys move highlight
+- Enter selects highlighted project
+- Escape cancels and restores normal footer
+
+**And** when project is selected:
+- TodoStore loads new project's todos
+- SettingsStore updates activeProjectId
+- Project indicator updates
+- Footer returns to normal hints
+- Input field regains focus
+
+**And** if no matches found:
+- Display: "No projects match"
+
+**Prerequisites:** Story 7.7 (project indicator)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Keyboard Shortcuts" and "Project Search UI Pattern"
+- Covers FR32 (keyboard fuzzy search switch)
+- Create `src/ui/projectSearch.ts`
+- Register shortcut: "ctrl+p" in KeyboardManager
+- ADR-010: Inline footer for project search UI
+
+---
+
+### Story 7.9: Implement Mouse Dropdown for Project Switch
+
+As a user,
+I want to switch projects using a mouse dropdown,
+So that I have an alternative to keyboard navigation.
+
+**Acceptance Criteria:**
+
+**Given** the project indicator is visible
+**When** I click the project indicator
+**Then** a dropdown appears below the indicator:
+- Lists all projects
+- Active project has checkmark (✓)
+- "New Project" option at bottom
+
+**And** clicking a project:
+- Switches to that project
+- Closes dropdown
+- Updates indicator
+- Loads new project's todos
+
+**And** clicking "New Project":
+- Opens project creation flow (prompts for name)
+- Creates project and switches to it
+
+**And** clicking outside dropdown:
+- Closes dropdown
+- No project change
+
+**And** dropdown styling:
+- Background: #000000
+- Border: 1px solid #00FF00
+- Items: #00FF00 text, hover #001100 background
+- No animations
+
+**Prerequisites:** Story 7.8 (keyboard search)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Project Search UI Pattern"
+- Covers FR33 (mouse dropdown switch)
+- Dropdown position: Below indicator, left-aligned
+- Click outside detection: document click listener
+- Mouse is secondary to keyboard (keyboard-first design)
+
+---
+
+### Story 7.10: Implement Project Create, Rename, Delete Operations
+
+As a user,
+I want to create, rename, and delete projects,
+So that I can manage my project organization.
+
+**Acceptance Criteria:**
+
+**Given** the project system is functional
+**When** I create a new project:
+- Keyboard: Type name in search mode + special key (Ctrl+Enter?)
+- Mouse: Click "New Project" in dropdown
+- Prompt appears for project name
+- New project created and switched to
+
+**And** when I rename a project:
+- Right-click project in dropdown OR keyboard shortcut
+- Inline edit mode for name
+- Enter confirms, Escape cancels
+- Name updated in all views
+
+**And** when I delete a project:
+- Confirmation prompt: "Delete 'ProjectName' and X todos inside? [Y/n]"
+- On confirm: Project and all todos deleted
+- Switches to another project (first available)
+- Cannot delete last remaining project
+
+**And** the Default project can be renamed but not deleted
+
+**Prerequisites:** Story 7.9 (dropdown implemented)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "API Contracts" → ProjectStore
+- Covers FR31, FR35, FR36, FR37
+- FR37: Default project ships with app, can be renamed
+- Delete cascade: Remove project + todos-{id}.toon file
+- Confirmation reuses existing footer confirmation pattern
+
+---
+
+### Story 7.11: Integrate Projects into App Startup
+
+As a user,
+I want the app to load my last active project on startup,
+So that I can continue where I left off.
+
+**Acceptance Criteria:**
+
+**Given** the projects system is complete
+**When** the app launches
+**Then** the startup sequence is:
+
+1. Migration check (v1 → v2 if needed)
+2. Load settings.toon (get activeProjectId, windowBounds)
+3. Load projects.toon (project index)
+4. Validate activeProjectId exists (fallback to first project)
+5. Load todos-{activeProjectId}.toon
+6. Render UI with active project's todos
+7. Display project indicator
+
+**And** if settings file missing (new install):
+- Create Default project
+- Create settings with Default as active
+- Start with empty todo list
+
+**And** if active project was deleted (corrupt state):
+- Log warning
+- Switch to first available project
+- Update settings
+
+**And** startup completes in <2 seconds (performance maintained)
+
+**Prerequisites:** Story 7.10 (CRUD operations)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Data Flow" → Projects Flow
+- Covers FR38 (auto-add to active), FR39 (isolation), FR40 (persistence)
+- Update `src/main.ts` entry point
+- Performance: Only load active project's todos
+- Window bounds applied via IPC to main process
+
+---
+
+## Epic 8: Polish & Quality of Life
+
+**Goal:** Implement quality-of-life improvements for better user experience
+
+**Value:** Users get refined experience with window memory, better todo ordering, visible version, update progress, and cleaned up shortcuts
+
+**Covers:** FR41 (window size), FR42 (todos at top), FR43 (version visibility), FR44 (update progress), FR45 (remove ESC)
+
+---
+
+### Story 8.1: Remember and Restore Window Size
+
+As a user,
+I want the app to remember my window size and position,
+So that it opens where I left it without manual resizing.
+
+**Acceptance Criteria:**
+
+**Given** the app is running
+**When** I resize or move the window
+**Then** the bounds are saved to settings.toon:
+- x position
+- y position
+- width
+- height
+
+**And** when I close and reopen the app:
+- Window opens at saved position
+- Window has saved dimensions
+
+**And** debouncing prevents excessive saves:
+- Save after resize/move stops (500ms debounce)
+
+**And** bounds validation:
+- If saved position is off-screen, reset to centered
+- If saved size is larger than screen, fit to screen
+
+**Prerequisites:** Story 7.11 (projects integrated)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "IPC Communication" → Window bounds
+- Covers FR41 (remember window size)
+- Main process tracks window bounds via 'resize' and 'move' events
+- IPC: `get-window-bounds`, `set-window-bounds`
+- SettingsStore handles persistence
+- Debounce: Don't save on every pixel of resize
+
+---
+
+### Story 8.2: New Todos Appear at Top of List
+
+As a user,
+I want new todos to appear at the top of the list,
+So that my most recent tasks are immediately visible.
+
+**Acceptance Criteria:**
+
+**Given** I have existing todos in the list
+**When** I create a new todo
+**Then** it appears at the TOP of the list (first position)
+
+**And** the existing todos shift down
+
+**And** the new todo is visible without scrolling
+
+**And** this applies to all projects
+
+**Prerequisites:** Story 8.1 (window bounds)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "API Contracts" → TodoStore.add() uses unshift
+- Covers FR42 (todos append to top)
+- Change in TodoStore.add(): `this._todos.unshift(newTodo)` instead of `push`
+- Update render to maintain order (no sorting needed)
+- Simple change with big UX impact
+
+---
+
+### Story 8.3: Improve Version Number Visibility
+
+As a user,
+I want to see the app version clearly,
+So that I know which version I'm running.
+
+**Acceptance Criteria:**
+
+**Given** the app is running
+**When** I look at the footer area
+**Then** the version number is visible:
+- Location: Bottom-right corner of footer
+- Format: "v1.2.3"
+- Color: #008800 (dimmed green, readable)
+- Font: Same as footer hints
+
+**And** the version is readable but not prominent:
+- Smaller font size (12px)
+- Doesn't compete with shortcuts hints
+
+**And** version comes from package.json (single source of truth)
+
+**Prerequisites:** Story 8.2 (todos at top)
+
+**Technical Notes:**
+- Covers FR43 (version visibility)
+- Read version: `require('../package.json').version` or Electron API
+- Current issue: Version hard to read (user feedback)
+- Balance: Visible but not distracting
+
+---
+
+### Story 8.4: Show Update Download Progress
+
+As a user,
+I want to see download progress when updates are downloading,
+So that I know something is happening and can estimate completion.
+
+**Acceptance Criteria:**
+
+**Given** an update is available
+**When** the update starts downloading
+**Then** the footer displays progress:
+- Text: "Downloading update... 45%"
+- Updates as download progresses
+- Color: #00FF00 (bright green)
+
+**And** when download completes:
+- Text changes to: "Update ready. Restart to install."
+- Persists until app restart
+
+**And** if download fails:
+- Text: "Update failed. Try again later."
+- Auto-hides after 5 seconds
+
+**And** progress doesn't block app usage
+
+**Prerequisites:** Story 8.3 (version visibility)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Update Mechanism" → Progress Feedback
+- Covers FR44 (update progress display)
+- electron-updater event: `download-progress` with percent
+- IPC from main process to renderer: `update-progress`
+- Footer temporarily replaces hints during download
+
+---
+
+### Story 8.5: Remove ESC Keyboard Shortcut
+
+As a user,
+I want the non-functional ESC shortcut removed,
+So that I'm not confused by dead keyboard shortcuts.
+
+**Acceptance Criteria:**
+
+**Given** the keyboard system is configured
+**When** I review the shortcuts
+**Then** ESC is no longer registered for "close app"
+
+**And** ESC still works in context-specific situations:
+- Cancel project search (Story 7.8)
+- Cancel confirmations
+
+**And** footer hints no longer show ESC
+
+**And** Ctrl+Q remains as the quit shortcut
+
+**Prerequisites:** Story 8.4 (update progress)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Keyboard Shortcuts" → Removed
+- Covers FR45 (remove ESC shortcut)
+- Unregister global ESC handler
+- Keep contextual ESC handlers (search cancel, confirm cancel)
+- Update `keyboardManager.getHints()` output
+
+---
+
+## Epic 9: Linux Distribution
+
+**Goal:** Package and distribute the application for Linux users with full feature parity
+
+**Value:** Users on Linux can use the same fast todo app with auto-updates
+
+**Covers:** FR46 (Linux package), FR47 (feature parity), FR48 (Linux auto-update)
+
+---
+
+### Story 9.1: Configure AppImage Maker in Electron Forge
+
+As a developer,
+I want Electron Forge configured to build AppImage for Linux,
+So that I can distribute the app to Linux users.
+
+**Acceptance Criteria:**
+
+**Given** the codebase is ready for multi-platform
+**When** I configure forge.config.ts for Linux
+**Then** the configuration includes:
+
+```javascript
+makers: [
+  // Existing Windows maker...
+  {
+    name: '@electron-forge/maker-appimage',
+    config: {
+      options: {
+        categories: ['Utility'],
+        icon: './assets/icon.png'
+      }
+    }
+  }
+]
+```
+
+**And** the dev dependency is installed:
+- `@electron-forge/maker-appimage`
+
+**And** `npm run make -- --platform=linux` succeeds
+
+**And** output is: `out/make/appimage/x64/spardutti-todo-{version}.AppImage`
+
+**Prerequisites:** Story 8.5 (polish complete)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Deployment Architecture" → Linux AppImage
+- ADR-009: AppImage for Linux distribution
+- AppImage is portable (no installation needed)
+- Works on all Linux distributions
+- File permissions: Make executable after download
+
+---
+
+### Story 9.2: Ensure Cross-Platform Path Handling
+
+As a developer,
+I want all file paths to work on both Windows and Linux,
+So that the app has feature parity across platforms.
+
+**Acceptance Criteria:**
+
+**Given** the app uses file system for storage
+**When** I review all path handling code
+**Then** all paths use platform-agnostic methods:
+- `path.join()` for combining paths (not string concatenation)
+- `app.getPath('userData')` for storage location
+- No hardcoded path separators (\ or /)
+
+**And** storage location is correct:
+- Windows: `%APPDATA%/spardutti-todo/`
+- Linux: `~/.config/spardutti-todo/`
+
+**And** all file operations work on Linux:
+- Read/write todos files
+- Read/write projects file
+- Read/write settings file
+- Migration code
+
+**And** tested on actual Linux system
+
+**Prerequisites:** Story 9.1 (AppImage maker configured)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Technology Stack Details" → Storage location
+- Covers FR47 (feature parity)
+- Node.js path module handles platform differences
+- app.getPath() returns correct paths per platform
+- Test on Ubuntu or similar
+
+---
+
+### Story 9.3: Configure Linux Auto-Update
+
+As a user on Linux,
+I want the app to auto-update like on Windows,
+So that I always have the latest version.
+
+**Acceptance Criteria:**
+
+**Given** the app is running on Linux as AppImage
+**When** a new version is available
+**Then** auto-update works:
+- Update check on launch
+- Background download
+- Progress shown in footer
+- Install on restart
+
+**And** the update process:
+- Downloads new .AppImage
+- Replaces current AppImage on restart
+- Preserves user data (separate from AppImage)
+
+**And** GitHub Release includes Linux metadata:
+- Upload: `spardutti-todo-{version}.AppImage`
+- Upload: `latest-linux.yml`
+
+**Prerequisites:** Story 9.2 (cross-platform paths)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Update Mechanism"
+- Covers FR48 (Linux auto-update)
+- electron-updater supports AppImage natively
+- Separate yml file for Linux: `latest-linux.yml`
+- AppImage self-updates (replaces own file)
+
+---
+
+### Story 9.4: Update Build and Release Pipeline for Linux
+
+As a developer,
+I want the CI/CD pipeline to build for both Windows and Linux,
+So that releases include both platforms automatically.
+
+**Acceptance Criteria:**
+
+**Given** GitHub Actions workflow exists
+**When** a release is triggered
+**Then** the pipeline builds:
+- Windows: `.exe` installer + `latest.yml`
+- Linux: `.AppImage` + `latest-linux.yml`
+
+**And** all artifacts are uploaded to GitHub Release
+
+**And** release notes mention both platforms
+
+**And** build commands are documented:
+```bash
+npm run make -- --platform=win32
+npm run make -- --platform=linux
+```
+
+**Prerequisites:** Story 9.3 (Linux auto-update)
+
+**Technical Notes:**
+- Architecture ref: architecture.md section "Build Pipeline"
+- Update `.github/workflows/release.yml` (if exists)
+- May need Linux runner for AppImage build
+- Cross-compilation possible but native build preferred
+
+---
+
 ## FR Coverage Matrix
+
+**MVP Features (FR1-FR30):** Covered by Epic 1-6 (see above)
+
+**Growth Features (FR31-FR48):**
 
 | FR | Description | Epic | Story |
 |----|-------------|------|-------|
-| **FR1** | Create todo by typing and pressing Enter | Epic 2 | Story 2.4 |
-| **FR2** | View list of all todos | Epic 2 | Story 2.3, 2.4 |
-| **FR3** | Mark todo as complete | Epic 2 | Story 2.5 |
-| **FR4** | Mark completed todo as incomplete (toggle) | Epic 2 | Story 2.5 |
-| **FR5** | Delete all completed todos | Epic 2 | Story 2.6 |
-| **FR6** | Visual distinction between active and completed | Epic 2, Epic 3 | Story 2.5, 3.3 |
-| **FR7** | Local storage on Windows PC | Epic 5 | Story 5.1, 5.2 |
-| **FR8** | Persist between sessions | Epic 5 | Story 5.2, 5.4 |
-| **FR9** | Offline access | Epic 5 | Story 5.2 |
-| **FR10** | Human-readable format | Epic 5 | Story 5.1, 5.4 |
-| **FR11** | Navigate with arrow keys | Epic 4 | Story 4.2 |
-| **FR12** | Navigate with vim-style j/k | Epic 4 | Story 4.2 |
-| **FR13** | Toggle with Space/Enter | Epic 4 | Story 4.3 |
-| **FR14** | Focus input with shortcut | Epic 4 | Story 4.4 |
-| **FR15** | Close app with shortcut | Epic 4 | Story 4.4 |
-| **FR16** | Delete completed shortcut | Epic 4 | Story 4.4 |
-| **FR17** | View keyboard shortcuts | Epic 3, Epic 4 | Story 3.4, 4.5 |
-| **FR18** | Fast launch (<2s) | Epic 1 | Story 1.4 (cross-cutting) |
-| **FR19** | Input focused on launch | Epic 2 | Story 2.4 |
-| **FR20** | Immediate visual feedback | Epic 2, Epic 3 | Cross-cutting all stories |
-| **FR21** | No animations/delays | Epic 3 | Story 3.2, 3.3, 3.5 |
-| **FR22** | Check for updates automatically | Epic 6 | Story 6.1 |
-| **FR23** | Auto-download and install updates | Epic 6 | Story 6.2, 6.4 |
-| **FR24** | Manual update check | Epic 6 | Story 6.3 |
-| **FR25** | Update notifications | Epic 6 | Story 6.2 |
-| **FR26** | Terminal-style interface | Epic 3 | Story 3.1, 3.2, 3.3, 3.5 |
-| **FR27** | Mouse interaction (optional) | Epic 2, Epic 4 | Cross-cutting (mouse + keyboard both work) |
-| **FR28** | Visual differentiation of completed | Epic 3 | Story 3.3 |
-| **FR29** | Confirmation before delete | Epic 2 | Story 2.6 |
-| **FR30** | Minimal, distraction-free UI | Epic 3 | Story 3.5 |
+| **FR31** | Create multiple projects | Epic 7 | Story 7.2, 7.10 |
+| **FR32** | Switch projects via keyboard fuzzy search | Epic 7 | Story 7.8 |
+| **FR33** | Switch projects via mouse dropdown | Epic 7 | Story 7.9 |
+| **FR34** | See active project indicator | Epic 7 | Story 7.7 |
+| **FR35** | Rename projects | Epic 7 | Story 7.10 |
+| **FR36** | Delete projects with confirmation | Epic 7 | Story 7.10 |
+| **FR37** | Default project on first launch | Epic 7 | Story 7.5, 7.10 |
+| **FR38** | Auto-add todos to active project | Epic 7 | Story 7.6, 7.11 |
+| **FR39** | Project isolation (no cross-view) | Epic 7 | Story 7.6, 7.11 |
+| **FR40** | Project data persistence | Epic 7 | Story 7.4, 7.11 |
+| **FR41** | Remember window size | Epic 8 | Story 8.1 |
+| **FR42** | Todos append to top | Epic 8 | Story 8.2 |
+| **FR43** | Version visibility | Epic 8 | Story 8.3 |
+| **FR44** | Update progress display | Epic 8 | Story 8.4 |
+| **FR45** | Remove ESC shortcut | Epic 8 | Story 8.5 |
+| **FR46** | Linux package (AppImage) | Epic 9 | Story 9.1 |
+| **FR47** | Linux feature parity | Epic 9 | Story 9.2 |
+| **FR48** | Linux auto-update | Epic 9 | Story 9.3, 9.4 |
 
-**Validation:** All 30 functional requirements are covered by specific stories.
+**Validation:** All 48 functional requirements are covered by specific stories.
 
 ---
 
 ## Summary
 
-**✅ Epic Breakdown Complete**
+**✅ Epic Breakdown Complete (v2.0)**
 
-**Created:** epics.md with complete epic and story breakdown
+**Created:** epics.md with complete epic and story breakdown for MVP + Growth features
 
-**FR Coverage:** All 30 functional requirements from PRD mapped to stories
+**FR Coverage:** All 48 functional requirements from PRD v2.0 mapped to stories
+- MVP: FR1-FR30 (Epics 1-6)
+- Growth: FR31-FR48 (Epics 7-9)
 
 **Context Incorporated:**
 - ✅ PRD requirements (all FRs and NFRs)
 - ✅ UX interaction patterns (Matrix Green theme, dense layout, keyboard-first)
-- ✅ Architecture technical decisions (Electron + Vite + TypeScript, TOON storage, custom components)
+- ✅ Architecture technical decisions (Electron + Vite + TypeScript, TOON multi-file storage, projects system)
 
-**Status:** COMPLETE - Ready for Phase 4 Implementation!
+**Status:** COMPLETE - Ready for Implementation!
 
 **Total Structure:**
-- 6 Epics
-- 25 Stories total
+- 9 Epics
+- 45 Stories total
 - All stories have:
   - User story statement (As a... I want... So that...)
   - Detailed BDD acceptance criteria (Given/When/Then/And)
@@ -1566,6 +2437,8 @@ So that users can reliably receive updates.
   - Technical notes with architecture/UX references
 
 **Epic Breakdown:**
+
+**MVP (Epics 1-6):**
 1. **Epic 1: Foundation & Project Setup** (4 stories)
    - Project initialization, structure, dependencies, window config
 2. **Epic 2: Core Task Management** (6 stories)
@@ -1579,14 +2452,26 @@ So that users can reliably receive updates.
 6. **Epic 6: Auto-Update System** (4 stories)
    - electron-updater config, auto-download, manual check, testing
 
-**Next Steps:**
-Run UX Design (if UI) or Architecture workflow (if not already complete)
+**Growth (Epics 7-9):**
+7. **Epic 7: Projects System** (11 stories)
+   - Project types, ProjectStore, SettingsStore, multi-file storage, migration
+   - Project indicator, keyboard search (Ctrl+P), mouse dropdown
+   - Create/rename/delete operations, app startup integration
+8. **Epic 8: Polish & Quality of Life** (5 stories)
+   - Window size memory, todos at top, version visibility
+   - Update progress bar, remove ESC shortcut
+9. **Epic 9: Linux Distribution** (4 stories)
+   - AppImage maker, cross-platform paths, Linux auto-update, CI/CD pipeline
 
-**Note:** Epics will be further enhanced during Phase 4 implementation as new technical details emerge.
+**Recommended Implementation Order:**
+1. Complete MVP epics (1-6) first
+2. Epic 7 (Projects) - Major feature, enables multi-project workflow
+3. Epic 8 (Polish) - Quick wins, improves UX
+4. Epic 9 (Linux) - Platform expansion
 
 ---
 
 _For implementation: Use the `create-story` workflow to generate individual story implementation plans from this epic breakdown._
 
-_This document was created with full context from PRD, UX Design, and Architecture specifications._
+_This document was created with full context from PRD v2.0, UX Design, and Architecture v2.0 specifications._
 

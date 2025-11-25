@@ -1,8 +1,8 @@
 # spardutti-todo - Product Requirements Document
 
 **Author:** Spardutti
-**Date:** 2025-11-19
-**Version:** 1.0
+**Date:** 2025-11-25
+**Version:** 2.0
 
 ---
 
@@ -142,9 +142,9 @@ This is a Windows desktop application with a focus on speed, simplicity, and loc
 ## desktop_app Specific Requirements
 
 **Platform Support:**
-- Windows-only application (no cross-platform requirement)
-- Target: Windows 10 and later
-- Native or Electron-based implementation (optimize for startup speed)
+- Primary: Windows 10 and later
+- Growth: Linux (Debian-based .deb and/or AppImage)
+- Electron-based implementation (enables cross-platform support)
 
 **Update Strategy:**
 - Auto-update mechanism required
@@ -287,6 +287,52 @@ These requirements define the complete capability set for spardutti-todo. Every 
 **FR29:** The application provides confirmation prompt before deleting completed todos
 
 **FR30:** The application window is minimal and distraction-free (no unnecessary UI chrome)
+
+---
+
+### Growth Features - Functional Requirements
+
+#### Projects System
+
+**FR31:** Users can create multiple projects to organize todos
+
+**FR32:** Users can switch between projects using keyboard fuzzy search (shortcut → type partial name → Enter)
+
+**FR33:** Users can switch between projects using mouse (click indicator → dropdown → select)
+
+**FR34:** Users can see which project is currently active via a minimal indicator
+
+**FR35:** Users can rename existing projects
+
+**FR36:** Users can delete projects with confirmation warning about deleting contained todos
+
+**FR37:** The application ships with a default project that users can rename
+
+**FR38:** New todos are automatically added to the currently active project without prompting
+
+**FR39:** Each project maintains a completely isolated todo list (no cross-project visibility)
+
+**FR40:** Project data persists between application sessions
+
+#### Polish & Quality of Life
+
+**FR41:** The application remembers and restores window size/dimensions between sessions
+
+**FR42:** New todos appear at the top of the list (most recent first)
+
+**FR43:** Version number display has improved visibility/contrast
+
+**FR44:** The application shows download progress during update downloads
+
+**FR45:** The ESC keyboard shortcut is removed (currently non-functional)
+
+#### Linux Distribution
+
+**FR46:** The application is available as a Linux package (.deb and/or AppImage)
+
+**FR47:** Linux version has feature parity with Windows version
+
+**FR48:** Auto-update mechanism functions on Linux
 
 ---
 

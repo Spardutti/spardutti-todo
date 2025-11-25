@@ -1,0 +1,195 @@
+<story-context id="7-1-define-project-data-model-and-typescript-interfaces" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>1</storyId>
+    <title>Define Project Data Model and TypeScript Interfaces</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-1-define-project-data-model-and-typescript-interfaces.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the Project data model and Settings interfaces defined</iWant>
+    <soThat>I have type safety and consistent data structures for the projects system</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <description>Create Project interface</description>
+        <subtasks>
+          <subtask>Create `src/types/Project.ts` file</subtask>
+          <subtask>Define `Project` interface with id, name, createdAt properties</subtask>
+          <subtask>Add JSDoc documentation for interface and each property</subtask>
+          <subtask>Export the interface</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2">
+        <description>Create AppSettings interface</description>
+        <subtasks>
+          <subtask>Create `src/types/Settings.ts` file</subtask>
+          <subtask>Define `WindowBounds` type for the nested bounds object</subtask>
+          <subtask>Define `AppSettings` interface with activeProjectId, windowBounds, version</subtask>
+          <subtask>Add JSDoc documentation for interface and each property</subtask>
+          <subtask>Export both types</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="3">
+        <description>Verify TypeScript compilation</description>
+        <subtasks>
+          <subtask>Run `npm run build` or TypeScript compiler</subtask>
+          <subtask>Verify no type errors with strict mode</subtask>
+          <subtask>Ensure interfaces work with existing tsconfig.json strict settings</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <description>Verify import aliases work</description>
+        <subtasks>
+          <subtask>Test import in a temporary file or existing file</subtask>
+          <subtask>Verify `@/types/Project` and `@/types/Settings` resolve correctly</subtask>
+          <subtask>Test both `import type` and regular imports</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="1,2,5">
+        <description>Write unit tests</description>
+        <subtasks>
+          <subtask>Create test file to verify type exports</subtask>
+          <subtask>Test that interface shape matches expected structure</subtask>
+          <subtask>Verify TypeScript catches type violations (compile-time tests)</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">A `src/types/Project.ts` file exists with a `Project` interface containing: id: string (UUID v4), name: string (user-defined name), createdAt: string (ISO 8601 timestamp)</criterion>
+    <criterion id="2">A `src/types/Settings.ts` file exists with an `AppSettings` interface containing: activeProjectId: string, windowBounds: { x: number, y: number, width: number, height: number }, version: string</criterion>
+    <criterion id="3">TypeScript compilation succeeds with strict mode enabled</criterion>
+    <criterion id="4">Types can be imported using path aliases: `import type { Project } from '@/types/Project'`</criterion>
+    <criterion id="5">Both interfaces are exported and documented with JSDoc comments</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Models</section>
+        <snippet>Defines Project interface with id (UUID v4), name (string), createdAt (ISO 8601). Defines AppSettings with activeProjectId, windowBounds, and version.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Naming Conventions</section>
+        <snippet>Types/Interfaces use PascalCase (Todo, Project, AppSettings). Files in src/types/ use PascalCase naming (Project.ts, Settings.ts).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Tech Spec</title>
+        <section>Data Models and Contracts</section>
+        <snippet>Detailed interface specifications for Project and AppSettings including all properties and their types with TypeScript syntax examples.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 7.1</section>
+        <snippet>Story requirements specifying Project.ts and Settings.ts file creation with interface definitions and JSDoc documentation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>PRD</title>
+        <section>Projects System</section>
+        <snippet>FR31-FR40 define projects system requirements. Each project has isolated todo list. Settings track active project.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/types/Todo.ts</path>
+        <kind>type</kind>
+        <symbol>Todo</symbol>
+        <lines>1-54</lines>
+        <reason>CRITICAL: Follow this exact JSDoc pattern - interface-level doc with @example, property-level docs with Format/Generated by notes. Uses export interface syntax.</reason>
+      </file>
+      <file>
+        <path>src/types/Shortcut.ts</path>
+        <kind>type</kind>
+        <symbol>ShortcutHandler</symbol>
+        <lines>1-16</lines>
+        <reason>Demonstrates shorter JSDoc style for simpler interfaces. Shows inline comments pattern.</reason>
+      </file>
+      <file>
+        <path>tsconfig.json</path>
+        <kind>config</kind>
+        <symbol>compilerOptions.paths</symbol>
+        <lines>15-18</lines>
+        <reason>Path aliases: @/* maps to ./src/*. New types at src/types/ will be importable as @/types/Project.</reason>
+      </file>
+      <file>
+        <path>tsconfig.json</path>
+        <kind>config</kind>
+        <symbol>compilerOptions strict</symbol>
+        <lines>8-9</lines>
+        <reason>noImplicitAny: true, strictNullChecks: true - types must handle these strict checks.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>typescript</package>
+        <version>^5.0.0</version>
+        <purpose>TypeScript compiler for type checking</purpose>
+      </node>
+      <node>
+        <package>electron</package>
+        <version>^33.0.0</version>
+        <purpose>Runtime platform (relevant for crypto.randomUUID availability)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use `interface` (not `type`) for public API consistency per architecture naming conventions</constraint>
+    <constraint type="pattern">Follow existing Todo.ts pattern in `src/types/` directory</constraint>
+    <constraint type="format">UUID v4 format for id fields (generated using `crypto.randomUUID()`)</constraint>
+    <constraint type="format">ISO 8601 format for timestamps: `2025-11-25T10:00:00Z`</constraint>
+    <constraint type="naming">Private class members in stores will use `_` prefix (e.g., `_projects`)</constraint>
+    <constraint type="design">Keep types simple and focused - validation logic belongs in stores, not type definitions</constraint>
+    <constraint type="layer">No changes to existing types required - these are additive</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Project</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface Project { id: string; name: string; createdAt: string; }</signature>
+      <path>src/types/Project.ts</path>
+    </interface>
+    <interface>
+      <name>AppSettings</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface AppSettings { activeProjectId: string; windowBounds: WindowBounds; version: string; }</signature>
+      <path>src/types/Settings.ts</path>
+    </interface>
+    <interface>
+      <name>WindowBounds</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface WindowBounds { x: number; y: number; width: number; height: number; }</signature>
+      <path>src/types/Settings.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests use Vitest framework with co-located test files (*.test.ts in same directory as source). TypeScript strict mode serves as compile-time type validation. Test coverage focuses on verifying type exports are accessible and properly typed.</standards>
+    <locations>
+      <location>src/types/*.test.ts</location>
+      <location>src/**/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Verify Project interface can be imported from @/types/Project</idea>
+      <idea ac="2">Verify AppSettings and WindowBounds can be imported from @/types/Settings</idea>
+      <idea ac="3">Create test file that imports types and assigns valid/invalid values to verify TypeScript catches errors</idea>
+      <idea ac="4">Import types in existing file to verify path aliases resolve correctly</idea>
+      <idea ac="5">Verify JSDoc comments appear in IDE intellisense when hovering over type properties</idea>
+    </ideas>
+  </tests>
+</story-context>

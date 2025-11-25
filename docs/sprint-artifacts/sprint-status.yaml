@@ -1,4 +1,4 @@
-# generated: 2025-11-21
+# generated: 2025-11-25
 # project: spardutti-todo
 # project_key: spardutti-todo
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 # - SM typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 
-generated: 2025-11-21
+generated: 2025-11-25
 project: spardutti-todo
 project_key: spardutti-todo
 tracking_system: file-system
@@ -88,3 +88,39 @@ development_status:
   6-3-implement-manual-update-check-fallback: done
   6-4-test-and-verify-auto-update-flow: done
   epic-6-retrospective: optional
+
+  # ============================================
+  # SPRINT 2: Growth Features (Epics 7-9)
+  # ============================================
+
+  # Epic 7: Projects System
+  epic-7: contexted
+  7-1-define-project-data-model-and-typescript-interfaces: done
+  7-2-implement-projectstore-class: backlog
+  7-3-implement-settingsstore-class: backlog
+  7-4-extend-toonstorage-for-multi-file-structure: backlog
+  7-5-implement-data-migration-v1-to-v2: backlog
+  7-6-update-todostore-for-project-scoping: backlog
+  7-7-implement-project-indicator-ui-component: backlog
+  7-8-implement-keyboard-project-search-ctrl-p: backlog
+  7-9-implement-mouse-dropdown-for-project-switch: backlog
+  7-10-implement-project-create-rename-delete-operations: backlog
+  7-11-integrate-projects-into-app-startup: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Polish & Quality of Life
+  epic-8: backlog
+  8-1-remember-and-restore-window-size: backlog
+  8-2-new-todos-appear-at-top-of-list: backlog
+  8-3-improve-version-number-visibility: backlog
+  8-4-show-update-download-progress: backlog
+  8-5-remove-esc-keyboard-shortcut: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Linux Distribution
+  epic-9: backlog
+  9-1-configure-appimage-maker-in-electron-forge: backlog
+  9-2-ensure-cross-platform-path-handling: backlog
+  9-3-configure-linux-auto-update: backlog
+  9-4-update-build-and-release-pipeline-for-linux: backlog
+  epic-9-retrospective: optional
