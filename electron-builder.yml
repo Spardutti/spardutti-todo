@@ -1,0 +1,37 @@
+appId: com.spardutti.todo
+productName: spardutti-todo
+copyright: Copyright © 2025 Spardutti
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - .vite/**/*
+  - package.json
+
+extraMetadata:
+  main: .vite/build/main.js
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icons/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icons/icon.ico
+  uninstallerIcon: build/icons/icon.ico
+  installerHeaderIcon: build/icons/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: spardutti-todo
+
+publish:
+  provider: github
+  owner: Spardutti
+  repo: spardutti-todo
+  releaseType: release

@@ -1,7 +1,7 @@
 {
   "name": "spardutti-todo",
   "productName": "spardutti-todo",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "test": "vitest",
-    "build:analyze": "vite build --mode analyze"
+    "build:analyze": "vite build --mode analyze",
+    "dist:win": "electron-forge package --platform win32 --arch x64 && electron-builder --win --x64 --prepackaged out/spardutti-todo-win32-x64"
   },
   "keywords": [],
   "author": {
@@ -38,6 +39,7 @@
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "electron": "39.2.3",
+    "electron-builder": "^26.0.12",
     "electron-icon-builder": "^2.0.1",
     "eslint": "^8.57.1",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -50,7 +52,6 @@
   "dependencies": {
     "@toon-format/toon": "1.0.0",
     "electron-log": "5.4.1",
-    "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "6.7.1",
     "rollup-plugin-visualizer": "6.0.5"
   }

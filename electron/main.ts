@@ -1,15 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
-import started from 'electron-squirrel-startup';
 import log from 'electron-log';
 import { ToonStorage } from './storage';
 import { initUpdater, isUpdateDownloaded, quitAndInstall, checkForUpdates } from './updater';
 import type { Todo } from '../src/types/Todo';
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (started) {
-  app.quit();
-}
 
 // IPC handler for getting todos file path
 ipcMain.handle('get-todos-path', () => {
