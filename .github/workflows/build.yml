@@ -54,6 +54,54 @@ jobs:
           echo "Generated installer files:"
           dir out\make\squirrel.windows\x64\
 
+      - name: Generate latest.yml for electron-updater
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          # Find the Setup.exe file
+          $exeFile = Get-ChildItem -Path "out\make\squirrel.windows\x64\*.Setup.exe" | Select-Object -First 1
+          if (-not $exeFile) {
+            Write-Error "Setup.exe not found!"
+            exit 1
+          }
+
+          # Get file info
+          $fileName = $exeFile.Name
+          $fileSize = $exeFile.Length
+
+          # Calculate SHA512 hash (base64 encoded as electron-updater expects)
+          $hash = Get-FileHash -Path $exeFile.FullName -Algorithm SHA512
+          $hashBytes = [byte[]]::new($hash.Hash.Length / 2)
+          for ($i = 0; $i -lt $hash.Hash.Length; $i += 2) {
+            $hashBytes[$i / 2] = [convert]::ToByte($hash.Hash.Substring($i, 2), 16)
+          }
+          $sha512Base64 = [Convert]::ToBase64String($hashBytes)
+
+          # Get version from package.json
+          $packageJson = Get-Content -Path "package.json" | ConvertFrom-Json
+          $version = $packageJson.version
+
+          # Get current date in ISO format
+          $releaseDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+
+          # Create latest.yml content
+          $yamlContent = @"
+          version: $version
+          files:
+            - url: $fileName
+              sha512: $sha512Base64
+              size: $fileSize
+          path: $fileName
+          sha512: $sha512Base64
+          releaseDate: '$releaseDate'
+          "@
+
+          # Write to file (remove leading spaces from here-string)
+          $yamlContent -replace '(?m)^          ', '' | Out-File -FilePath "out\make\squirrel.windows\x64\latest.yml" -Encoding utf8NoBOM
+
+          Write-Host "Generated latest.yml:"
+          Get-Content "out\make\squirrel.windows\x64\latest.yml"
+
       - name: Upload to GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
@@ -62,5 +110,6 @@ jobs:
             out/make/squirrel.windows/x64/*.exe
             out/make/squirrel.windows/x64/RELEASES
             out/make/squirrel.windows/x64/*.nupkg
+            out/make/squirrel.windows/x64/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
