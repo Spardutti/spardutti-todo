@@ -59,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           # Find the Setup.exe file
-          $exeFile = Get-ChildItem -Path "out\make\squirrel.windows\x64\*.Setup.exe" | Select-Object -First 1
+          $exeFile = Get-ChildItem -Path "out\make\squirrel.windows\x64\*Setup.exe" | Select-Object -First 1
           if (-not $exeFile) {
             Write-Error "Setup.exe not found!"
             exit 1
