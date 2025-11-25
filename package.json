@@ -1,7 +1,7 @@
 {
   "name": "spardutti-todo",
   "productName": "spardutti-todo",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "lint": "eslint --ext .ts,.tsx .",
     "test": "vitest",
     "build:analyze": "vite build --mode analyze",
-    "dist:win": "electron-forge package --platform win32 --arch x64 && electron-builder --win --x64 --prepackaged out/spardutti-todo-win32-x64"
+    "dist:win": "electron-forge package --platform win32 --arch x64 && electron-builder --win --x64 --prepackaged out/spardutti-todo-win32-x64 --publish never"
   },
   "keywords": [],
   "author": {

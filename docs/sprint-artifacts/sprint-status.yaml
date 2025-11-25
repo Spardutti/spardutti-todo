@@ -86,5 +86,5 @@ development_status:
   6-1-configure-electron-updater-and-github-releases: done
   6-2-implement-automatic-update-download-and-notification: done
   6-3-implement-manual-update-check-fallback: done
-  6-4-test-and-verify-auto-update-flow: in-progress
+  6-4-test-and-verify-auto-update-flow: done
   epic-6-retrospective: optional
