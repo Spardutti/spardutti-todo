@@ -44,6 +44,7 @@ jobs:
           name: windows-installer
           path: |
             dist/*.exe
+            dist/*.exe.blockmap
             dist/latest.yml
           if-no-files-found: error
           retention-days: 30
@@ -59,6 +60,7 @@ jobs:
         with:
           files: |
             dist/*.exe
+            dist/*.exe.blockmap
             dist/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

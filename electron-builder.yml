@@ -29,6 +29,7 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: spardutti-todo
+  artifactName: ${productName}-Setup-${version}.${ext}
 
 publish:
   provider: github
