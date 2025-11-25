@@ -11,6 +11,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: './build/icons/icon', // Will use .ico on Windows, .icns on macOS
+    extraResource: ['./build/app-update.yml'], // Required for electron-updater
   },
   rebuildConfig: {},
   makers: [

@@ -1,0 +1,4 @@
+provider: github
+owner: Spardutti
+repo: spardutti-todo
+updaterCacheDirName: spardutti-todo-updater
