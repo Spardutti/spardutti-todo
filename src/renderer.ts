@@ -366,6 +366,17 @@ async function initApp(): Promise<void> {
   }, 'Cancel')
 
   // ===================================
+  // Story 6.3: Manual Update Check Shortcut
+  // ===================================
+  // Ctrl+U triggers manual update check (works in all contexts)
+  keyboardManager.register('ctrl+u', () => {
+    if (window.updater && window.updater.checkForUpdates) {
+      window.updater.checkForUpdates()
+    }
+    return true
+  }, 'Check updates')
+
+  // ===================================
   // Story 4.5: Initialize Footer Hints
   // ===================================
   // After all shortcuts are registered, get formatted hints string

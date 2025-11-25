@@ -10,11 +10,31 @@ import type { UpdateStatus } from '../src/types/UpdateStatus'
 let _updateDownloaded = false
 
 /**
+ * Tracks whether the current update check was triggered manually (Ctrl+U).
+ * Manual checks show all results in footer, automatic checks are silent for not-available/error.
+ */
+let _isManualCheck = false
+
+/**
+ * Timestamp of the last update check for debouncing.
+ * Prevents repeated checks within 10 seconds to avoid GitHub API spam.
+ */
+let _lastCheckTime = 0
+
+/**
+ * Reference to mainWindow for IPC communication from event handlers.
+ */
+let _mainWindow: BrowserWindow | null = null
+
+/**
  * Initializes the electron-updater system with logging and automatic update checks.
  *
  * @param mainWindow - The main BrowserWindow instance for IPC communication
  */
 export function initUpdater(mainWindow: BrowserWindow): void {
+  // Store reference for event handlers
+  _mainWindow = mainWindow
+
   // Configure electron-updater to use electron-log for all logging
   autoUpdater.logger = log
 
@@ -29,27 +49,53 @@ export function initUpdater(mainWindow: BrowserWindow): void {
   // Event: Checking for update
   autoUpdater.on('checking-for-update', () => {
     log.info('Checking for updates...')
-    // Note: Checking status not sent to renderer for automatic checks (transient state)
+
+    // For manual checks, send "Checking..." message to footer
+    if (_isManualCheck && _mainWindow) {
+      const status: UpdateStatus = {
+        status: 'checking',
+        message: 'Checking for updates...',
+      }
+      _mainWindow.webContents.send('update-status', status)
+    }
+    // Note: Automatic checks don't send "checking" status (transient state)
   })
 
   // Event: Update available
   autoUpdater.on('update-available', (info) => {
     log.info('Update available:', info.version)
 
-    // Send IPC message to renderer
-    const status: UpdateStatus = {
-      status: 'available',
-      version: info.version,
-      message: 'Update available. Downloading...',
+    // Send IPC message to renderer (both manual and automatic checks)
+    if (_mainWindow) {
+      const status: UpdateStatus = {
+        status: 'available',
+        version: info.version,
+        message: 'Update available. Downloading...',
+      }
+      _mainWindow.webContents.send('update-status', status)
     }
-    mainWindow.webContents.send('update-status', status)
+
+    // Reset manual check flag after handling
+    _isManualCheck = false
   })
 
   // Event: No update available
   autoUpdater.on('update-not-available', (info) => {
     log.info('Update not available:', info.version)
-    // Silent for automatic checks - no IPC message sent
-    // Manual checks will handle this differently in Story 6.3
+
+    // Manual checks show "You're on the latest version." with auto-hide
+    if (_isManualCheck && _mainWindow) {
+      const status: UpdateStatus = {
+        status: 'not-available',
+        version: info.version,
+        message: "You're on the latest version.",
+      }
+      _mainWindow.webContents.send('update-status', status)
+    }
+    // Automatic checks: Silent (no IPC message sent)
+
+    // Reset manual check flag after handling
+    _isManualCheck = false
   })
 
   // Event: Update downloaded and ready to install
@@ -59,21 +105,38 @@ export function initUpdater(mainWindow: BrowserWindow): void {
     // Track downloaded state for quitAndInstall
     _updateDownloaded = true
 
-    // Send IPC message to renderer
-    const status: UpdateStatus = {
-      status: 'downloaded',
-      version: info.version,
-      message: 'Update available. Restart to install.',
+    // Send IPC message to renderer (both manual and automatic checks)
+    if (_mainWindow) {
+      const status: UpdateStatus = {
+        status: 'downloaded',
+        version: info.version,
+        message: 'Update available. Restart to install.',
+      }
+      _mainWindow.webContents.send('update-status', status)
     }
-    mainWindow.webContents.send('update-status', status)
+
+    // Reset manual check flag after handling
+    _isManualCheck = false
   })
 
   // Event: Error occurred during update process
   // Offline-first design: Don't crash app, just log the error
   autoUpdater.on('error', (error) => {
     log.error('Update error:', error.message)
-    // Silent for automatic checks - no IPC message sent
-    // Manual checks will show error messages in Story 6.3
+
+    // Manual checks show "Update check failed." with auto-hide
+    if (_isManualCheck && _mainWindow) {
+      const status: UpdateStatus = {
+        status: 'error',
+        message: 'Update check failed. Try again later.',
+        error: error.message,
+      }
+      _mainWindow.webContents.send('update-status', status)
+    }
+    // Automatic checks: Silent (no IPC message sent)
+
+    // Reset manual check flag after handling
+    _isManualCheck = false
   })
 
   // Start initial update check on app launch
@@ -81,9 +144,23 @@ export function initUpdater(mainWindow: BrowserWindow): void {
 }
 
 /**
- * Manually triggers an update check (for Ctrl+U shortcut in future stories)
+ * Manually triggers an update check with debouncing (for Ctrl+U shortcut).
+ *
+ * Debouncing prevents repeated checks within 10 seconds to avoid GitHub API spam.
+ * Sets _isManualCheck flag so event handlers know to send feedback messages.
  */
 export function checkForUpdates(): void {
+  const now = Date.now()
+
+  // Debounce: Prevent checks within 10 seconds
+  if (now - _lastCheckTime < 10000) {
+    log.info('Update check debounced (within 10 seconds)')
+    return
+  }
+
+  _lastCheckTime = now
+  _isManualCheck = true
+  log.info('Manual update check initiated')
   autoUpdater.checkForUpdates()
 }
 

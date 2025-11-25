@@ -10,6 +10,7 @@ export interface ElectronAPI {
 
 export interface UpdaterAPI {
   onUpdateStatus: (callback: (status: UpdateStatus) => void) => void
+  checkForUpdates: () => void
 }
 
 declare global {

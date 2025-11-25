@@ -21,5 +21,13 @@ contextBridge.exposeInMainWorld('updater', {
    */
   onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
     ipcRenderer.on('update-status', (_event, status: UpdateStatus) => callback(status))
+  },
+
+  /**
+   * Triggers a manual update check (for Ctrl+U shortcut).
+   * Debouncing is handled in the main process.
+   */
+  checkForUpdates: () => {
+    ipcRenderer.send('check-for-updates-manual')
   }
 })

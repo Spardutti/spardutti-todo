@@ -3,7 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import log from 'electron-log';
 import { ToonStorage } from './storage';
-import { initUpdater, isUpdateDownloaded, quitAndInstall } from './updater';
+import { initUpdater, isUpdateDownloaded, quitAndInstall, checkForUpdates } from './updater';
 import type { Todo } from '../src/types/Todo';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -28,6 +28,12 @@ ipcMain.handle('save-todos', async (_event, filePath: string, todos: Todo[]) => 
 // IPC handler for getting app version
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
+});
+
+// IPC handler for manual update check (Ctrl+U shortcut)
+ipcMain.on('check-for-updates-manual', () => {
+  log.info('Manual update check triggered by user');
+  checkForUpdates();
 });
 
 // Capture startup time before any async operations

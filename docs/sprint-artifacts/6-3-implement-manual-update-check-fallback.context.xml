@@ -1,0 +1,221 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>3</storyId>
+    <title>Implement Manual Update Check Fallback</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-3-implement-manual-update-check-fallback.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>a way to manually check for updates if auto-update fails</iWant>
+    <soThat>I can still get new versions if the automatic system has issues</soThat>
+    <tasks>
+      - Add Ctrl+U keyboard shortcut to KeyboardManager (AC: #1)
+      - Add IPC handler for manual update check in main process (AC: #1, #6)
+      - Expose manual check API in preload (AC: #1)
+      - Implement checkForUpdates() function in electron/updater.ts (AC: #1, #5)
+      - Update electron/updater.ts event handlers for manual check context (AC: #2, #3, #4, #6)
+      - Enhance initUpdateNotifications() in src/ui/render.ts (AC: #2, #3, #4)
+      - Wire up Ctrl+U shortcut in renderer (AC: #1)
+      - Test manual update check flow (AC: #1, #2, #3, #4)
+      - Test debouncing logic (AC: #5)
+      - Test automatic vs manual check interaction (AC: #6)
+      - Verify error logging and debugging (AC: #4)
+      - Update ESLint and TypeScript checks
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">
+      Manual update check trigger (Ctrl+U): GIVEN the app is running, WHEN I press Ctrl+U (update shortcut), THEN a manual update check is triggered AND the footer shows "Checking for updates..." (bright green #00FF00) AND the check happens asynchronously (does not block UI)
+    </criterion>
+    <criterion id="2">
+      Update available result: GIVEN I triggered a manual update check (Ctrl+U), WHEN the check completes and an update is available, THEN the footer shows "Update available. Downloading..." AND the message persists (does not auto-hide) AND the same download flow from Story 6.2 continues AND when download completes: "Update available. Restart to install."
+    </criterion>
+    <criterion id="3">
+      No update available result: GIVEN I triggered a manual update check (Ctrl+U), WHEN the check completes and no update is available, THEN the footer shows "You're on the latest version." (bright green #00FF00) AND the message auto-hides after 3 seconds AND the footer returns to showing keyboard hints
+    </criterion>
+    <criterion id="4">
+      Update check failed result: GIVEN I triggered a manual update check (Ctrl+U), WHEN the check fails (network error, GitHub API error, etc.), THEN the footer shows "Update check failed. Try again later." (bright green #00FF00) AND the message auto-hides after 3 seconds AND the error is logged via electron-log AND the footer returns to showing keyboard hints
+    </criterion>
+    <criterion id="5">
+      Manual check debouncing: GIVEN I pressed Ctrl+U recently (within 10 seconds), WHEN I press Ctrl+U again, THEN the check is debounced (no duplicate API calls) AND the footer shows the existing status message (no change) AND only one update check is active at a time
+    </criterion>
+    <criterion id="6">
+      Manual check does not interfere with automatic checks: GIVEN automatic update checks happen on app launch, WHEN I trigger a manual check later during the session, THEN both check types use the same electron-updater event handlers AND manual check results are displayed in footer (automatic checks are silent for no-update/error) AND the update system state remains consistent
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>AC7-AC9: Manual Update Check (Story 6.3)</section>
+        <snippet>AC7: Manual Update Check Trigger - Ctrl+U keyboard shortcut triggers manual update check, footer shows "Checking for updates...". AC8: Manual Check Feedback Messages - Footer displays appropriate messages based on result (update available, no update, error). AC9: Manual Check Debouncing - Prevent repeated checks within 10 seconds to avoid API spam.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>Workflow 2: Manual Check</section>
+        <snippet>User presses Ctrl+U → KeyboardManager detects shortcut → Renderer calls window.updater.checkForUpdates() → Preload sends IPC → Main process calls autoUpdater.checkForUpdates(). Includes debouncing logic (10 seconds), _isManualCheck flag for differentiating manual vs automatic checks, and auto-hide logic for transient messages (3 seconds).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Deployment Architecture → Update Mechanism</section>
+        <snippet>Manual update check must follow same architectural patterns as automatic updates. Same electron-updater event handlers. Differentiate manual vs automatic via internal flag. Manual checks show all results in footer, automatic checks only show available/downloaded (silent for not-available/error). Debouncing prevents GitHub API rate limiting abuse.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns → Keyboard System</section>
+        <snippet>Ctrl+U chosen to avoid conflicts with existing shortcuts. Registered in KeyboardManager with description "Check for updates". Works in all contexts (input focused, todo selected, etc.). No visual indicator beyond footer message (terminal constraint).</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>UX Pattern Decisions → Feedback Patterns</section>
+        <snippet>Auto-hide timing for transient messages: 3 seconds (UX standard for non-critical feedback). Applies to "You're on the latest version" and "Update check failed". Does not apply to persistent messages like "Update available. Downloading..." or "Restart to install". Terminal aesthetic: No fade animations, instant show/hide.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/6-2-implement-automatic-update-download-and-notification.md</path>
+        <title>Story 6.2: Implement Automatic Update Download and Notification</title>
+        <section>Completion Notes - Infrastructure Available</section>
+        <snippet>Story 6.2 successfully implemented automatic update notification system. All infrastructure ready: electron/updater.ts has complete event handler structure, IPC communication layer established (update-status messages), initUpdateNotifications() in src/ui/render.ts handles UpdateStatus display, Footer component can display transient and persistent messages.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>electron/updater.ts</path>
+        <kind>main-process-module</kind>
+        <symbol>initUpdater, checkForUpdates</symbol>
+        <lines>1-104</lines>
+        <reason>Contains electron-updater configuration and event handlers. checkForUpdates() function exists but needs debouncing and _isManualCheck flag. Event handlers need enhancement to differentiate manual vs automatic checks.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/preload.ts</path>
+        <kind>ipc-bridge</kind>
+        <symbol>window.updater</symbol>
+        <lines>16-25</lines>
+        <reason>Exposes updater API to renderer. Currently only has onUpdateStatus listener. Needs to add checkForUpdates() method for manual update trigger from Ctrl+U shortcut.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/main.ts</path>
+        <kind>main-process</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Needs new IPC handler for 'check-for-updates-manual' channel to connect renderer manual check request to updater.checkForUpdates() function.</reason>
+      </artifact>
+      <artifact>
+        <path>src/keyboard/KeyboardManager.ts</path>
+        <kind>keyboard-system</kind>
+        <symbol>KeyboardManager.register</symbol>
+        <lines>1-243</lines>
+        <reason>Centralized keyboard shortcut manager. Needs to register Ctrl+U shortcut that calls window.updater.checkForUpdates(). Existing infrastructure supports all required functionality.</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>renderer-ui</kind>
+        <symbol>initUpdateNotifications</symbol>
+        <lines>418-483</lines>
+        <reason>Handles update status IPC messages and updates footer. Currently handles 'available' and 'downloaded' states. Needs to add handling for 'checking', 'not-available', and 'error' states with auto-hide logic (3 seconds).</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/window.d.ts</path>
+        <kind>type-definitions</kind>
+        <symbol>UpdaterAPI</symbol>
+        <lines>11-13</lines>
+        <reason>TypeScript interface for updater API. Currently only has onUpdateStatus method. Needs to add checkForUpdates: () => void method.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/UpdateStatus.ts</path>
+        <kind>type-definitions</kind>
+        <symbol>UpdateStatus</symbol>
+        <lines>N/A</lines>
+        <reason>Interface defining update status structure. Already supports 'checking', 'not-available', 'error' status values needed for manual check.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="electron-updater" version="6.7.1">Auto-update client library for Electron. Provides autoUpdater API with event handlers (checking-for-update, update-available, update-not-available, update-downloaded, error) and checkForUpdates() method.</package>
+        <package name="electron-log" version="5.4.1">File-based logging for Electron. Used by electron-updater for logging all update events. Logs written to %APPDATA%/spardutti-todo/logs/main.log.</package>
+        <package name="electron" version="39.2.3">Desktop app framework providing IPC communication, BrowserWindow, and Node.js integration for main process.</package>
+      </npm>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Terminal aesthetic enforcement: All footer messages use bright green (#00FF00) color. No animations or transitions - status changes must be instant. Messages appear/disappear immediately.</constraint>
+    <constraint>Keyboard-first discipline: Ctrl+U shortcut must work in all contexts (input focused, todo selected, etc.). No mouse interaction required for manual update check.</constraint>
+    <constraint>Offline-first design: Manual update check failures must not crash app or block functionality. Errors logged but gracefully handled.</constraint>
+    <constraint>Type safety requirements: Strict TypeScript enabled. No 'any' types. All IPC messages must have TypeScript interfaces (UpdateStatus).</constraint>
+    <constraint>Performance discipline: Update check must not block UI. Footer updates must be synchronous (no perceived lag &lt;16ms target).</constraint>
+    <constraint>Debouncing requirement: Prevent update checks within 10 seconds to avoid GitHub API rate limiting. Single check active at a time.</constraint>
+    <constraint>Differentiation pattern: Manual checks show all results (checking, available, not-available, error). Automatic checks only show available/downloaded (silent for not-available/error).</constraint>
+    <constraint>Auto-hide pattern: Transient messages ("You're on the latest version", "Update check failed") auto-hide after 3 seconds. Persistent messages ("Update available. Downloading...", "Restart to install") do not auto-hide.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>window.updater.checkForUpdates()</name>
+      <kind>Renderer → Main IPC</kind>
+      <signature>checkForUpdates: () => void</signature>
+      <path>electron/preload.ts (exposed), src/types/window.d.ts (typed)</path>
+    </interface>
+    <interface>
+      <name>autoUpdater.checkForUpdates()</name>
+      <kind>electron-updater API</kind>
+      <signature>checkForUpdates(): Promise&lt;UpdateCheckResult | null&gt;</signature>
+      <path>electron/updater.ts (called from checkForUpdates() function)</path>
+    </interface>
+    <interface>
+      <name>IPC channel: 'check-for-updates-manual'</name>
+      <kind>IPC communication</kind>
+      <signature>ipcRenderer.send('check-for-updates-manual') → ipcMain.on('check-for-updates-manual', handler)</signature>
+      <path>electron/preload.ts (send), electron/main.ts (receive)</path>
+    </interface>
+    <interface>
+      <name>IPC channel: 'update-status'</name>
+      <kind>IPC communication</kind>
+      <signature>mainWindow.webContents.send('update-status', status: UpdateStatus)</signature>
+      <path>electron/updater.ts (send), src/ui/render.ts (receive via window.updater.onUpdateStatus)</path>
+    </interface>
+    <interface>
+      <name>UpdateStatus interface</name>
+      <kind>TypeScript interface</kind>
+      <signature>{ status: 'checking' | 'available' | 'not-available' | 'downloaded' | 'error', version?: string, message: string, error?: string }</signature>
+      <path>src/types/UpdateStatus.ts</path>
+    </interface>
+    <interface>
+      <name>KeyboardManager.register()</name>
+      <kind>Function signature</kind>
+      <signature>register(key: string, handler: () => void | boolean, description: string): void</signature>
+      <path>src/keyboard/KeyboardManager.ts (Ctrl+U shortcut registration)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Vitest for unit tests (co-located with source: *.test.ts). Integration tests for IPC flows and event handlers. E2E tests for full update flow. Mocking: Mock GitHub API responses, autoUpdater events, IPC messages. No mocking for terminal operations. Test coverage target: 85% for Epic 6 components.</standards>
+    <locations>
+      <location>electron/updater.test.ts - Unit tests for debouncing logic and _isManualCheck flag</location>
+      <location>src/keyboard/KeyboardManager.test.ts - Unit tests for Ctrl+U shortcut registration</location>
+      <location>tests/integration/update-flow.test.ts - Integration tests for IPC and event handlers</location>
+      <location>tests/e2e/manual-update-check.spec.ts - E2E tests for Ctrl+U flow</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test Ctrl+U triggers IPC message 'check-for-updates-manual'. Verify footer shows "Checking for updates..." immediately.</idea>
+      <idea ac="2">Mock update-available event, verify footer shows "Update available. Downloading..." and message persists (no auto-hide).</idea>
+      <idea ac="3">Mock update-not-available event for manual check, verify footer shows "You're on the latest version." and auto-hides after 3 seconds.</idea>
+      <idea ac="4">Mock error event for manual check, verify footer shows "Update check failed. Try again later." and auto-hides after 3 seconds. Verify error logged to electron-log.</idea>
+      <idea ac="5">Test debouncing: Press Ctrl+U twice within 5 seconds. Verify only one checkForUpdates() call. Check logs for "debounced" message.</idea>
+      <idea ac="6">Test automatic check on launch + manual check after 5 seconds. Verify both use same event handlers. Verify manual check shows all results, automatic check silent for not-available/error.</idea>
+      <idea ac="all">Test edge case: Ctrl+U pressed during active download. Verify debouncing prevents duplicate check.</idea>
+      <idea ac="all">Test edge case: Multiple rapid Ctrl+U presses (10 times). Verify only 1 API call in logs.</idea>
+    </ideas>
+  </tests>
+</story-context>

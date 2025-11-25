@@ -1,0 +1,313 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>4</storyId>
+    <title>Test and Verify Auto-Update Flow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-4-test-and-verify-auto-update-flow.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to verify the complete auto-update flow works end-to-end</iWant>
+    <soThat>users can reliably receive updates</soThat>
+    <tasks>
+      <task id="1">Create test GitHub Release for update verification (AC: #1, #2)
+        <subtask>Bump version in package.json to test version (e.g., 1.0.1 or 1.0.2)</subtask>
+        <subtask>Build installer with npm run make</subtask>
+        <subtask>Create GitHub Release with .exe and latest.yml</subtask>
+        <subtask>Tag release appropriately (v1.0.1 or pre-release for testing)</subtask>
+        <subtask>Verify latest.yml contains correct SHA512 hash and version</subtask>
+      </task>
+      <task id="2">Test successful update flow (AC: #1, #6)
+        <subtask>Install older version (current v1.0.0 or v1.0.1)</subtask>
+        <subtask>Create multiple todos (5+ active, 3+ completed)</subtask>
+        <subtask>Launch app with newer version available on GitHub</subtask>
+        <subtask>Verify "Update available. Downloading..." notification appears</subtask>
+        <subtask>Wait for download to complete</subtask>
+        <subtask>Verify "Update available. Restart to install." appears</subtask>
+        <subtask>Close app and verify update installs</subtask>
+        <subtask>Verify app relaunches with new version</subtask>
+        <subtask>Verify all todos are intact (count, text, completion states)</subtask>
+      </task>
+      <task id="3">Test no update available scenario (AC: #2)
+        <subtask>Ensure app version matches latest GitHub Release</subtask>
+        <subtask>Launch app</subtask>
+        <subtask>Verify no update notification appears in footer</subtask>
+        <subtask>Check logs: Should contain "Update not available" entry</subtask>
+        <subtask>Verify app functions normally (create, toggle, delete todos)</subtask>
+      </task>
+      <task id="4">Test offline mode scenario (AC: #3)
+        <subtask>Disable network connection (WiFi off or network adapter disabled)</subtask>
+        <subtask>Launch app</subtask>
+        <subtask>Verify no error notification appears to user</subtask>
+        <subtask>Verify app launches normally with existing todos</subtask>
+        <subtask>Check logs: Should contain "Update error" with network-related message</subtask>
+        <subtask>Verify all todo operations work offline</subtask>
+      </task>
+      <task id="5">Test manual update check (AC: #4)
+        <subtask>With update available: Press Ctrl+U, verify "Update available" flow</subtask>
+        <subtask>With no update available: Press Ctrl+U, verify "You're on the latest version." (auto-hides)</subtask>
+        <subtask>With network disabled: Press Ctrl+U, verify "Update check failed. Try again later." (auto-hides)</subtask>
+        <subtask>Verify keyboard hints restore after 3 seconds</subtask>
+      </task>
+      <task id="6">Verify logging output (AC: #5)
+        <subtask>Locate log file: %APPDATA%/spardutti-todo/logs/main.log</subtask>
+        <subtask>Trigger update check (launch or Ctrl+U)</subtask>
+        <subtask>Open log file in text editor</subtask>
+        <subtask>Verify presence of: "Checking for updates..." entry with timestamp</subtask>
+        <subtask>Verify presence of: "Update available: [version]" OR "Update not available" entry</subtask>
+        <subtask>Verify presence of: "Update downloaded: [version]" (if update was downloaded)</subtask>
+        <subtask>Verify presence of: Error entries with stack traces (if errors occurred)</subtask>
+        <subtask>Verify log format is readable and includes context</subtask>
+      </task>
+      <task id="7">Test TOON data persistence (AC: #6)
+        <subtask>Create comprehensive test data: 5+ active todos, 3+ completed todos</subtask>
+        <subtask>Verify todos.toon exists in %APPDATA%/spardutti-todo/</subtask>
+        <subtask>Trigger update flow</subtask>
+        <subtask>After update: Verify todo count unchanged, text unchanged, completion states correct, timestamps preserved</subtask>
+        <subtask>Open todos.toon in text editor to verify format</subtask>
+      </task>
+      <task id="8">Test version number display (AC: #7)
+        <subtask>Before update: Note current version number</subtask>
+        <subtask>After update: Verify version reflects new version</subtask>
+        <subtask>Check package.json in installed location matches expected version</subtask>
+        <subtask>Optional: Verify version display in app footer</subtask>
+      </task>
+      <task id="9">Document test results
+        <subtask>Create test log with pass/fail for each scenario</subtask>
+        <subtask>Screenshot any unexpected behaviors</subtask>
+        <subtask>Document any edge cases discovered</subtask>
+        <subtask>Update story file with completion notes</subtask>
+      </task>
+      <task id="10">Verify TypeScript and linting passes
+        <subtask>Run npm run lint - expect 0 errors</subtask>
+        <subtask>Run TypeScript compilation - ensure no type errors</subtask>
+        <subtask>Fix any issues discovered during testing</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" priority="high">
+      <title>Successful update flow end-to-end (AC10)</title>
+      <given>version 0.1.0 is installed and version 0.2.0 is on GitHub Releases</given>
+      <when>I launch the app on v0.1.0</when>
+      <then>the update check runs automatically AND the update downloads in the background AND notification appears: "Update available. Restart to install." AND when I close the app, it updates to v0.2.0 AND the app relaunches with v0.2.0 AND all todos persist correctly (no data loss)</then>
+    </criterion>
+    <criterion id="AC2" priority="high">
+      <title>No update available scenario (AC11)</title>
+      <given>I'm on the latest version</given>
+      <when>I launch the app</when>
+      <then>the update check runs AND no notification appears (silent) AND the app continues normally AND logs show "Update not available" (electron-log)</then>
+    </criterion>
+    <criterion id="AC3" priority="high">
+      <title>Offline mode scenario (AC12)</title>
+      <given>I have no internet connection</given>
+      <when>I launch the app</when>
+      <then>the update check fails silently AND no error notification appears AND the app continues normally (offline-first design) AND the error is logged in electron-log</then>
+    </criterion>
+    <criterion id="AC4" priority="medium">
+      <title>Manual check verification (AC13)</title>
+      <given>the app is running</given>
+      <when>I press Ctrl+U</when>
+      <then>the footer shows "Checking for updates..." AND the appropriate result message appears based on availability AND the message auto-hides after 3 seconds (for no-update/error results)</then>
+    </criterion>
+    <criterion id="AC5" priority="medium">
+      <title>Update events logged correctly (AC14)</title>
+      <given>update operations occur</given>
+      <when>I check %APPDATA%/spardutti-todo/logs/main.log</when>
+      <then>I see logged events: "Checking for updates...", "Update available: [version]" OR "Update not available", "Update downloaded: [version]", OR "Update error: [error message]" (if failed), AND logs include timestamps and context information</then>
+    </criterion>
+    <criterion id="AC6" priority="high">
+      <title>TOON data persistence through update</title>
+      <given>I have 10+ todos (mix of active and completed)</given>
+      <when>I update from v0.1.0 to v0.2.0</when>
+      <then>all todos remain intact after update AND completion states are preserved AND todo text and timestamps are unchanged AND todos.toon file is not corrupted</then>
+    </criterion>
+    <criterion id="AC7" priority="low">
+      <title>Version number updates correctly</title>
+      <given>the update completes successfully</given>
+      <when>I check the app version (via About or package.json)</when>
+      <then>the version number reflects the new version (0.2.0) AND GitHub Releases page shows the version as downloaded</then>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>Acceptance Criteria (AC10-AC14)</section>
+        <snippet>Story 6.4 is the verification and testing story for the complete auto-update system. It validates that all components work together end-to-end: AC10 (Successful Update Flow), AC11 (No Update Available), AC12 (Offline Mode), AC13 (Manual Check), AC14 (Logging).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Auto-Update System</title>
+        <section>Test Strategy Summary (lines 856-875)</section>
+        <snippet>E2E test scenarios: Successful Update (publish new version, verify check/download/install/relaunch), No Update Available, Offline Mode (graceful degradation), Manual Update Check. Pre-release checklist with 8 verification steps.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Deployment Architecture - Release Process (lines 632-652)</section>
+        <snippet>Release process: 1) npm version patch, 2) npm run make, 3) gh release create with .exe and latest.yml, 4) Users auto-update. NSIS installer generates latest.yml with SHA512 hashes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 6.4 (lines 1449-1500)</section>
+        <snippet>Story 6.4 is the final story in Epic 6, focused on end-to-end verification. Tests all FRs: FR22 (auto-check), FR23 (auto-download/install), FR24 (manual check), FR25 (notifications). Validates integration with GitHub Releases and data persistence.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/6-3-implement-manual-update-check-fallback.md</path>
+        <title>Story 6.3: Implement Manual Update Check Fallback</title>
+        <section>Completion Notes</section>
+        <snippet>Story 6.3 completed manual update check implementation. All infrastructure ready for Story 6.4: automatic check on launch (6.1), background download (6.2), manual check Ctrl+U (6.3), debouncing, IPC, footer notifications, electron-log integration.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>electron/updater.ts</path>
+        <kind>service</kind>
+        <symbol>initUpdater, checkForUpdates, isUpdateDownloaded, quitAndInstall</symbol>
+        <lines>1-181</lines>
+        <reason>Core updater module - configures electron-updater, handles events (checking, available, not-available, downloaded, error), implements debouncing for manual checks, tracks download state for quitAndInstall</reason>
+      </artifact>
+      <artifact>
+        <path>electron/main.ts</path>
+        <kind>main-process</kind>
+        <symbol>createWindow, initUpdater, before-quit handler, IPC handlers</symbol>
+        <lines>1-133</lines>
+        <reason>Electron main process - initializes updater on ready-to-show, handles before-quit to install updates, registers check-for-updates-manual IPC handler</reason>
+      </artifact>
+      <artifact>
+        <path>electron/preload.ts</path>
+        <kind>ipc-bridge</kind>
+        <symbol>contextBridge.exposeInMainWorld updater API</symbol>
+        <lines>1-34</lines>
+        <reason>IPC bridge - exposes updater.onUpdateStatus callback and updater.checkForUpdates to renderer process</reason>
+      </artifact>
+      <artifact>
+        <path>src/renderer.ts</path>
+        <kind>renderer-entry</kind>
+        <symbol>initApp, keyboardManager Ctrl+U registration, initUpdateNotifications call</symbol>
+        <lines>370-398</lines>
+        <reason>Renderer initialization - registers Ctrl+U keyboard shortcut, initializes update notification system</reason>
+      </artifact>
+      <artifact>
+        <path>src/ui/render.ts</path>
+        <kind>ui-component</kind>
+        <symbol>initUpdateNotifications, showFeedback, restoreFooterHints</symbol>
+        <lines>440-516</lines>
+        <reason>Update notification UI - handles update status IPC messages, displays footer notifications with auto-hide for not-available/error states</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/UpdateStatus.ts</path>
+        <kind>type-definition</kind>
+        <symbol>UpdateStatus interface</symbol>
+        <lines>1-36</lines>
+        <reason>TypeScript interface for update status - status enum (checking/available/not-available/downloaded/error), version, message, error fields</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/window.d.ts</path>
+        <kind>type-definition</kind>
+        <symbol>UpdaterAPI interface, Window.updater</symbol>
+        <lines>1-22</lines>
+        <reason>Global Window type declarations - defines updater API shape for renderer process</reason>
+      </artifact>
+      <artifact>
+        <path>package.json</path>
+        <kind>config</kind>
+        <symbol>version, repository</symbol>
+        <lines>1-57</lines>
+        <reason>Package config - current version 1.0.1, repository URL for electron-updater GitHub provider</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>electron-updater</package>
+        <version>6.7.1</version>
+        <purpose>Auto-update client library - checks GitHub Releases, downloads updates, triggers installation</purpose>
+      </node>
+      <package>electron-log</package>
+      <version>5.4.1</version>
+      <purpose>File-based logging - logs update events to %APPDATA%/spardutti-todo/logs/main.log</purpose>
+      <package>electron</package>
+      <version>39.2.3</version>
+      <purpose>Desktop app framework - BrowserWindow, IPC, app lifecycle</purpose>
+      <package>@electron-forge/maker-squirrel</package>
+      <version>7.10.2</version>
+      <purpose>NSIS installer maker - generates .exe and latest.yml for Windows distribution</purpose>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md">Terminal aesthetic: Green text on black, no decorative elements. Footer notifications must use terminal styling.</constraint>
+    <constraint source="tech-spec-epic-6.md">Offline-first design: Update check failures must not break app functionality. App must function 100% if update check fails.</constraint>
+    <constraint source="tech-spec-epic-6.md">No blocking UI: Background downloads only, no progress bar for MVP.</constraint>
+    <constraint source="architecture.md">No animations or transitions: Status changes must be instant.</constraint>
+    <constraint source="tech-spec-epic-6.md">Debouncing: Prevent repeated manual checks within 10 seconds.</constraint>
+    <constraint source="tech-spec-epic-6.md">Automatic checks: Silent for not-available/error (no user notification). Only manual checks show all feedback.</constraint>
+    <constraint source="story-6.4.md">This is verification/testing only story - no code changes required. All implementation completed in Stories 6.1, 6.2, 6.3.</constraint>
+    <constraint source="tech-spec-epic-6.md">GitHub Releases: Public repository required for unauthenticated update checks. latest.yml must have correct SHA512 hashes.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>electron-updater autoUpdater API</name>
+      <kind>library API</kind>
+      <signature>autoUpdater.checkForUpdatesAndNotify(), autoUpdater.checkForUpdates(), autoUpdater.quitAndInstall(), autoUpdater.on(event, handler)</signature>
+      <path>electron/updater.ts</path>
+    </interface>
+    <interface>
+      <name>IPC: check-for-updates-manual</name>
+      <kind>IPC channel</kind>
+      <signature>ipcMain.on('check-for-updates-manual', () => checkForUpdates())</signature>
+      <path>electron/main.ts:34-37</path>
+    </interface>
+    <interface>
+      <name>IPC: update-status</name>
+      <kind>IPC channel</kind>
+      <signature>mainWindow.webContents.send('update-status', UpdateStatus)</signature>
+      <path>electron/updater.ts</path>
+    </interface>
+    <interface>
+      <name>window.updater API</name>
+      <kind>preload exposed API</kind>
+      <signature>{ onUpdateStatus: (callback) => void, checkForUpdates: () => void }</signature>
+      <path>electron/preload.ts:17-33</path>
+    </interface>
+    <interface>
+      <name>GitHub Releases API</name>
+      <kind>external REST API</kind>
+      <signature>GET https://api.github.com/repos/Spardutti/spardutti-todo/releases/latest (auto by electron-updater)</signature>
+      <path>electron/updater.ts:43-47</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Story 6.4 is a verification story focused on E2E and manual testing. No automated unit tests required for this story.
+      Testing approach: Real GitHub Releases with beta/pre-release tags, manual verification of all scenarios,
+      log file inspection for debugging. Test with actual data (todos.toon with 10+ entries).
+      Pre-release checklist must pass 100% before story completion.
+    </standards>
+    <locations>
+      <location>%APPDATA%/spardutti-todo/logs/main.log - Update event logs</location>
+      <location>%APPDATA%/spardutti-todo/todos.toon - Data persistence verification</location>
+      <location>GitHub Releases page - spardutti/spardutti-todo - Release artifact verification</location>
+      <location>docs/sprint-artifacts/6-4-test-and-verify-auto-update-flow.md - Test results documentation</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">E2E: Install v1.0.0, create test release v1.0.2, verify full update cycle: check → download → notification → close → install → relaunch → verify version</idea>
+      <idea acRef="AC2">Verification: Launch with latest version, verify silent check (no notification), verify log entry "Update not available"</idea>
+      <idea acRef="AC3">Offline test: Disable network adapter, launch app, verify no error UI, verify app functions normally, verify log entry "Update error"</idea>
+      <idea acRef="AC4">Manual check: Test Ctrl+U with update available, no update available, and offline scenarios. Verify 3-second auto-hide for transient messages.</idea>
+      <idea acRef="AC5">Log inspection: Verify log format with timestamps, version info, error details. Check log location %APPDATA%/spardutti-todo/logs/main.log</idea>
+      <idea acRef="AC6">Data persistence: Create 10+ todos before update, verify count/text/states/timestamps after update, open todos.toon to verify format</idea>
+      <idea acRef="AC7">Version verification: Check version in footer display, verify package.json version in installed app matches release</idea>
+      <idea acRef="edge">Edge case: Rapid Ctrl+U presses (verify debouncing), app close during download, Unicode chars in todos through update</idea>
+    </ideas>
+  </tests>
+</story-context>

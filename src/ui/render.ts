@@ -415,6 +415,9 @@ export function hideError(): void {
   }
 }
 
+// Update notification auto-hide timeout reference
+let updateNotificationTimeout: number | null = null
+
 /**
  * Initializes update notification system by listening to IPC messages from main process.
  *
@@ -422,10 +425,11 @@ export function hideError(): void {
  * Updates the footer to show update notifications based on the status received.
  *
  * Update notification states:
+ * - 'checking': Shows "Checking for updates..." (persistent until result, manual checks only)
  * - 'available': Shows "Update available. Downloading..." (persistent while downloading)
  * - 'downloaded': Shows "Update available. Restart to install." (persistent until app close)
- * - 'not-available': No change to footer (keep keyboard hints)
- * - 'error': No change for automatic checks (silent, logged only)
+ * - 'not-available': Shows "You're on the latest version." (auto-hide after 3s, manual checks only)
+ * - 'error': Shows "Update check failed. Try again later." (auto-hide after 3s, manual checks only)
  *
  * @example
  * ```typescript
@@ -452,28 +456,57 @@ export function initUpdateNotifications(): void {
     const hintsElement = getFooterHintsElement(footer)
     if (!hintsElement) return
 
+    // Clear any existing auto-hide timeout
+    if (updateNotificationTimeout !== null) {
+      clearTimeout(updateNotificationTimeout)
+      updateNotificationTimeout = null
+    }
+
     // Handle different update statuses
     switch (status.status) {
+      case 'checking':
+        // Show "Checking for updates..." message (persistent until result)
+        hintsElement.textContent = status.message
+        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        // No auto-hide - wait for result
+        break
+
       case 'available':
         // Show "Downloading..." message (persistent while downloading)
         hintsElement.textContent = status.message
         hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        // No auto-hide - persistent
         break
 
       case 'downloaded':
         // Show "Restart to install" message (persistent until app close)
         hintsElement.textContent = status.message
         hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        // No auto-hide - persistent
         break
 
       case 'not-available':
-        // Silent for automatic checks - no footer change
-        // Keep existing keyboard hints
+        // Show "You're on the latest version." (auto-hide after 3s)
+        hintsElement.textContent = status.message
+        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        // Auto-hide after 3 seconds and restore keyboard hints
+        updateNotificationTimeout = window.setTimeout(() => {
+          restoreFooterHints(footer)
+          hintsElement.style.color = '' // Reset to default CSS color
+          updateNotificationTimeout = null
+        }, 3000)
         break
 
       case 'error':
-        // Silent for automatic checks - no footer change
-        // Manual checks in Story 6.3 will handle error display
+        // Show "Update check failed. Try again later." (auto-hide after 3s)
+        hintsElement.textContent = status.message
+        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
+        // Auto-hide after 3 seconds and restore keyboard hints
+        updateNotificationTimeout = window.setTimeout(() => {
+          restoreFooterHints(footer)
+          hintsElement.style.color = '' // Reset to default CSS color
+          updateNotificationTimeout = null
+        }, 3000)
         break
 
       default:
