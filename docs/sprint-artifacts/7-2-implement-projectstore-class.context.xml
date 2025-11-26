@@ -1,0 +1,297 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>2</storyId>
+    <title>Implement ProjectStore Class</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-2-implement-projectstore-class.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a ProjectStore class to manage project CRUD operations</iWant>
+    <soThat>I have a single source of truth for all project data with clear mutation methods</soThat>
+    <tasks>
+      <task id="1" ac="1">Create ProjectStore class file structure
+        <subtask>Create src/store/ProjectStore.ts file</subtask>
+        <subtask>Import required dependencies: Project type, electron-log</subtask>
+        <subtask>Define class with private _projects array and _filePath string</subtask>
+        <subtask>Export the class</subtask>
+      </task>
+      <task id="2" ac="2">Implement load() method
+        <subtask>Define async load() method signature</subtask>
+        <subtask>Add placeholder call to ToonStorage.loadProjects() (will be implemented in Story 7.4)</subtask>
+        <subtask>Populate _projects array with loaded data</subtask>
+        <subtask>Add logging with electron-log for success/failure</subtask>
+        <subtask>Handle file-not-found gracefully (return empty array)</subtask>
+      </task>
+      <task id="3" ac="3">Implement save() method
+        <subtask>Define async save() method signature</subtask>
+        <subtask>Add placeholder call to ToonStorage.saveProjects() (will be implemented in Story 7.4)</subtask>
+        <subtask>Add logging with electron-log for success/failure</subtask>
+        <subtask>Use fire-and-forget pattern (don't throw on error, log only)</subtask>
+      </task>
+      <task id="4" ac="4">Implement create() method
+        <subtask>Define create(name: string): Project signature</subtask>
+        <subtask>Generate UUID using crypto.randomUUID()</subtask>
+        <subtask>Create ISO 8601 timestamp using new Date().toISOString()</subtask>
+        <subtask>Create Project object with id, name, createdAt</subtask>
+        <subtask>Add to _projects array</subtask>
+        <subtask>Call save() without await (fire-and-forget)</subtask>
+        <subtask>Return the created project</subtask>
+      </task>
+      <task id="5" ac="5">Implement rename() method
+        <subtask>Define rename(id: string, newName: string): void signature</subtask>
+        <subtask>Find project by ID using findById()</subtask>
+        <subtask>Throw error if not found: "Project not found: {id}"</subtask>
+        <subtask>Update name property</subtask>
+        <subtask>Call save() without await</subtask>
+      </task>
+      <task id="6" ac="6">Implement delete() method
+        <subtask>Define delete(id: string): void signature</subtask>
+        <subtask>Check if last project (throw error: "Cannot delete last project")</subtask>
+        <subtask>Find project by ID</subtask>
+        <subtask>Throw error if not found: "Project not found: {id}"</subtask>
+        <subtask>Remove from _projects array using filter</subtask>
+        <subtask>Add placeholder call to ToonStorage.deleteTodosFile(id) (Story 7.4)</subtask>
+        <subtask>Call save() without await</subtask>
+      </task>
+      <task id="7" ac="7,8,9">Implement getter methods
+        <subtask>getAll(): Project[] - return [...this._projects]</subtask>
+        <subtask>findById(id: string): Project | undefined - use array.find()</subtask>
+        <subtask>search(query: string): Project[] - case-insensitive includes() filter</subtask>
+      </task>
+      <task id="8" ac="10,11">Write unit tests
+        <subtask>Create src/store/ProjectStore.test.ts</subtask>
+        <subtask>Test create(): verify project created with correct shape</subtask>
+        <subtask>Test create(): verify auto-generated id and createdAt</subtask>
+        <subtask>Test rename(): verify name updated</subtask>
+        <subtask>Test rename(): verify throws on invalid id</subtask>
+        <subtask>Test delete(): verify project removed</subtask>
+        <subtask>Test delete(): verify throws when deleting last project</subtask>
+        <subtask>Test delete(): verify throws on invalid id</subtask>
+        <subtask>Test getAll(): verify returns shallow copy</subtask>
+        <subtask>Test findById(): verify finds project</subtask>
+        <subtask>Test findById(): verify returns undefined for missing id</subtask>
+        <subtask>Test search(): verify case-insensitive matching</subtask>
+        <subtask>Test search(): verify returns all on empty query</subtask>
+        <subtask>Verify all tests pass with npm test</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">A src/store/ProjectStore.ts file exists with a ProjectStore class containing private _projects: Project[] and private _filePath: string</ac>
+    <ac id="2">The load() method is async, returns Promise&lt;void&gt;, calls ToonStorage to load projects from disk, populates internal _projects array, logs success/failure with electron-log</ac>
+    <ac id="3">The save() method is async, returns Promise&lt;void&gt;, calls ToonStorage to persist projects to disk, logs success/failure with electron-log</ac>
+    <ac id="4">The create(name: string) method generates UUID v4 using crypto.randomUUID(), creates ISO 8601 timestamp using new Date().toISOString(), adds project to internal array, returns the created Project object, triggers auto-save (fire-and-forget pattern)</ac>
+    <ac id="5">The rename(id: string, newName: string) method finds project by ID, updates name property, throws error if ID not found, triggers auto-save</ac>
+    <ac id="6">The delete(id: string) method removes project from array, also deletes associated todos-{id}.toon file, throws error if trying to delete last project, throws error if ID not found, triggers auto-save</ac>
+    <ac id="7">The getAll() method returns a shallow copy of projects array (prevents external mutation)</ac>
+    <ac id="8">The findById(id: string) method returns Project | undefined</ac>
+    <ac id="9">The search(query: string) method uses name.toLowerCase().includes(query.toLowerCase()), returns matching projects, returns all projects if query is empty</ac>
+    <ac id="10">Unit tests exist in src/store/ProjectStore.test.ts covering all public methods</ac>
+    <ac id="11">All tests pass with npm test</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic Technical Specification: Projects System</title>
+        <section>APIs and Interfaces</section>
+        <snippet>ProjectStore Public API specification with load(), save(), create(), rename(), delete(), getAll(), findById(), search() method signatures.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>API Contracts - ProjectStore Public API</section>
+        <snippet>ProjectStore class with async load/save, create(name): Project, rename(id, newName), delete(id) that also deletes todos file, getAll(), findById(), search() methods.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>ADR-007: Separate Store Classes</section>
+        <snippet>Decision to create ProjectStore and SettingsStore alongside TodoStore. Single responsibility principle, each store testable in isolation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>ADR-008: Simple includes() for Project Search</section>
+        <snippet>Use basic string includes() instead of fuzzy search library. PRD specifies 5-10 projects max, includes() is sufficient, zero dependencies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>spardutti-todo - Epic Breakdown</title>
+        <section>Story 7.2: Implement ProjectStore Class</section>
+        <snippet>Full story requirements including class structure, method specifications, error handling patterns, and testing requirements.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/types/Project.ts</path>
+        <kind>type-definition</kind>
+        <symbol>Project</symbol>
+        <lines>18-46</lines>
+        <reason>Project interface with id, name, createdAt fields - the data model ProjectStore will manage</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>store-class</kind>
+        <symbol>TodoStore</symbol>
+        <lines>1-215</lines>
+        <reason>Reference implementation for store pattern - use same patterns for constructor, load(), save(), fire-and-forget auto-save, JSDoc comments</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.test.ts</path>
+        <kind>test-file</kind>
+        <symbol>TodoStore tests</symbol>
+        <lines>1-422</lines>
+        <reason>Reference test patterns - vi.mock for window.electron, beforeEach reset, describe/it structure, auto-save verification tests</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/Project.test.ts</path>
+        <kind>test-file</kind>
+        <symbol>Project interface tests</symbol>
+        <lines>1-68</lines>
+        <reason>Interface shape tests pattern to follow for type validation</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>electron-log</package>
+        <version>5.4.1</version>
+        <purpose>File-based logging for load/save operations</purpose>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.13</version>
+        <purpose>Unit testing framework</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md">Use vanilla TypeScript class following existing TodoStore pattern</constraint>
+    <constraint source="architecture.md">Private properties prefixed with underscore (e.g., _projects, _filePath)</constraint>
+    <constraint source="architecture.md">Auto-save on every mutation using fire-and-forget pattern (call save() without await)</constraint>
+    <constraint source="architecture.md">Return shallow copies from getters to prevent external mutation</constraint>
+    <constraint source="architecture.md#ADR-007">Separate store classes - ProjectStore is independent of TodoStore and SettingsStore</constraint>
+    <constraint source="architecture.md#ADR-008">Use simple includes() for project search (sufficient for 5-10 projects)</constraint>
+    <constraint source="dev-notes">File-not-found on load returns empty array (not an error)</constraint>
+    <constraint source="dev-notes">Save failures log error, don't throw (UI continues working)</constraint>
+    <constraint source="dev-notes">Invalid ID throws descriptive error</constraint>
+    <constraint source="dev-notes">Delete last project throws "Cannot delete last project"</constraint>
+    <constraint source="dev-notes">ToonStorage methods (loadProjects, saveProjects, deleteTodosFile) will be implemented in Story 7.4 - use placeholder/mock calls or optional dependency injection for testing</constraint>
+    <constraint source="CLAUDE.md">Follow single responsibility principle</constraint>
+    <constraint source="CLAUDE.md">Use functions without side effects</constraint>
+    <constraint source="CLAUDE.md">Use objects for parameters</constraint>
+    <constraint source="CLAUDE.md">Functions should have at most 20 lines (recommendation)</constraint>
+    <constraint source="CLAUDE.md">Use arrow functions</constraint>
+    <constraint source="CLAUDE.md">Function names should read like a sentence (ex: getUserById)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Project</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface Project { id: string; name: string; createdAt: string; }</signature>
+      <path>src/types/Project.ts</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.load</name>
+      <kind>async method</kind>
+      <signature>async load(): Promise&lt;void&gt;</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.save</name>
+      <kind>async method</kind>
+      <signature>async save(): Promise&lt;void&gt;</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.create</name>
+      <kind>method</kind>
+      <signature>create(name: string): Project</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.rename</name>
+      <kind>method</kind>
+      <signature>rename(id: string, newName: string): void</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.delete</name>
+      <kind>method</kind>
+      <signature>delete(id: string): void</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.getAll</name>
+      <kind>method</kind>
+      <signature>getAll(): Project[]</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.findById</name>
+      <kind>method</kind>
+      <signature>findById(id: string): Project | undefined</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ProjectStore.search</name>
+      <kind>method</kind>
+      <signature>search(query: string): Project[]</signature>
+      <path>src/store/ProjectStore.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>window.electron (IPC placeholder)</name>
+      <kind>IPC bridge</kind>
+      <signature>loadProjects(filePath: string): Promise&lt;Project[]&gt;, saveProjects(filePath: string, projects: Project[]): Promise&lt;void&gt;, deleteTodosFile(projectId: string): Promise&lt;void&gt;</signature>
+      <path>electron/preload.ts (to be extended in Story 7.4)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing uses Vitest framework with vi.mock for external dependencies (window.electron). Tests are co-located with source files (*.test.ts in same directory). Follow existing TodoStore.test.ts patterns: describe/it blocks, beforeEach for reset, vi.clearAllMocks(), vi.spyOn for auto-save verification. Mock window.electron methods using global.window assignment. Test both success and error cases.
+    </standards>
+    <locations>
+      <location>src/store/ProjectStore.test.ts</location>
+      <location>src/store/*.test.ts (existing test files for pattern reference)</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test constructor stores file path correctly</idea>
+      <idea ac="2">Test load() calls window.electron.loadProjects with correct path</idea>
+      <idea ac="2">Test load() populates _projects array from loaded data</idea>
+      <idea ac="2">Test load() handles file-not-found gracefully (empty array)</idea>
+      <idea ac="3">Test save() calls window.electron.saveProjects with correct params</idea>
+      <idea ac="3">Test save() catches errors without throwing (fire-and-forget)</idea>
+      <idea ac="4">Test create() generates valid UUID v4 format</idea>
+      <idea ac="4">Test create() creates ISO 8601 timestamp</idea>
+      <idea ac="4">Test create() adds project to internal array</idea>
+      <idea ac="4">Test create() returns the created project</idea>
+      <idea ac="4">Test create() triggers auto-save (verify save() called)</idea>
+      <idea ac="5">Test rename() updates project name</idea>
+      <idea ac="5">Test rename() throws Error for invalid ID: "Project not found: {id}"</idea>
+      <idea ac="5">Test rename() triggers auto-save</idea>
+      <idea ac="6">Test delete() removes project from array</idea>
+      <idea ac="6">Test delete() throws "Cannot delete last project" when only one exists</idea>
+      <idea ac="6">Test delete() throws Error for invalid ID</idea>
+      <idea ac="6">Test delete() calls deleteTodosFile with project ID</idea>
+      <idea ac="6">Test delete() triggers auto-save</idea>
+      <idea ac="7">Test getAll() returns shallow copy (mutating result doesn't affect internal)</idea>
+      <idea ac="7">Test getAll() returns all projects</idea>
+      <idea ac="8">Test findById() returns project when found</idea>
+      <idea ac="8">Test findById() returns undefined when not found</idea>
+      <idea ac="9">Test search() with matching query returns filtered projects</idea>
+      <idea ac="9">Test search() is case-insensitive</idea>
+      <idea ac="9">Test search() with empty query returns all projects</idea>
+      <idea ac="9">Test search() with non-matching query returns empty array</idea>
+    </ideas>
+  </tests>
+</story-context>

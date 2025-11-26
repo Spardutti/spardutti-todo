@@ -1,0 +1,139 @@
+<story-context id="7-4-extend-toonstorage-for-multi-file-structure" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>4</storyId>
+    <title>Extend ToonStorage for Multi-File Structure</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-4-extend-toonstorage-for-multi-file-structure.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>ToonStorage extended to handle projects and settings files</iWant>
+    <soThat>I can persist the multi-file data structure for the Projects System</soThat>
+    <tasks>
+      <task id="1" title="Add Project-related storage methods">
+        <subtask>Implement loadProjects(): Promise&lt;Project[]&gt;</subtask>
+        <subtask>Implement saveProjects(projects: Project[]): Promise&lt;void&gt;</subtask>
+        <subtask>Define TOON schema for projects with version header</subtask>
+        <subtask>Handle empty/missing projects.toon (return empty array)</subtask>
+      </task>
+      <task id="2" title="Add Settings storage methods">
+        <subtask>Implement loadSettings(): Promise&lt;AppSettings&gt;</subtask>
+        <subtask>Implement saveSettings(settings: AppSettings): Promise&lt;void&gt;</subtask>
+        <subtask>Define TOON schema for settings including windowBounds</subtask>
+        <subtask>Handle empty/missing settings.toon (return defaults)</subtask>
+        <subtask>Define default AppSettings values</subtask>
+      </task>
+      <task id="3" title="Refactor existing todos methods for projectId">
+        <subtask>Update loadTodos(projectId: string) signature</subtask>
+        <subtask>Update file path to todos-{projectId}.toon</subtask>
+        <subtask>Update saveTodos(projectId: string, todos: Todo[]) signature</subtask>
+        <subtask>Maintain backwards compatibility pattern for existing code</subtask>
+      </task>
+      <task id="4" title="Implement deleteTodosFile method">
+        <subtask>Implement deleteTodosFile(projectId: string): Promise&lt;void&gt;</subtask>
+        <subtask>Handle non-existent file gracefully (no error)</subtask>
+        <subtask>Log deletion with electron-log</subtask>
+      </task>
+      <task id="5" title="Implement error handling">
+        <subtask>Add try-catch blocks to all file operations</subtask>
+        <subtask>Log errors with electron-log</subtask>
+        <subtask>Throw descriptive errors for malformed files</subtask>
+        <subtask>Return defaults for missing files (not errors)</subtask>
+      </task>
+      <task id="6" title="Write unit tests for all new methods">
+        <subtask>Test loadProjects (success, empty file, missing file, malformed)</subtask>
+        <subtask>Test saveProjects (success, various project counts)</subtask>
+        <subtask>Test loadSettings (success, missing file, malformed)</subtask>
+        <subtask>Test saveSettings (success, various bounds values)</subtask>
+        <subtask>Test loadTodos with projectId (verify file path pattern)</subtask>
+        <subtask>Test saveTodos with projectId (verify file path pattern)</subtask>
+        <subtask>Test deleteTodosFile (existing file, missing file)</subtask>
+        <subtask>Run npm test and verify all pass</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">ToonStorage class has new static methods added: loadProjects, saveProjects, loadSettings, saveSettings, deleteTodosFile</criterion>
+    <criterion id="AC2">Existing loadTodos() method refactored to accept projectId parameter with signature loadTodos(projectId: string): Promise&lt;Todo[]&gt;, loads from todos-{projectId}.toon</criterion>
+    <criterion id="AC3">Existing saveTodos() method refactored to accept projectId parameter with signature saveTodos(projectId: string, todos: Todo[]): Promise&lt;void&gt;, saves to todos-{projectId}.toon</criterion>
+    <criterion id="AC4">File formats match architecture specification: projects.toon uses projects[N]{id,name,createdAt}:, todos-{projectId}.toon uses todos[N]{id,text,completed,createdAt}:, settings.toon uses activeProjectId: and windowBounds{x,y,width,height}:</criterion>
+    <criterion id="AC5">All new methods handle error cases gracefully: missing files return defaults, malformed files throw descriptive errors, write errors are propagated</criterion>
+    <criterion id="AC6">Unit tests exist in src/storage/ToonStorage.test.ts covering all new and modified methods</criterion>
+    <criterion id="AC7">All tests pass with npm test</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="ToonStorage Extended API" snippet="Defines extended ToonStorage API: loadProjects, saveProjects, loadSettings, saveSettings, deleteTodosFile. Also refactored loadTodos/saveTodos with projectId parameter." />
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="File Format (TOON Multi-File)" snippet="Projects.toon: projects[N]{id,name,createdAt}: format. Settings.toon: activeProjectId: and windowBounds{x,y,width,height}: format." />
+      <doc path="docs/architecture.md" title="Architecture" section="Data Architecture - File Format (TOON)" snippet="Multi-file storage: projects.toon for project index, todos-{projectId}.toon for per-project todos, settings.toon for app state." />
+      <doc path="docs/architecture.md" title="Architecture" section="API Contracts - ToonStorage Public API" snippet="ToonStorage static methods: loadTodos(projectId), saveTodos(projectId, todos), loadProjects, saveProjects, loadSettings, saveSettings, deleteTodosFile." />
+      <doc path="docs/architecture.md" title="Architecture" section="ADR-006: Multi-File Storage for Projects" snippet="Decided on separate files for project isolation and performance. Each project's todos in separate file." />
+      <doc path="docs/epics.md" title="Epics" section="Story 7.4" snippet="Extend ToonStorage for multi-file structure with new methods and refactored todos methods for projectId." />
+      <doc path="docs/sprint-artifacts/7-1-define-project-data-model-and-typescript-interfaces.md" title="Story 7.1 Completion" section="Dev-Agent-Record" snippet="Created Project and AppSettings interfaces at src/types/Project.ts and src/types/Settings.ts." />
+    </docs>
+    <code>
+      <artifact path="electron/storage.ts" kind="service" symbol="ToonStorage" lines="1-151" reason="Existing ToonStorage class to extend with new methods. Contains load, save, encode, decode for todos." />
+      <artifact path="electron/main.ts" kind="main-process" symbol="ipcMain handlers" lines="9-25" reason="IPC handlers for load-todos, save-todos that will need updates for projectId parameter." />
+      <artifact path="src/types/Project.ts" kind="interface" symbol="Project" lines="18-46" reason="Project interface with id, name, createdAt fields to use for loadProjects/saveProjects." />
+      <artifact path="src/types/Settings.ts" kind="interface" symbol="AppSettings, WindowBounds" lines="17-72" reason="AppSettings and WindowBounds interfaces for loadSettings/saveSettings." />
+      <artifact path="src/types/Todo.ts" kind="interface" symbol="Todo" lines="17-54" reason="Todo interface for typing todos array in loadTodos/saveTodos." />
+      <artifact path="src/store/TodoStore.ts" kind="store" symbol="TodoStore" lines="49-52,68-78" reason="TodoStore uses window.electron.loadTodos/saveTodos - will need updates for projectId parameter." />
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="@toon-format/toon" version="1.0.0" purpose="TOON encode/decode (currently unused - custom implementation in storage.ts)" />
+        <package name="electron-log" version="5.4.1" purpose="File-based logging for error handling" />
+        <package name="vitest" version="^4.0.13" purpose="Unit testing framework" />
+        <package name="typescript" version="~5.9.2" purpose="Type safety" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">Extend existing ToonStorage class with static methods (no class instantiation)</constraint>
+    <constraint source="architecture">File path base: app.getPath('userData') via Electron IPC</constraint>
+    <constraint source="architecture">All file operations are async (Node.js fs promises)</constraint>
+    <constraint source="story">Follow existing ToonStorage patterns for encode/decode</constraint>
+    <constraint source="story">Return defaults for missing files, throw for malformed files</constraint>
+    <constraint source="CLAUDE.md">Follow single responsibility - each method does one thing</constraint>
+    <constraint source="CLAUDE.md">Use arrow functions</constraint>
+    <constraint source="CLAUDE.md">Functions should have at most 20 lines (recommendation)</constraint>
+    <constraint source="CLAUDE.md">Use objects for parameters where applicable</constraint>
+    <constraint source="architecture">Project isolation enforced at file level</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="ToonStorage.loadProjects" kind="static method" signature="static async loadProjects(): Promise&lt;Project[]&gt;" path="electron/storage.ts" />
+    <interface name="ToonStorage.saveProjects" kind="static method" signature="static async saveProjects(projects: Project[]): Promise&lt;void&gt;" path="electron/storage.ts" />
+    <interface name="ToonStorage.loadSettings" kind="static method" signature="static async loadSettings(): Promise&lt;AppSettings&gt;" path="electron/storage.ts" />
+    <interface name="ToonStorage.saveSettings" kind="static method" signature="static async saveSettings(settings: AppSettings): Promise&lt;void&gt;" path="electron/storage.ts" />
+    <interface name="ToonStorage.loadTodos" kind="static method" signature="static async loadTodos(projectId: string): Promise&lt;Todo[]&gt; (refactored)" path="electron/storage.ts" />
+    <interface name="ToonStorage.saveTodos" kind="static method" signature="static async saveTodos(projectId: string, todos: Todo[]): Promise&lt;void&gt; (refactored)" path="electron/storage.ts" />
+    <interface name="ToonStorage.deleteTodosFile" kind="static method" signature="static async deleteTodosFile(projectId: string): Promise&lt;void&gt;" path="electron/storage.ts" />
+  </interfaces>
+
+  <tests>
+    <standards>Use Vitest for unit tests with co-located test files. Follow existing patterns from TodoStore.test.ts. Mock file system operations using vitest mocking. Test both success and error scenarios.</standards>
+    <locations>
+      <location>electron/storage.test.ts (new file for ToonStorage tests)</location>
+      <location>src/store/TodoStore.test.ts (existing, may need updates)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC4">Test loadProjects returns empty array for missing file, decodes valid projects.toon correctly</idea>
+      <idea ac="AC1,AC4">Test saveProjects encodes projects array to correct TOON format with version header</idea>
+      <idea ac="AC1,AC4">Test loadSettings returns default values for missing file, parses valid settings.toon</idea>
+      <idea ac="AC1,AC4">Test saveSettings writes correct activeProjectId and windowBounds format</idea>
+      <idea ac="AC2,AC3">Test loadTodos(projectId) constructs correct file path todos-{projectId}.toon</idea>
+      <idea ac="AC2,AC3">Test saveTodos(projectId, todos) writes to correct file path</idea>
+      <idea ac="AC1">Test deleteTodosFile removes file when exists, no error when missing</idea>
+      <idea ac="AC5">Test malformed files throw descriptive errors</idea>
+      <idea ac="AC5">Test file write errors are propagated</idea>
+    </ideas>
+  </tests>
+</story-context>

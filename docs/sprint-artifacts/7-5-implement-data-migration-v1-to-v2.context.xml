@@ -1,0 +1,307 @@
+<story-context id="7-5-implement-data-migration-v1-to-v2" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>5</storyId>
+    <title>Implement Data Migration (v1 to v2)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-5-implement-data-migration-v1-to-v2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user upgrading from MVP</asA>
+    <iWant>my existing todos automatically migrated to the projects system</iWant>
+    <soThat>I don't lose any data when updating the app</soThat>
+    <tasks>
+      <task id="1" status="pending">
+        <description>Create migration module structure (AC: #1, #7)</description>
+        <subtasks>
+          <subtask>Create `src/storage/migration.ts` file</subtask>
+          <subtask>Implement `migrateIfNeeded(): Promise&lt;MigrationResult&gt;` main entry point</subtask>
+          <subtask>Implement `needsMigration(): Promise&lt;boolean&gt;` detection function</subtask>
+          <subtask>Define MigrationResult type (success, skipped, error + details)</subtask>
+        </subtasks>
+      </task>
+      <task id="2" status="pending">
+        <description>Implement v1 format detection (AC: #1)</description>
+        <subtasks>
+          <subtask>Check if `todos.toon` exists using ToonStorage or fs</subtask>
+          <subtask>Check if `projects.toon` does NOT exist</subtask>
+          <subtask>Return true only if both conditions met</subtask>
+          <subtask>Log detection result with electron-log</subtask>
+        </subtasks>
+      </task>
+      <task id="3" status="pending">
+        <description>Implement backup creation (AC: #2)</description>
+        <subtasks>
+          <subtask>Copy `todos.toon` to `todos.toon.backup`</subtask>
+          <subtask>Use fs.copyFile for atomic copy</subtask>
+          <subtask>Verify backup exists before proceeding</subtask>
+          <subtask>If backup fails, abort migration immediately</subtask>
+        </subtasks>
+      </task>
+      <task id="4" status="pending">
+        <description>Implement Default project creation (AC: #3)</description>
+        <subtasks>
+          <subtask>Generate UUID v4 using crypto.randomUUID()</subtask>
+          <subtask>Create Project object with name "Default"</subtask>
+          <subtask>Set createdAt to current ISO 8601 timestamp</subtask>
+          <subtask>Return project object for subsequent steps</subtask>
+        </subtasks>
+      </task>
+      <task id="5" status="pending">
+        <description>Implement file migration (AC: #4, #5, #6)</description>
+        <subtasks>
+          <subtask>Rename `todos.toon` to `todos-{projectId}.toon` using fs.rename</subtask>
+          <subtask>Create `projects.toon` using ToonStorage.saveProjects([defaultProject])</subtask>
+          <subtask>Create `settings.toon` using ToonStorage.saveSettings(defaultSettings)</subtask>
+          <subtask>Verify all files exist after creation</subtask>
+        </subtasks>
+      </task>
+      <task id="6" status="pending">
+        <description>Implement logging (AC: #8)</description>
+        <subtasks>
+          <subtask>Import electron-log</subtask>
+          <subtask>Log 'Migration started' with hasOldFormat: true</subtask>
+          <subtask>Log each step: backup, project create, file rename, save</subtask>
+          <subtask>Log 'Migration completed' with backupPath and newProjectId</subtask>
+          <subtask>Log errors with full Error object and context</subtask>
+        </subtasks>
+      </task>
+      <task id="7" status="pending">
+        <description>Implement error handling and rollback (AC: #9)</description>
+        <subtasks>
+          <subtask>Wrap migration in try-catch</subtask>
+          <subtask>On error: Do NOT delete or modify original todos.toon</subtask>
+          <subtask>On error: Return MigrationResult with error details</subtask>
+          <subtask>On error: Log error with full context</subtask>
+          <subtask>Define error display mechanism for main.ts caller</subtask>
+        </subtasks>
+      </task>
+      <task id="8" status="pending">
+        <description>Write unit tests (AC: #10, #11)</description>
+        <subtasks>
+          <subtask>Test needsMigration: returns true when todos.toon exists, projects.toon doesn't</subtask>
+          <subtask>Test needsMigration: returns false when projects.toon exists</subtask>
+          <subtask>Test needsMigration: returns false when no files exist (fresh install)</subtask>
+          <subtask>Test migrateIfNeeded: creates backup before any changes</subtask>
+          <subtask>Test migrateIfNeeded: creates correct file structure after migration</subtask>
+          <subtask>Test migrateIfNeeded: migration is idempotent (second call is no-op)</subtask>
+          <subtask>Test migrateIfNeeded: preserves original on error</subtask>
+          <subtask>Test migrateIfNeeded: logs all steps with electron-log</subtask>
+          <subtask>Run `npm test` and verify all pass</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">App detects v1 format on launch: Detection condition: `todos.toon` exists AND `projects.toon` does NOT exist. Fresh installs (no files) skip migration entirely. Already-migrated installs (projects.toon exists) skip migration.</criterion>
+    <criterion id="AC2">Backup created before any changes: Original `todos.toon` copied to `todos.toon.backup`. Backup preserved even after successful migration. If backup creation fails, migration aborts with error.</criterion>
+    <criterion id="AC3">Default project created with proper structure: New UUID v4 generated for default project. Project name: "Default". createdAt: ISO 8601 timestamp of migration time.</criterion>
+    <criterion id="AC4">Original todos file migrated to new format: `todos.toon` renamed to `todos-{defaultProjectId}.toon`. Todos content unchanged (same format, just different filename).</criterion>
+    <criterion id="AC5">Projects index file created: `projects.toon` created with Default project entry. Format matches architecture spec: `projects[N]{id,name,createdAt}: ...`. Version header: `version: 2.0`.</criterion>
+    <criterion id="AC6">Settings file created: `settings.toon` created with activeProjectId pointing to Default project. Default window bounds: `{ x: 100, y: 100, width: 600, height: 400 }`. Version header: `version: 1.0`.</criterion>
+    <criterion id="AC7">Migration is idempotent: Runs only once (subsequent launches skip). Detection check prevents re-migration.</criterion>
+    <criterion id="AC8">Migration is logged with electron-log: Log migration start with context. Log each step (backup, create project, rename, save files). Log migration success with new projectId. Log any errors with full context.</criterion>
+    <criterion id="AC9">Migration failure handling: On any error: Original `todos.toon` preserved unchanged. On any error: Backup file preserved if created. On any error: App shows inline error message. Error message: "Migration failed. Contact support." App does NOT start fresh (preserves v1 data for manual recovery).</criterion>
+    <criterion id="AC10">Unit tests exist in `src/storage/migration.test.ts` covering all scenarios.</criterion>
+    <criterion id="AC11">All tests pass with `npm test`.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Migration (v1 → v2)</section>
+        <snippet>Trigger: App detects `todos.toon` exists but no `projects.toon`. Migration creates Default project with new UUID, renames todos.toon to todos-{id}.toon, creates projects.toon and settings.toon. Includes backup: todos.toon.backup.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>File Format (TOON)</section>
+        <snippet>projects.toon format: `projects[N]{id,name,createdAt}: id,name,timestamp`. settings.toon format: `activeProjectId: uuid, windowBounds{x,y,width,height}: values, version: 1.0`. todos-{id}.toon format: `todos[N]{id,text,completed,createdAt}: values`.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>ToonStorage Public API</section>
+        <snippet>Extended API: `loadProjects(): Promise&lt;Project[]&gt;`, `saveProjects(projects: Project[]): Promise&lt;void&gt;`, `loadSettings(): Promise&lt;AppSettings&gt;`, `saveSettings(settings: AppSettings): Promise&lt;void&gt;`.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Data Migration Flow (v1→v2)</section>
+        <snippet>1. Check: todos.toon exists AND projects.toon does NOT exist. 2. Create backup: todos.toon → todos.toon.backup. 3. Generate default project UUID. 4. Rename: todos.toon → todos-{defaultProjectId}.toon. 5. Create projects.toon with Default project entry. 6. Create settings.toon. 7. Log success.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Migration Acceptance Criteria</section>
+        <snippet>v1 users (todos.toon exists, no projects.toon) auto-migrate. Original backed up. Todos migrated to Default project. Fresh installs skip. Migration runs only once (idempotent).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Error Scenarios</section>
+        <snippet>Migration failure: Preserve original file, show error, allow manual recovery. Each project's data in separate file (corruption isolated). Settings corruption doesn't affect todo data.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 7.5: Implement Data Migration (v1 → v2)</section>
+        <snippet>Create src/storage/migration.ts. Detection: todos.toon exists AND projects.toon does NOT exist. Backup before any changes. Log all steps for debugging. Test with actual v1 data file.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR37: Default Project</section>
+        <snippet>The application ships with a default project that users can rename. v1 users get todos migrated to "Default" project. Default project can be renamed but not deleted if last remaining.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/7-4-extend-toonstorage-for-multi-file-structure.md</path>
+        <title>Story 7.4: ToonStorage Multi-File</title>
+        <section>Dependencies</section>
+        <snippet>Story 7.5 depends on ToonStorage methods: saveProjects(), saveSettings(). These will be available after Story 7.4 is complete. Story 7.4 is currently ready-for-dev.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/types/Project.ts</path>
+        <kind>type</kind>
+        <symbol>Project</symbol>
+        <lines>18-46</lines>
+        <reason>Defines Project interface that migration creates. Fields: id (UUID v4), name (string), createdAt (ISO 8601). Migration creates Default project using this structure.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/Settings.ts</path>
+        <kind>type</kind>
+        <symbol>AppSettings, WindowBounds</symbol>
+        <lines>17-72</lines>
+        <reason>Defines AppSettings interface that migration creates. Fields: activeProjectId, windowBounds, version. Migration creates settings.toon with Default project as active.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/storage.ts</path>
+        <kind>service</kind>
+        <symbol>ToonStorage</symbol>
+        <lines>1-150</lines>
+        <reason>Existing ToonStorage class handles TOON encoding/decoding and file I/O. Migration will use extended methods (saveProjects, saveSettings) after Story 7.4. Also reference for file path handling and error patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>electron/preload.ts</path>
+        <kind>bridge</kind>
+        <symbol>electron API</symbol>
+        <lines>1-33</lines>
+        <reason>IPC bridge between renderer and main process. Migration runs in main process. May need to add migration-related IPC channels or expose migration result to renderer.</reason>
+      </artifact>
+      <artifact>
+        <path>src/store/TodoStore.ts</path>
+        <kind>service</kind>
+        <symbol>TodoStore</symbol>
+        <lines>1-214</lines>
+        <reason>Current TodoStore uses single file path. After migration, will need to load from project-scoped todos-{id}.toon. Shows existing patterns for file operations and error handling.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/window.d.ts</path>
+        <kind>type</kind>
+        <symbol>ElectronAPI</symbol>
+        <lines>1-21</lines>
+        <reason>Type definitions for window.electron API. May need to extend with migration-related methods if migration status needs to be communicated to renderer.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="@toon-format/toon" version="1.0.0">TOON format encoding/decoding</package>
+        <package name="electron-log" version="5.4.1">File-based logging for migration steps</package>
+        <package name="electron" version="39.2.3">Electron framework with fs and path modules</package>
+        <package name="vitest" version="^4.0.13">Unit testing framework for migration.test.ts</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow single responsibility principle - migration module only handles v1→v2 migration</constraint>
+    <constraint type="pattern">Use arrow functions per CLAUDE.md coding standards</constraint>
+    <constraint type="pattern">Functions should have at most 20 lines (recommendation from CLAUDE.md)</constraint>
+    <constraint type="pattern">Use objects for parameters per CLAUDE.md</constraint>
+    <constraint type="pattern">Function names should read like sentences (e.g., migrateIfNeeded, needsMigration)</constraint>
+    <constraint type="architecture">Migration runs in main process (has access to fs module)</constraint>
+    <constraint type="architecture">Migration runs synchronously during app startup (blocking acceptable for one-time operation)</constraint>
+    <constraint type="architecture">Use Node.js fs promises API for file operations</constraint>
+    <constraint type="architecture">File paths: Use app.getPath('userData') as base path</constraint>
+    <constraint type="architecture">Windows: %APPDATA%/spardutti-todo/, Linux: ~/.config/spardutti-todo/</constraint>
+    <constraint type="error-handling">Never lose user data - backup before any changes</constraint>
+    <constraint type="error-handling">On error: Original todos.toon preserved unchanged</constraint>
+    <constraint type="error-handling">On error: Return MigrationResult with error details (don't throw)</constraint>
+    <constraint type="performance">Migration overhead acceptable - one-time operation on app upgrade</constraint>
+    <constraint type="testing">Co-locate tests: migration.test.ts in same directory</constraint>
+    <constraint type="testing">Test with mocked file system or temp directories</constraint>
+    <constraint type="dependency">Depends on Story 7.4: ToonStorage.saveProjects() and ToonStorage.saveSettings() methods</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="MigrationResult" kind="type">
+      <signature>
+type MigrationResult =
+  | { status: 'success'; projectId: string }
+  | { status: 'skipped'; reason: 'not-needed' | 'already-migrated' }
+  | { status: 'error'; error: Error }
+      </signature>
+      <path>src/storage/migration.ts</path>
+    </interface>
+    <interface name="migrateIfNeeded" kind="function">
+      <signature>async function migrateIfNeeded(): Promise&lt;MigrationResult&gt;</signature>
+      <path>src/storage/migration.ts</path>
+    </interface>
+    <interface name="needsMigration" kind="function">
+      <signature>async function needsMigration(): Promise&lt;boolean&gt;</signature>
+      <path>src/storage/migration.ts</path>
+    </interface>
+    <interface name="ToonStorage.saveProjects" kind="static method">
+      <signature>static async saveProjects(projects: Project[]): Promise&lt;void&gt;</signature>
+      <path>electron/storage.ts (after Story 7.4)</path>
+    </interface>
+    <interface name="ToonStorage.saveSettings" kind="static method">
+      <signature>static async saveSettings(settings: AppSettings): Promise&lt;void&gt;</signature>
+      <path>electron/storage.ts (after Story 7.4)</path>
+    </interface>
+    <interface name="Project" kind="interface">
+      <signature>interface Project { id: string; name: string; createdAt: string; }</signature>
+      <path>src/types/Project.ts</path>
+    </interface>
+    <interface name="AppSettings" kind="interface">
+      <signature>interface AppSettings { activeProjectId: string; windowBounds: WindowBounds; version: string; }</signature>
+      <path>src/types/Settings.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests use Vitest framework. Tests co-located with source (migration.test.ts alongside migration.ts). Mock file system operations using temp directories or fs mocking. Test edge cases: empty file, corrupt file, permission errors. Follow existing patterns from TodoStore.test.ts and KeyboardManager.test.ts.</standards>
+    <locations>
+      <location>src/storage/migration.test.ts</location>
+      <location>src/**/*.test.ts</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">Test needsMigration returns true when todos.toon exists and projects.toon doesn't</idea>
+      <idea acRef="AC1">Test needsMigration returns false when projects.toon already exists</idea>
+      <idea acRef="AC1">Test needsMigration returns false when neither file exists (fresh install)</idea>
+      <idea acRef="AC2">Test backup file created before any other changes</idea>
+      <idea acRef="AC2">Test migration aborts if backup creation fails</idea>
+      <idea acRef="AC3">Test Default project has valid UUID v4 format</idea>
+      <idea acRef="AC3">Test Default project name is "Default"</idea>
+      <idea acRef="AC3">Test Default project createdAt is valid ISO 8601</idea>
+      <idea acRef="AC4">Test original todos.toon renamed to todos-{id}.toon</idea>
+      <idea acRef="AC4">Test todos content unchanged after rename</idea>
+      <idea acRef="AC5">Test projects.toon created with correct format</idea>
+      <idea acRef="AC5">Test projects.toon has version: 2.0 header</idea>
+      <idea acRef="AC6">Test settings.toon created with activeProjectId</idea>
+      <idea acRef="AC6">Test settings.toon has default window bounds</idea>
+      <idea acRef="AC7">Test calling migrateIfNeeded twice is no-op second time</idea>
+      <idea acRef="AC8">Verify electron-log called for each migration step</idea>
+      <idea acRef="AC9">Test original file preserved on error</idea>
+      <idea acRef="AC9">Test MigrationResult returns error status on failure</idea>
+    </ideas>
+  </tests>
+</story-context>

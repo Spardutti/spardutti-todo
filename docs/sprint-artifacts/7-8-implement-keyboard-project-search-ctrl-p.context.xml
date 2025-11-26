@@ -1,0 +1,215 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>8</storyId>
+    <title>Implement Keyboard Project Search (Ctrl+P)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-8-implement-keyboard-project-search-ctrl-p.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>switch projects using keyboard fuzzy search</iWant>
+    <soThat>I can quickly navigate between projects without using the mouse</soThat>
+    <tasks>
+      <task id="1" acs="1,7">Create projectSearch.ts file structure
+        <subtask>Create new file at src/ui/projectSearch.ts</subtask>
+        <subtask>Import Project type from @/types/Project</subtask>
+        <subtask>Import ProjectStore for search functionality</subtask>
+        <subtask>Define state management for search mode (query, selectedIndex, isActive)</subtask>
+        <subtask>Export functions for search mode operations</subtask>
+      </task>
+      <task id="2" acs="1">Register Ctrl+P shortcut in KeyboardManager
+        <subtask>Add Ctrl+P to KeyboardManager shortcuts</subtask>
+        <subtask>Handler activates project search mode</subtask>
+        <subtask>Ensure shortcut works regardless of current focus</subtask>
+        <subtask>Description: "Switch Project" for hints</subtask>
+      </task>
+      <task id="3" acs="1,6">Implement footer transformation for search mode
+        <subtask>Create function to render search input in footer</subtask>
+        <subtask>Display prompt: > with cursor indicator</subtask>
+        <subtask>Hide normal footer hints during search</subtask>
+        <subtask>Capture keystrokes for search input</subtask>
+        <subtask>Style matching terminal aesthetic (#00FF00 text, #000000 bg)</subtask>
+      </task>
+      <task id="4" acs="2,6,7">Implement project filtering logic
+        <subtask>Create filter function using includes() matching</subtask>
+        <subtask>Case-insensitive comparison</subtask>
+        <subtask>Return all projects when query is empty</subtask>
+        <subtask>Return empty array when no matches</subtask>
+        <subtask>Update filtered list on each keystroke</subtask>
+      </task>
+      <task id="5" acs="2,7">Implement filtered results display
+        <subtask>Render matching projects inline in footer area</subtask>
+        <subtask>Display as horizontal chips: [ProjectA] [ProjectB]</subtask>
+        <subtask>Limit display width (truncate list with "..." if many matches)</subtask>
+        <subtask>Show "No projects match" when filter returns empty</subtask>
+        <subtask>Style with terminal green aesthetic</subtask>
+      </task>
+      <task id="6" acs="3">Implement arrow key navigation
+        <subtask>Track selectedIndex in search state</subtask>
+        <subtask>ArrowDown/j increments selectedIndex (bound to matches length)</subtask>
+        <subtask>ArrowUp/k decrements selectedIndex (bound to 0)</subtask>
+        <subtask>Update visual highlight on index change</subtask>
+        <subtask>Highlight first match automatically when filter changes</subtask>
+      </task>
+      <task id="7" acs="4">Implement Enter key selection
+        <subtask>Get highlighted project from filtered results</subtask>
+        <subtask>Call TodoStore.load(selectedProjectId)</subtask>
+        <subtask>Call SettingsStore.setActiveProject(selectedProjectId)</subtask>
+        <subtask>Trigger project indicator update</subtask>
+        <subtask>Exit search mode and restore footer</subtask>
+        <subtask>Return focus to input field</subtask>
+      </task>
+      <task id="8" acs="5">Implement Escape key cancellation
+        <subtask>Reset search state (query, selectedIndex)</subtask>
+        <subtask>Restore normal footer hints</subtask>
+        <subtask>Return focus to input field</subtask>
+        <subtask>No project change occurs</subtask>
+      </task>
+      <task id="9" acs="1,2,3">Add CSS styles for search mode
+        <subtask>Add .project-search-active class for footer</subtask>
+        <subtask>Add .project-search-input for input display</subtask>
+        <subtask>Add .project-search-results for results list</subtask>
+        <subtask>Add .project-search-match for each project chip</subtask>
+        <subtask>Add .project-search-match--selected for highlighted state</subtask>
+        <subtask>Follow terminal aesthetic (no transitions, green on black)</subtask>
+      </task>
+      <task id="10" acs="1,2,3,4,5,6,7">Unit tests for projectSearch
+        <subtask>Create src/ui/projectSearch.test.ts</subtask>
+        <subtask>Test: filter function returns correct matches</subtask>
+        <subtask>Test: case-insensitive matching works</subtask>
+        <subtask>Test: empty query returns all projects</subtask>
+        <subtask>Test: no matches returns empty array</subtask>
+        <subtask>Test: selectedIndex navigation bounds</subtask>
+        <subtask>Test: Enter triggers project selection</subtask>
+        <subtask>Test: Escape resets state</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1" title="Ctrl+P opens inline search mode in footer">
+      <detail>Footer transforms to show input prompt: > _</detail>
+      <detail>Normal footer hints are hidden</detail>
+      <detail>Input is ready to receive keystrokes immediately</detail>
+      <detail>Focus is captured by the search mode</detail>
+    </criterion>
+    <criterion id="2" title="Typing filters projects using includes() matching">
+      <detail>Projects filtered using name.toLowerCase().includes(query.toLowerCase())</detail>
+      <detail>Matching projects displayed inline (as chips or list)</detail>
+      <detail>First match is automatically highlighted</detail>
+      <detail>Filter updates on each keystroke (instant feedback)</detail>
+    </criterion>
+    <criterion id="3" title="Arrow key navigation works in filtered results">
+      <detail>ArrowDown/j moves highlight to next match</detail>
+      <detail>ArrowUp/k moves highlight to previous match</detail>
+      <detail>Navigation wraps at boundaries (optional) or stops at ends</detail>
+      <detail>Highlighted project is visually distinct</detail>
+    </criterion>
+    <criterion id="4" title="Enter selects the highlighted project">
+      <detail>TodoStore loads new project's todos</detail>
+      <detail>SettingsStore updates activeProjectId</detail>
+      <detail>Project indicator updates to show new project name</detail>
+      <detail>Footer returns to normal hints</detail>
+      <detail>Input field regains focus (ready for todo entry)</detail>
+    </criterion>
+    <criterion id="5" title="Escape cancels search mode">
+      <detail>Footer restores to normal hints</detail>
+      <detail>No project change occurs</detail>
+      <detail>Previous focus state restored</detail>
+      <detail>Input field focus returned</detail>
+    </criterion>
+    <criterion id="6" title="Empty query behavior">
+      <detail>Shows all projects in list</detail>
+      <detail>All projects available for selection</detail>
+    </criterion>
+    <criterion id="7" title="No matches behavior">
+      <detail>Display: "No projects match" message</detail>
+      <detail>Enter does nothing when no matches</detail>
+      <detail>User can continue typing or press Escape to cancel</detail>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="FR32: Keyboard Project Search" snippet="Ctrl+P opens inline search in footer. Typing filters projects using includes() matching. Arrow keys navigate filtered results. Enter selects highlighted project. Escape cancels and restores footer hints."/>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="Workflows and Sequencing - Keyboard" snippet="Project Switch Flow (Keyboard - Ctrl+P): 1. User presses Ctrl+P, 2. Footer transforms to search input, 3. User types partial name, 4. projectSearch.filter() matches, 5. Arrow keys navigate, 6. Enter selects, 7-11. TodoStore/SettingsStore update, render updates."/>
+      <doc path="docs/architecture.md" title="Architecture" section="Project Search UI Pattern" snippet="Keyboard (Ctrl+P): Footer transforms to search mode. Type partial name → Filter projects with includes(). Arrow keys → Navigate filtered results. Enter → Switch to selected project. Esc → Cancel, restore normal footer."/>
+      <doc path="docs/architecture.md" title="Architecture" section="ADR-008: Simple includes() for Project Search" snippet="Use basic string includes() instead of fuzzy search library. PRD specifies 5-10 projects max. includes() is sufficient for small lists. Zero dependencies. Users type partial exact matches anyway."/>
+      <doc path="docs/architecture.md" title="Architecture" section="ADR-010: Inline Footer for Project Search UI" snippet="Use footer-based inline search instead of modal overlay. Terminal aesthetic: no modals, no overlays. Footer already used for contextual UI (confirmations). Minimal UI disruption. Quick dismiss with Escape."/>
+      <doc path="docs/architecture.md" title="Architecture" section="Keyboard Shortcuts" snippet="Growth Shortcuts: Ctrl+P - Open project search (Global), Enter - Select project (Project search), Escape - Cancel project search (Project search)."/>
+      <doc path="docs/epics.md" title="Epic Breakdown" section="Story 7.8" snippet="As a user, I want to switch projects using keyboard fuzzy search, so that I can quickly navigate between projects without using the mouse. Covers FR32 (keyboard fuzzy search switch)."/>
+      <doc path="docs/sprint-artifacts/7-7-implement-project-indicator-ui-component.md" title="Story 7.7 (Dependency)" section="Component API" snippet="renderProjectIndicator function with project, container, onDropdownClick parameters. CSS classes: .project-indicator, .project-indicator-name, .project-indicator-arrow. Will be used to update indicator after project switch."/>
+    </docs>
+    <code>
+      <file path="src/keyboard/KeyboardManager.ts" kind="class" symbol="KeyboardManager" lines="1-243" reason="Core keyboard manager for registering Ctrl+P shortcut. Provides register(), handle(), getHints() methods. Must integrate search mode keyboard capture."/>
+      <file path="src/types/Project.ts" kind="interface" symbol="Project" lines="1-46" reason="Project interface with id, name, createdAt fields. Used for search filtering and display."/>
+      <file path="src/ui/render.ts" kind="module" symbol="showConfirmation, showFeedback, restoreFooterHints, setFooterOriginalContent" lines="201-347" reason="Footer state management functions. Search mode will need similar pattern for footer transformation and restoration."/>
+      <file path="src/ui/render.ts" kind="function" symbol="getFooterHintsElement" lines="230-233" reason="Helper to get footer hints element. Will be used to transform footer content during search mode."/>
+      <file path="src/ui/styles.css" kind="stylesheet" symbol="footer, footer-hints" lines="186-212" reason="Existing footer styles. Add new .project-search-* classes following same patterns."/>
+      <file path="src/renderer.ts" kind="module" symbol="initApp" lines="219-486" reason="Main app entry point. Shows pattern for KeyboardManager registration and footer integration. Search mode will integrate here."/>
+      <file path="src/store/TodoStore.ts" kind="class" symbol="TodoStore" lines="1-214" reason="Todo state management. Search mode will call TodoStore.load(projectId) when project selected."/>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="@toon-format/toon" version="1.0.0" purpose="TOON data format (not directly used in this story)"/>
+        <package name="electron" version="39.2.3" purpose="Desktop app framework"/>
+        <package name="vitest" version="4.0.13" purpose="Unit testing framework for test task"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture" type="pattern">Direct DOM manipulation only - no virtual DOM or UI framework</constraint>
+    <constraint source="architecture" type="aesthetic">Terminal aesthetic enforcement: Consolas monospace 14px, Matrix Green palette only (#00FF00, #004400, #008800, #000000, #FF0000)</constraint>
+    <constraint source="architecture" type="aesthetic">No animations or transitions - instant state changes only</constraint>
+    <constraint source="architecture" type="aesthetic">No modals or overlays - inline footer UI only (ADR-010)</constraint>
+    <constraint source="architecture" type="search">Simple includes() matching - no fuzzy search library (ADR-008)</constraint>
+    <constraint source="architecture" type="keyboard">Keyboard-first design - Ctrl+P is primary, mouse is secondary</constraint>
+    <constraint source="CLAUDE.md" type="style">Use arrow functions with object parameters</constraint>
+    <constraint source="CLAUDE.md" type="style">Functions should be read like a sentence (e.g., filterProjects, activateProjectSearch)</constraint>
+    <constraint source="CLAUDE.md" type="style">Functions should have at most 20 lines (recommendation)</constraint>
+    <constraint source="story" type="dependency">Story 7-7 (projectIndicator) must be implemented - provides renderProjectIndicator function</constraint>
+    <constraint source="story" type="dependency">Story 7-2 (ProjectStore) must be implemented - provides project list and search</constraint>
+    <constraint source="story" type="dependency">Story 7-3 (SettingsStore) must be implemented - provides setActiveProject</constraint>
+    <constraint source="story" type="dependency">Story 7-6 (TodoStore) must be implemented - provides load(projectId)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="ProjectSearchState" kind="interface" signature="{ isActive: boolean, query: string, selectedIndex: number, filteredProjects: Project[] }" path="src/ui/projectSearch.ts (new)"/>
+    <interface name="filterProjects" kind="function" signature="({ projects, query }: { projects: Project[], query: string }) => Project[]" path="src/ui/projectSearch.ts (new)"/>
+    <interface name="activateProjectSearch" kind="function" signature="({ footerContainer, projectStore, todoStore, settingsStore, onComplete }: {...}) => void" path="src/ui/projectSearch.ts (new)"/>
+    <interface name="KeyboardManager.register" kind="method" signature="(key: string, handler: () => void | boolean, description: string) => void" path="src/keyboard/KeyboardManager.ts:49"/>
+    <interface name="KeyboardManager.handle" kind="method" signature="(event: KeyboardEvent) => boolean" path="src/keyboard/KeyboardManager.ts:99"/>
+    <interface name="restoreFooterHints" kind="function" signature="(footer: HTMLDivElement) => void" path="src/ui/render.ts:343"/>
+    <interface name="setFooterOriginalContent" kind="function" signature="(content: string) => void" path="src/ui/render.ts:221"/>
+    <interface name="TodoStore.load" kind="method" signature="(projectId: string) => Promise&lt;void&gt;" path="src/store/TodoStore.ts (to be extended in 7-6)"/>
+    <interface name="SettingsStore.setActiveProject" kind="method" signature="(projectId: string) => void" path="src/store/SettingsStore.ts (from 7-3)"/>
+    <interface name="ProjectStore.getAll" kind="method" signature="() => Project[]" path="src/store/ProjectStore.ts (from 7-2)"/>
+    <interface name="ProjectStore.search" kind="method" signature="(query: string) => Project[]" path="src/store/ProjectStore.ts (from 7-2)"/>
+    <interface name="renderProjectIndicator" kind="function" signature="({ project, container, onDropdownClick }: {...}) => void" path="src/ui/projectIndicator.ts (from 7-7)"/>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests using Vitest with jsdom environment. Tests co-located with source files (e.g., projectSearch.test.ts). Focus on pure function testing for filter logic. DOM manipulation tests for render functions. Mock stores for integration points. Follow existing patterns from KeyboardManager.test.ts and TodoStore.test.ts.</standards>
+    <locations>
+      <location>src/ui/projectSearch.test.ts (new file)</location>
+      <location>src/**/*.test.ts (existing pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test Ctrl+P registration - verify KeyboardManager has ctrl+p shortcut registered with correct description</idea>
+      <idea ac="2">Test filterProjects pure function - verify includes() matching, case-insensitivity, empty query returns all, no matches returns empty</idea>
+      <idea ac="2">Test filter updates on each keystroke - verify filtered list updates correctly as query changes</idea>
+      <idea ac="3">Test selectedIndex bounds - verify navigation stops at boundaries (0 and length-1)</idea>
+      <idea ac="3">Test selectedIndex auto-reset - verify first match highlighted when filter changes</idea>
+      <idea ac="4">Test Enter key - verify correct project selected and stores updated</idea>
+      <idea ac="5">Test Escape key - verify state reset, footer restored, no project change</idea>
+      <idea ac="6">Test empty query - verify all projects returned</idea>
+      <idea ac="7">Test no matches - verify "No projects match" message displayed</idea>
+      <idea ac="7">Test Enter with no matches - verify no action taken</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -96,16 +96,16 @@ development_status:
   # Epic 7: Projects System
   epic-7: contexted
   7-1-define-project-data-model-and-typescript-interfaces: done
-  7-2-implement-projectstore-class: backlog
-  7-3-implement-settingsstore-class: backlog
-  7-4-extend-toonstorage-for-multi-file-structure: backlog
-  7-5-implement-data-migration-v1-to-v2: backlog
-  7-6-update-todostore-for-project-scoping: backlog
-  7-7-implement-project-indicator-ui-component: backlog
-  7-8-implement-keyboard-project-search-ctrl-p: backlog
-  7-9-implement-mouse-dropdown-for-project-switch: backlog
-  7-10-implement-project-create-rename-delete-operations: backlog
-  7-11-integrate-projects-into-app-startup: backlog
+  7-2-implement-projectstore-class: ready-for-dev
+  7-3-implement-settingsstore-class: ready-for-dev
+  7-4-extend-toonstorage-for-multi-file-structure: ready-for-dev
+  7-5-implement-data-migration-v1-to-v2: ready-for-dev
+  7-6-update-todostore-for-project-scoping: ready-for-dev
+  7-7-implement-project-indicator-ui-component: ready-for-dev
+  7-8-implement-keyboard-project-search-ctrl-p: ready-for-dev
+  7-9-implement-mouse-dropdown-for-project-switch: ready-for-dev
+  7-10-implement-project-create-rename-delete-operations: ready-for-dev
+  7-11-integrate-projects-into-app-startup: ready-for-dev
   epic-7-retrospective: optional
 
   # Epic 8: Polish & Quality of Life

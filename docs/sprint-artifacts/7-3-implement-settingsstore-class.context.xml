@@ -1,0 +1,315 @@
+<story-context id="7-3-implement-settingsstore-class" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>3</storyId>
+    <title>Implement SettingsStore Class</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-3-implement-settingsstore-class.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a SettingsStore class to manage app state including active project and window bounds</iWant>
+    <soThat>I can persist user preferences between sessions</soThat>
+    <tasks>
+      <task id="1" ac="#1">
+        <title>Create SettingsStore class file structure</title>
+        <subtasks>
+          <subtask>Create `src/store/SettingsStore.ts` file</subtask>
+          <subtask>Import required dependencies: AppSettings type, WindowBounds type, electron-log</subtask>
+          <subtask>Define class with private `_settings: AppSettings` and `_filePath: string`</subtask>
+          <subtask>Define DEFAULT_SETTINGS constant with sensible defaults</subtask>
+          <subtask>Export the class</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="#2">
+        <title>Implement load() method</title>
+        <subtasks>
+          <subtask>Define async load() method signature returning `Promise&lt;void&gt;`</subtask>
+          <subtask>Add placeholder call to ToonStorage.loadSettings() (will be implemented in Story 7.4)</subtask>
+          <subtask>Populate _settings object with loaded data</subtask>
+          <subtask>Handle file-not-found gracefully: return default settings</subtask>
+          <subtask>Add logging with electron-log for success/failure</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="#3">
+        <title>Implement save() method</title>
+        <subtasks>
+          <subtask>Define async save() method signature returning `Promise&lt;void&gt;`</subtask>
+          <subtask>Add placeholder call to ToonStorage.saveSettings() (will be implemented in Story 7.4)</subtask>
+          <subtask>Add logging with electron-log for success/failure</subtask>
+          <subtask>Use fire-and-forget pattern (don't throw on error, log only)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="#4">
+        <title>Implement getActiveProjectId() method</title>
+        <subtasks>
+          <subtask>Define getActiveProjectId(): string signature</subtask>
+          <subtask>Return `this._settings.activeProjectId`</subtask>
+          <subtask>Return empty string if undefined/null</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="#5">
+        <title>Implement setActiveProject() method</title>
+        <subtasks>
+          <subtask>Define setActiveProject(projectId: string): void signature</subtask>
+          <subtask>Update `this._settings.activeProjectId = projectId`</subtask>
+          <subtask>Call save() without await (fire-and-forget)</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="#6">
+        <title>Implement getWindowBounds() method</title>
+        <subtasks>
+          <subtask>Define getWindowBounds(): WindowBounds signature</subtask>
+          <subtask>Return `this._settings.windowBounds`</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="#7">
+        <title>Implement setWindowBounds() method</title>
+        <subtasks>
+          <subtask>Define setWindowBounds(bounds: WindowBounds): void signature</subtask>
+          <subtask>Update `this._settings.windowBounds = bounds`</subtask>
+          <subtask>Call save() without await (fire-and-forget)</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="#8,#9">
+        <title>Write unit tests</title>
+        <subtasks>
+          <subtask>Create `src/store/SettingsStore.test.ts`</subtask>
+          <subtask>Test load(): verify returns default settings when file doesn't exist</subtask>
+          <subtask>Test load(): verify populates settings from loaded data</subtask>
+          <subtask>Test save(): verify doesn't throw on error (fire-and-forget)</subtask>
+          <subtask>Test getActiveProjectId(): verify returns correct project ID</subtask>
+          <subtask>Test getActiveProjectId(): verify returns empty string when not set</subtask>
+          <subtask>Test setActiveProject(): verify updates activeProjectId</subtask>
+          <subtask>Test setActiveProject(): verify triggers save</subtask>
+          <subtask>Test getWindowBounds(): verify returns current bounds</subtask>
+          <subtask>Test setWindowBounds(): verify updates bounds</subtask>
+          <subtask>Test setWindowBounds(): verify triggers save</subtask>
+          <subtask>Test default settings values match specification</subtask>
+          <subtask>Verify all tests pass with npm test</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">A `src/store/SettingsStore.ts` file exists with a `SettingsStore` class containing: private _settings: AppSettings - Internal settings object, private _filePath: string - Path to settings.toon file</criterion>
+    <criterion id="2">The load() method: Is async and returns Promise&lt;void&gt;, Calls ToonStorage to load settings from disk, Populates internal _settings object, Returns default settings if file doesn't exist (activeProjectId: '', windowBounds: { x: 100, y: 100, width: 600, height: 400 }, version: '1.0'), Logs success/failure with electron-log</criterion>
+    <criterion id="3">The save() method: Is async and returns Promise&lt;void&gt;, Calls ToonStorage to persist settings to disk, Logs success/failure with electron-log, Uses fire-and-forget pattern (don't throw on error, log only)</criterion>
+    <criterion id="4">The getActiveProjectId() method: Returns string (the current active project ID), Returns empty string if no active project set</criterion>
+    <criterion id="5">The setActiveProject(projectId: string) method: Updates activeProjectId in internal settings, Triggers auto-save (fire-and-forget pattern), Does NOT reload TodoStore (caller responsibility)</criterion>
+    <criterion id="6">The getWindowBounds() method: Returns WindowBounds object with { x, y, width, height }</criterion>
+    <criterion id="7">The setWindowBounds(bounds: WindowBounds) method: Updates windowBounds in internal settings, Triggers auto-save (fire-and-forget pattern)</criterion>
+    <criterion id="8">Unit tests exist in `src/store/SettingsStore.test.ts` covering all public methods</criterion>
+    <criterion id="9">All tests pass with `npm test`</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>API Contracts - SettingsStore Public API</section>
+        <snippet>SettingsStore class with load, save, getActiveProjectId, setActiveProject, getWindowBounds, setWindowBounds methods. Uses fire-and-forget auto-save pattern.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Models - AppSettings Interface</section>
+        <snippet>AppSettings interface with activeProjectId: string, windowBounds: { x, y, width, height }, version: string.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>ADR-007: Separate Store Classes</section>
+        <snippet>Three separate stores (TodoStore, ProjectStore, SettingsStore) following single responsibility principle. Each store testable in isolation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Naming Conventions</section>
+        <snippet>Private class members prefixed with _ (e.g., _todos, _projects, _settings). Classes: PascalCase. Functions: camelCase.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Flow - Projects Flow</section>
+        <snippet>App Launch → migration.migrateIfNeeded() → SettingsStore.load() → ProjectStore.load() → Validate activeProjectId → TodoStore.load(activeProjectId) → render()</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic Technical Specification: Projects System</title>
+        <section>APIs and Interfaces - SettingsStore Public API</section>
+        <snippet>SettingsStore class with private _settings: AppSettings, private _filePath: string. Methods: load(), save(), getActiveProjectId(), setActiveProject(projectId), getWindowBounds(), setWindowBounds(bounds). Auto-saves on every change.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic Technical Specification: Projects System</title>
+        <section>Data Models and Contracts</section>
+        <snippet>AppSettings interface: activeProjectId: string, windowBounds: { x, y, width, height }, version: string. Settings schema version for future migrations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic Technical Specification: Projects System</title>
+        <section>File Format - settings.toon</section>
+        <snippet>TOON format: activeProjectId: 550e8400-..., windowBounds{x,y,width,height}: 100,100,600,400, version: 1.0</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 7.3: Implement SettingsStore Class</section>
+        <snippet>SettingsStore manages app state including active project and window bounds. Methods: load, save, getActiveProjectId, setActiveProject, getWindowBounds, setWindowBounds. Default settings when file missing.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/store/TodoStore.ts</path>
+        <kind>store</kind>
+        <symbol>TodoStore</symbol>
+        <lines>1-215</lines>
+        <reason>Reference pattern for store implementation: private _filePath, load/save methods with fire-and-forget pattern, window.electron IPC calls, displayError for save failures. SettingsStore should follow same patterns.</reason>
+      </file>
+      <file>
+        <path>src/store/TodoStore.test.ts</path>
+        <kind>test</kind>
+        <symbol>TodoStore tests</symbol>
+        <lines>1-422</lines>
+        <reason>Reference pattern for store tests: vi.mock for window.electron, beforeEach setup, testing load/save/auto-save, fire-and-forget verification. SettingsStore tests should follow same structure.</reason>
+      </file>
+      <file>
+        <path>src/types/Settings.ts</path>
+        <kind>type</kind>
+        <symbol>AppSettings, WindowBounds</symbol>
+        <lines>1-72</lines>
+        <reason>Type definitions SettingsStore will use. AppSettings has activeProjectId, windowBounds, version. WindowBounds has x, y, width, height.</reason>
+      </file>
+      <file>
+        <path>src/types/Project.ts</path>
+        <kind>type</kind>
+        <symbol>Project</symbol>
+        <lines>1-46</lines>
+        <reason>Related type for understanding project ID references. SettingsStore stores activeProjectId that references Project.id.</reason>
+      </file>
+      <file>
+        <path>electron/storage.ts</path>
+        <kind>storage</kind>
+        <symbol>ToonStorage</symbol>
+        <lines>1-150</lines>
+        <reason>Current ToonStorage implementation for todos. Will need to be extended in Story 7.4 for loadSettings/saveSettings. SettingsStore will call these methods via window.electron IPC.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>electron-log</package>
+        <version>5.4.1</version>
+        <purpose>File-based logging for success/failure messages</purpose>
+      </node>
+      <node>
+        <package>vitest</package>
+        <version>4.0.13</version>
+        <purpose>Unit testing framework</purpose>
+      </node>
+      <node>
+        <package>typescript</package>
+        <version>~5.9.2</version>
+        <purpose>TypeScript compiler with strict mode</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">Use vanilla TypeScript class following existing TodoStore pattern</constraint>
+    <constraint source="architecture">Private properties prefixed with _ (e.g., _settings, _filePath)</constraint>
+    <constraint source="architecture">Auto-save on every mutation using fire-and-forget pattern (call save() without await)</constraint>
+    <constraint source="ADR-007">Separate store classes (TodoStore, ProjectStore, SettingsStore) - single responsibility</constraint>
+    <constraint source="dev-notes">SettingsStore does NOT validate activeProjectId (caller responsibility)</constraint>
+    <constraint source="dev-notes">ToonStorage methods (loadSettings, saveSettings) will be implemented in Story 7.4 - use placeholder/mock calls or optional dependency injection for testing</constraint>
+    <constraint source="CLAUDE.md">Follow single responsibility principle</constraint>
+    <constraint source="CLAUDE.md">Use functions without side effects where possible</constraint>
+    <constraint source="CLAUDE.md">Use arrow functions</constraint>
+    <constraint source="CLAUDE.md">Functions name should be read like a sentence</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>SettingsStore</name>
+      <kind>class interface</kind>
+      <signature>
+class SettingsStore {
+  private _settings: AppSettings
+  private _filePath: string
+
+  async load(): Promise&lt;void&gt;
+  async save(): Promise&lt;void&gt;
+  getActiveProjectId(): string
+  setActiveProject(projectId: string): void
+  getWindowBounds(): WindowBounds
+  setWindowBounds(bounds: WindowBounds): void
+}
+      </signature>
+      <path>src/store/SettingsStore.ts</path>
+    </interface>
+    <interface>
+      <name>AppSettings</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface AppSettings {
+  activeProjectId: string
+  windowBounds: WindowBounds
+  version: string
+}
+      </signature>
+      <path>src/types/Settings.ts</path>
+    </interface>
+    <interface>
+      <name>WindowBounds</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface WindowBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+      </signature>
+      <path>src/types/Settings.ts</path>
+    </interface>
+    <interface>
+      <name>window.electron (expected extension)</name>
+      <kind>IPC interface</kind>
+      <signature>
+// Expected methods to be added (Story 7.4):
+loadSettings(filePath: string): Promise&lt;AppSettings&gt;
+saveSettings(filePath: string, settings: AppSettings): Promise&lt;void&gt;
+      </signature>
+      <path>electron/preload.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests use Vitest framework with vi.mock for mocking window.electron IPC calls. Tests are co-located with source files (*.test.ts). Follow describe/it/expect BDD pattern. Mock external dependencies (electron IPC, fs). Test both success and error paths. Verify fire-and-forget pattern doesn't throw errors.</standards>
+    <locations>
+      <location>src/store/SettingsStore.test.ts</location>
+      <location>src/store/*.test.ts (convention)</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test constructor initializes with default settings and file path</idea>
+      <idea ac="2">Test load() returns default settings when file doesn't exist (mock ENOENT)</idea>
+      <idea ac="2">Test load() populates _settings from loaded data correctly</idea>
+      <idea ac="2">Test load() logs success/failure with electron-log</idea>
+      <idea ac="3">Test save() doesn't throw on error (fire-and-forget pattern)</idea>
+      <idea ac="3">Test save() logs errors when save fails</idea>
+      <idea ac="4">Test getActiveProjectId() returns current activeProjectId</idea>
+      <idea ac="4">Test getActiveProjectId() returns empty string when not set</idea>
+      <idea ac="5">Test setActiveProject() updates activeProjectId value</idea>
+      <idea ac="5">Test setActiveProject() triggers save() (fire-and-forget)</idea>
+      <idea ac="6">Test getWindowBounds() returns current windowBounds object</idea>
+      <idea ac="7">Test setWindowBounds() updates windowBounds value</idea>
+      <idea ac="7">Test setWindowBounds() triggers save() (fire-and-forget)</idea>
+      <idea ac="2">Test DEFAULT_SETTINGS values match specification: activeProjectId: '', windowBounds: { x: 100, y: 100, width: 600, height: 400 }, version: '1.0'</idea>
+    </ideas>
+  </tests>
+</story-context>
