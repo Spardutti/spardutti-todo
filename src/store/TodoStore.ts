@@ -18,42 +18,52 @@ import { displayError } from '@/ui/render'
  */
 export class TodoStore {
   private _todos: Todo[] = []
-  private _filePath: string
+  private _projectId: string
 
   /**
-   * Creates a new TodoStore with the specified file path for persistence.
+   * Creates a new TodoStore for managing todos scoped to a specific project.
    *
-   * @param filePath - Absolute path to the .toon file for loading/saving todos
+   * The store starts empty - call load(projectId) to load a project's todos.
    */
-  constructor(filePath: string) {
+  constructor() {
     this._todos = []
-    this._filePath = filePath
+    this._projectId = ''
   }
 
   /**
-   * Loads todos from disk using ToonStorage.
+   * Loads todos for a specific project from disk.
    *
-   * Populates the internal _todos array with todos from the file.
+   * Clears any existing todos in memory before loading.
+   * Stores the projectId for subsequent save operations.
    * If the file doesn't exist, loads an empty array (no error).
    * If the file is corrupt, throws error to caller for handling.
    *
+   * @param projectId - The UUID of the project to load todos for
    * @returns Promise<void>
    * @throws Error if file is corrupt or unreadable
    *
    * @example
    * ```typescript
-   * await todoStore.load()
-   * const todos = todoStore.getAll() // Todos loaded from disk
+   * await todoStore.load('550e8400-e29b-41d4-a716-446655440000')
+   * const todos = todoStore.getAll() // Todos loaded from disk for this project
    * ```
    */
-  async load(): Promise<void> {
-    this._todos = await window.electron.loadTodos(this._filePath)
-    console.log('Todos loaded', this._todos.length, this._filePath)
+  async load(projectId: string): Promise<void> {
+    // Clear existing todos before loading new project
+    this._todos = []
+    this._projectId = projectId
+
+    const basePath = await window.electron.getTodosPath()
+    const filePath = basePath.replace('todos.toon', `todos-${projectId}.toon`)
+
+    this._todos = await window.electron.loadTodos(filePath)
+    console.log('Todos loaded for project', this._todos.length, projectId)
   }
 
   /**
    * Saves todos to disk using ToonStorage (fire-and-forget pattern).
    *
+   * Saves to the file for the currently loaded project (todos-{projectId}.toon).
    * Catches all errors internally and logs them without throwing.
    * This ensures save failures don't block UI or crash the app.
    * In-memory state is preserved even if save fails.
@@ -67,11 +77,14 @@ export class TodoStore {
    */
   async save(): Promise<void> {
     try {
-      await window.electron.saveTodos(this._filePath, this._todos)
-      console.log('Todos saved', this._todos.length)
+      const basePath = await window.electron.getTodosPath()
+      const filePath = basePath.replace('todos.toon', `todos-${this._projectId}.toon`)
+
+      await window.electron.saveTodos(filePath, this._todos)
+      console.log('Todos saved for project', this._todos.length, this._projectId)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error('Save failed', errorMessage, this._todos.length)
+      console.error('Save failed', errorMessage, this._todos.length, this._projectId)
       displayError('Failed to save. Try again.', 5000)
       // No throw - silent failure with logging and user feedback
     }
@@ -109,7 +122,8 @@ export class TodoStore {
       createdAt,
     }
 
-    this._todos.push(todo)
+    // Add to top of list (unshift) - FR42: New todos appear at top
+    this._todos.unshift(todo)
 
     // Fire-and-forget auto-save (no await - non-blocking)
     this.save()

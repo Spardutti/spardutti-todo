@@ -19,27 +19,32 @@ global.window = {
 
 describe('TodoStore', () => {
   let store: TodoStore
-  const mockFilePath = '/mock/todos.toon'
+  const mockBasePath = '/mock/todos.toon'
+  const mockProjectId = '550e8400-e29b-41d4-a716-446655440000'
 
   beforeEach(() => {
     // Clear all mocks before each test
     vi.clearAllMocks()
 
-    // Create store with mock file path
-    store = new TodoStore(mockFilePath)
+    // Setup default mock return values
+    vi.mocked(window.electron.getTodosPath).mockResolvedValue(mockBasePath)
+    vi.mocked(window.electron.loadTodos).mockResolvedValue([])
+    vi.mocked(window.electron.saveTodos).mockResolvedValue()
+
+    // Create store (no constructor parameters needed)
+    store = new TodoStore()
   })
 
   describe('constructor', () => {
-    it('should store file path', () => {
-      const testPath = '/test/path.toon'
-      const testStore = new TodoStore(testPath)
-      // File path is stored internally (verified by load/save tests)
+    it('should create store without parameters', () => {
+      const testStore = new TodoStore()
       expect(testStore).toBeDefined()
+      expect(testStore.getAll()).toEqual([])
     })
   })
 
   describe('load()', () => {
-    it('should load todos from window.electron.loadTodos', async () => {
+    it('should load todos for a specific project', async () => {
       const mockTodos = [
         {
           id: '1',
@@ -57,27 +62,49 @@ describe('TodoStore', () => {
 
       vi.mocked(window.electron.loadTodos).mockResolvedValue(mockTodos)
 
-      await store.load()
+      await store.load(mockProjectId)
 
-      expect(window.electron.loadTodos).toHaveBeenCalledWith(mockFilePath)
+      expect(window.electron.getTodosPath).toHaveBeenCalled()
+      expect(window.electron.loadTodos).toHaveBeenCalledWith(
+        `/mock/todos-${mockProjectId}.toon`
+      )
       expect(store.getAll()).toEqual(mockTodos)
+    })
+
+    it('should clear existing todos before loading new project', async () => {
+      const project1Todos = [{ id: '1', text: 'Todo 1', completed: false, createdAt: '2025-11-24T10:00:00Z' }]
+      const project2Todos = [{ id: '2', text: 'Todo 2', completed: false, createdAt: '2025-11-24T11:00:00Z' }]
+
+      // Load first project
+      vi.mocked(window.electron.loadTodos).mockResolvedValue(project1Todos)
+      await store.load('project-1')
+      expect(store.getAll()).toEqual(project1Todos)
+
+      // Load second project - should clear previous
+      vi.mocked(window.electron.loadTodos).mockResolvedValue(project2Todos)
+      await store.load('project-2')
+      expect(store.getAll()).toEqual(project2Todos)
+      expect(store.getAll()).toHaveLength(1)
     })
 
     it('should propagate errors from loadTodos (corrupt file)', async () => {
       const mockError = new Error('Invalid TOON format')
       vi.mocked(window.electron.loadTodos).mockRejectedValue(mockError)
 
-      await expect(store.load()).rejects.toThrow('Invalid TOON format')
+      await expect(store.load(mockProjectId)).rejects.toThrow('Invalid TOON format')
     })
   })
 
   describe('save()', () => {
-    it('should save todos to window.electron.saveTodos', async () => {
-      vi.mocked(window.electron.saveTodos).mockResolvedValue()
-
+    it('should save todos to project-scoped file', async () => {
+      await store.load(mockProjectId)
       await store.save()
 
-      expect(window.electron.saveTodos).toHaveBeenCalledWith(mockFilePath, [])
+      expect(window.electron.getTodosPath).toHaveBeenCalled()
+      expect(window.electron.saveTodos).toHaveBeenCalledWith(
+        `/mock/todos-${mockProjectId}.toon`,
+        []
+      )
     })
 
     it('should catch and log save errors without throwing', async () => {
@@ -100,7 +127,8 @@ describe('TodoStore', () => {
   })
 
   describe('auto-save integration', () => {
-    it('should call save() after add()', () => {
+    it('should call save() after add()', async () => {
+      await store.load(mockProjectId)
       vi.mocked(window.electron.saveTodos).mockResolvedValue()
       const saveSpy = vi.spyOn(store, 'save')
 
@@ -109,7 +137,8 @@ describe('TodoStore', () => {
       expect(saveSpy).toHaveBeenCalled()
     })
 
-    it('should not await save in add() (fire-and-forget)', () => {
+    it('should not await save in add() (fire-and-forget)', async () => {
+      await store.load(mockProjectId)
       vi.mocked(window.electron.saveTodos).mockResolvedValue()
 
       const todo = store.add('Buy milk')
@@ -119,7 +148,8 @@ describe('TodoStore', () => {
       expect(todo?.text).toBe('Buy milk')
     })
 
-    it('should call save() after toggle()', () => {
+    it('should call save() after toggle()', async () => {
+      await store.load(mockProjectId)
       vi.mocked(window.electron.saveTodos).mockResolvedValue()
       const saveSpy = vi.spyOn(store, 'save')
       const todo = store.add('Test')
@@ -132,7 +162,8 @@ describe('TodoStore', () => {
       expect(saveSpy).toHaveBeenCalled()
     })
 
-    it('should call save() after deleteCompleted()', () => {
+    it('should call save() after deleteCompleted()', async () => {
+      await store.load(mockProjectId)
       vi.mocked(window.electron.saveTodos).mockResolvedValue()
       const saveSpy = vi.spyOn(store, 'save')
       const todo = store.add('Test')
@@ -187,13 +218,16 @@ describe('TodoStore', () => {
       expect(todo).toHaveProperty('createdAt')
     })
 
-    it('should add todo to internal array', () => {
+    it('should prepend todo to top of list (unshift)', () => {
       store.add('First task')
       store.add('Second task')
+      store.add('Third task')
       const allTodos = store.getAll()
-      expect(allTodos).toHaveLength(2)
-      expect(allTodos[0].text).toBe('First task')
+      expect(allTodos).toHaveLength(3)
+      // Newest first (unshift behavior - FR42)
+      expect(allTodos[0].text).toBe('Third task')
       expect(allTodos[1].text).toBe('Second task')
+      expect(allTodos[2].text).toBe('First task')
     })
 
     it('should return null for empty string', () => {
@@ -253,8 +287,9 @@ describe('TodoStore', () => {
 
       store.toggle(todo1!.id)
       const todos = store.getAll()
-      expect(todos[0].completed).toBe(true)
-      expect(todos[1].completed).toBe(false)
+      // todo2 is first (unshift), todo1 is second
+      expect(todos[0].completed).toBe(false) // todo2
+      expect(todos[1].completed).toBe(true) // todo1
     })
   })
 
@@ -290,8 +325,9 @@ describe('TodoStore', () => {
 
       const remainingTodos = store.getAll()
       expect(remainingTodos).toHaveLength(2)
-      expect(remainingTodos[0].text).toBe('Active 1')
-      expect(remainingTodos[1].text).toBe('Active 2')
+      // Reversed order due to unshift: newest first
+      expect(remainingTodos[0].text).toBe('Active 2')
+      expect(remainingTodos[1].text).toBe('Active 1')
       expect(remainingTodos[0].completed).toBe(false)
       expect(remainingTodos[1].completed).toBe(false)
     })
@@ -343,16 +379,17 @@ describe('TodoStore', () => {
       expect(internalTodos[0].text).toBe('Test task')
     })
 
-    it('should return all todos in order', () => {
+    it('should return all todos in reverse order (newest first)', () => {
       store.add('First')
       store.add('Second')
       store.add('Third')
 
       const todos = store.getAll()
       expect(todos).toHaveLength(3)
-      expect(todos[0].text).toBe('First')
+      // Newest first due to unshift (FR42)
+      expect(todos[0].text).toBe('Third')
       expect(todos[1].text).toBe('Second')
-      expect(todos[2].text).toBe('Third')
+      expect(todos[2].text).toBe('First')
     })
 
     it('should return empty array for empty store', () => {
@@ -374,8 +411,9 @@ describe('TodoStore', () => {
 
       const activeTodos = store.getActive()
       expect(activeTodos).toHaveLength(2)
-      expect(activeTodos[0].text).toBe('Active 1')
-      expect(activeTodos[1].text).toBe('Active 2')
+      // Newest first due to unshift
+      expect(activeTodos[0].text).toBe('Active 2')
+      expect(activeTodos[1].text).toBe('Active 1')
     })
 
     it('should return empty array if no active todos', () => {
@@ -406,8 +444,9 @@ describe('TodoStore', () => {
 
       const completedTodos = store.getCompleted()
       expect(completedTodos).toHaveLength(2)
-      expect(completedTodos[0].text).toBe('Completed 1')
-      expect(completedTodos[1].text).toBe('Completed 2')
+      // Newest first due to unshift
+      expect(completedTodos[0].text).toBe('Completed 2')
+      expect(completedTodos[1].text).toBe('Completed 1')
     })
 
     it('should return empty array if no completed todos', () => {

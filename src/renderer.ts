@@ -224,12 +224,10 @@ async function initApp(): Promise<void> {
 
   console.log('Initializing app...')
 
-  // Get todos file path from main process
-  const filePath = await window.electron.getTodosPath()
-  console.log('File path:', filePath)
-
-  // Create TodoStore instance with file path (module-scoped for navigation helpers)
-  todoStore = new TodoStore(filePath)
+  // Create TodoStore instance (module-scoped for navigation helpers)
+  // NOTE: Story 7-6 - TodoStore now requires projectId in load() instead of filePath in constructor
+  // Full integration with projects will be done in Story 7-11
+  todoStore = new TodoStore()
 
   // Get root container
   const appContainer = document.querySelector('#app')
@@ -254,14 +252,15 @@ async function initApp(): Promise<void> {
   selectedTodoIndex = null
 
   // Load todos from disk after rendering
+  // NOTE: Story 7-6 - Using temporary 'default' projectId until Story 7-11 integrates projects system
   try {
-    await todoStore.load()
+    await todoStore.load('default')
     // Re-render with loaded todos
     renderTodoList(todoStore.getAll(), listContainer, selectedTodoIndex)
   } catch (error) {
     // Corrupt file error - log and display error message
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('Failed to load todos', errorMessage, filePath)
+    console.error('Failed to load todos', errorMessage, 'default')
 
     // Display inline error message to user
     displayError('Data file corrupted. Starting fresh.')
