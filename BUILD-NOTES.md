@@ -1,56 +1,72 @@
 # Build Notes - spardutti-todo
 
-## Windows Installer Build Requirements
+## Platform-Specific Build Commands
 
-### Native Windows (Recommended for Production)
-Building the Windows installer (`.exe` and `latest.yml`) on **native Windows** is the most reliable approach:
-
-```bash
-npm run make
-```
-
-This will generate:
-- `out/make/squirrel.windows/x64/spardutti-todo-1.0.0 Setup.exe` - Windows installer
-- `out/make/squirrel.windows/x64/RELEASES` - Auto-update metadata
-- `out/make/squirrel.windows/x64/spardutti-todo-1.0.0-full.nupkg` - NuGet package
-
-### WSL/Linux (Development Only)
-Building Windows installers from WSL requires Wine and Mono, but electron-winstaller has strict detection requirements that may not work reliably:
+### Windows (NSIS Installer)
 
 ```bash
-# Attempt to install dependencies (may not fully resolve detection issues)
-sudo dpkg --add-architecture i386
-sudo apt update
-sudo apt install wine64 wine32:i386 mono-complete
-
-# Try building
-npm run make -- --platform=win32
+npm run dist:win
 ```
 
-**Known Limitation:** Even with Wine/Mono installed, electron-winstaller may fail to detect them properly in WSL environments. This is a known issue with the packaging tool's environment detection.
+Generates in `dist/`:
+- `spardutti-todo-Setup-{version}.exe` - Windows NSIS installer
+- `latest.yml` - Auto-update metadata for electron-updater
 
-### GitHub Actions CI/CD (Recommended Alternative)
-Set up GitHub Actions to build for both Windows and Linux automatically. Example workflow:
+### Linux (AppImage)
 
-```yaml
-name: Build
+```bash
+npm run dist:linux
+```
 
-on: [push, pull_request]
+Generates in `dist/`:
+- `spardutti-todo-{version}-x64.AppImage` - Portable Linux application
+- `latest-linux.yml` - Auto-update metadata for electron-updater
 
-jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-      - run: npm ci
-      - run: npm run make
-      - uses: actions/upload-artifact@v3
-        with:
-          name: windows-installer
-          path: out/make/**/*.exe
+## Build Requirements
+
+### Windows
+- **Native Windows (Recommended):** Most reliable approach for production builds
+- **WSL/Linux:** Requires Wine and Mono; may not work reliably due to electron-winstaller environment detection issues
+
+### Linux
+- **Native Linux or Ubuntu:** Best for AppImage builds
+- Dependencies are handled by npm; no additional system packages typically required
+
+## CI/CD Pipeline (GitHub Actions)
+
+The project uses GitHub Actions for automated multi-platform builds. The workflow (`.github/workflows/build.yml`) provides:
+
+### Triggers
+- **Push to master/main:** Runs tests and builds artifacts
+- **Pull requests:** Validates code changes
+- **Version tags (v*.*.*):** Creates GitHub Release with all platform artifacts
+- **Manual dispatch:** Trigger builds on-demand
+
+### Jobs
+1. **build-windows:** Runs on `windows-latest`, produces `.exe` + `latest.yml`
+2. **build-linux:** Runs on `ubuntu-latest`, produces `.AppImage` + `latest-linux.yml`
+3. **release:** Collects artifacts from both jobs and uploads to GitHub Release (tag pushes only)
+
+### Release Artifacts
+When a version tag is pushed (e.g., `v1.2.0`), the release includes:
+- `spardutti-todo-Setup-{version}.exe` (Windows installer)
+- `spardutti-todo-{version}-x64.AppImage` (Linux portable)
+- `latest.yml` (Windows auto-update metadata)
+- `latest-linux.yml` (Linux auto-update metadata)
+
+### Creating a Release
+
+```bash
+# 1. Update version in package.json
+npm version patch  # or minor/major
+
+# 2. Push the tag to trigger release workflow
+git push origin v{version}  # e.g., git push origin v1.2.0
+
+# 3. GitHub Actions will:
+#    - Run tests and lint
+#    - Build Windows and Linux artifacts
+#    - Create GitHub Release with all files
 ```
 
 ## Auto-Update System

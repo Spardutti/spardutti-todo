@@ -12,7 +12,8 @@
     "lint": "eslint --ext .ts,.tsx .",
     "test": "vitest",
     "build:analyze": "vite build --mode analyze",
-    "dist:win": "electron-forge package --platform win32 --arch x64 && electron-builder --win --x64 --prepackaged out/spardutti-todo-win32-x64 --publish never"
+    "dist:win": "electron-forge package --platform win32 --arch x64 && electron-builder --win --x64 --prepackaged out/spardutti-todo-win32-x64 --publish never",
+    "dist:linux": "electron-forge package --platform linux --arch x64 && electron-builder --linux --x64 --prepackaged out/spardutti-todo-linux-x64 --publish never"
   },
   "keywords": [],
   "author": {
@@ -34,6 +35,7 @@
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron-forge/plugin-vite": "^7.10.2",
     "@electron/fuses": "^1.8.0",
+    "@reforged/maker-appimage": "^5.1.1",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^5.62.0",

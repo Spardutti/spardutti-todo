@@ -1,4 +1,4 @@
-name: Build Windows Installer
+name: Build Release
 
 on:
   push:
@@ -35,13 +35,18 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Build NSIS installer
+      - name: Build Windows NSIS installer
         run: npm run dist:win
 
-      - name: Upload installer artifacts
+      - name: List generated files
+        run: |
+          echo "Generated Windows installer files:"
+          dir dist\
+
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-installer
+          name: windows-artifacts
           path: |
             dist/*.exe
             dist/*.exe.blockmap
@@ -49,18 +54,80 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build Linux AppImage
+        run: npm run dist:linux
+
       - name: List generated files
         run: |
-          echo "Generated installer files:"
-          dir dist\
+          echo "Generated Linux installer files:"
+          ls -la dist/
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: |
+            dist/*.AppImage
+            dist/latest-linux.yml
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifacts
+          path: release/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifacts
+          path: release/linux
+
+      - name: List all release artifacts
+        run: |
+          echo "Windows artifacts:"
+          ls -la release/windows/
+          echo ""
+          echo "Linux artifacts:"
+          ls -la release/linux/
 
       - name: Upload to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/*.exe
-            dist/*.exe.blockmap
-            dist/latest.yml
+            release/windows/*.exe
+            release/windows/*.exe.blockmap
+            release/windows/latest.yml
+            release/linux/*.AppImage
+            release/linux/latest-linux.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

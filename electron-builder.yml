@@ -31,6 +31,15 @@ nsis:
   shortcutName: spardutti-todo
   artifactName: ${productName}-Setup-${version}.${ext}
 
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: build/icons
+  category: Utility
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
 publish:
   provider: github
   owner: Spardutti

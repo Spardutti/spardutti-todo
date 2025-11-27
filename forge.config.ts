@@ -21,9 +21,15 @@ const config: ForgeConfig = {
       setupIcon: './build/icons/icon.ico',
     }),
     new MakerZIP({}, ['darwin', 'win32']),
-    // Commented out Linux makers to avoid build issues on WSL
-    // new MakerRpm({}),
-    // new MakerDeb({}),
+    // AppImage maker for Linux distribution
+    {
+      name: '@reforged/maker-appimage',
+      config: {
+        options: {
+          categories: ['Utility'],
+        },
+      },
+    },
   ],
   plugins: [
     new VitePlugin({
