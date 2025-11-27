@@ -101,7 +101,7 @@ development_status:
   7-4-extend-toonstorage-for-multi-file-structure: done
   7-5-implement-data-migration-v1-to-v2: done
   7-6-update-todostore-for-project-scoping: done
-  7-7-implement-project-indicator-ui-component: review
+  7-7-implement-project-indicator-ui-component: done
   7-8-implement-keyboard-project-search-ctrl-p: ready-for-dev
   7-9-implement-mouse-dropdown-for-project-switch: ready-for-dev
   7-10-implement-project-create-rename-delete-operations: ready-for-dev
