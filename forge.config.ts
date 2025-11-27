@@ -27,6 +27,7 @@ const config: ForgeConfig = {
       config: {
         options: {
           categories: ['Utility'],
+          icon: './build/icons/512x512.png', // AppImage icon (must be PNG)
         },
       },
     },
