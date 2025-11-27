@@ -315,25 +315,20 @@ const setupKeyboardNav = ({
 
   document.addEventListener('keydown', handleKeydown)
 
-  // Store cleanup
-  const originalCleanup = dropdownState
-  dropdownState = {
-    ...dropdownState,
-    cleanup: () => {
-      document.removeEventListener('keydown', handleKeydown)
-    }
-  } as any
+  // Store cleanup function
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-extra-semi
+  ;(dropdownState as any).cleanup = () => {
+    document.removeEventListener('keydown', handleKeydown)
+  }
 }
 
 const selectProject = async ({
   project,
-  projectStore,
   todoStore,
   settingsStore,
   onClose
 }: {
   project: Project
-  projectStore: ProjectStore
   todoStore: TodoStore
   settingsStore: SettingsStore
   onClose: () => void
@@ -494,9 +489,6 @@ const deleteProject = ({
 
   const confirmDelete = async (): Promise<void> => {
     try {
-      // Get all projects before deletion to find next project
-      const allProjects = projectStore.getAll()
-
       // Delete project (will throw if last project)
       projectStore.delete(project.id)
 
@@ -514,7 +506,7 @@ const deleteProject = ({
       settingsStore.setActiveProject(nextProject.id)
 
       // Show feedback
-      const { showFeedback, restoreFooterHints } = await import('./render')
+      const { showFeedback } = await import('./render')
       showFeedback(footer, `Project '${project.name}' deleted`, 2000)
 
       // Return focus to input
@@ -528,7 +520,7 @@ const deleteProject = ({
       console.error('Failed to delete project:', errorMessage)
 
       // Show error feedback
-      const { showFeedback, restoreFooterHints } = await import('./render')
+      const { showFeedback } = await import('./render')
       showFeedback(footer, `Error: ${errorMessage}`, 3000)
 
       // Return focus to input
@@ -572,7 +564,9 @@ export const hideProjectDropdown = (): void => {
   }
 
   // Remove keyboard listener (stored in state)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((dropdownState as any).cleanup) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (dropdownState as any).cleanup()
   }
 

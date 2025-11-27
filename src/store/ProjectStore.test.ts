@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ProjectStore } from './ProjectStore'
 import type { Project } from '@/types/Project'

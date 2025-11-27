@@ -126,6 +126,7 @@ export const showProjectNameInput = (options: ProjectNameInputOptions): void => 
   }, 0)
 
   // Store cleanup function
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-extra-semi
   ;(container as any).__cleanup = (): void => {
     input.removeEventListener('keydown', handleKeydown)
     document.removeEventListener('click', handleClickOutside)
@@ -147,8 +148,10 @@ export const hideProjectNameInput = (): void => {
   if (!activeInput) return
 
   // Cleanup listeners
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((activeInput as any).__cleanup) {
-    ;(activeInput as any).__cleanup()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (activeInput as any).__cleanup()
   }
 
   // Remove from DOM

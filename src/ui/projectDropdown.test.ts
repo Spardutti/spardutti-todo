@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderDropdownItems, showProjectDropdown, hideProjectDropdown } from './projectDropdown'
 import type { Project } from '@/types/Project'

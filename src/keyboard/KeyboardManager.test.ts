@@ -173,8 +173,6 @@ describe('KeyboardManager', () => {
     })
 
     it('should ignore modifier-only keys (Control alone)', () => {
-      const handler = vi.fn()
-
       const event = new KeyboardEvent('keydown', { key: 'Control' })
       const handled = km.handle(event)
 
