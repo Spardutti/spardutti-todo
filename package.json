@@ -1,7 +1,7 @@
 {
   "name": "spardutti-todo",
   "productName": "spardutti-todo",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
   "scripts": {
