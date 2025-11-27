@@ -599,31 +599,6 @@ async function initApp(): Promise<void> {
     return true
   }, 'Delete completed')
 
-  // Simplified Esc shortcut (Story 4.6 AC #5)
-  // Esc ONLY cancels confirmations - no input blur, no window close
-  // Use Ctrl+Q to quit the app explicitly (safer UX)
-  keyboardManager.register('escape', () => {
-    // Only priority: Cancel confirmation if showing
-    if (isConfirmationShowing) {
-      // Cancel confirmation - state will be cleared by cancel callback
-      return false // Allow showConfirmation's Esc handler to run
-    }
-
-    // No other actions (no input blur, no window close)
-    return true // Event handled (do nothing)
-  }, 'Cancel')
-
-  // ===================================
-  // Story 6.3: Manual Update Check Shortcut
-  // ===================================
-  // Ctrl+U triggers manual update check (works in all contexts)
-  keyboardManager.register('ctrl+u', () => {
-    if (window.updater && window.updater.checkForUpdates) {
-      window.updater.checkForUpdates()
-    }
-    return true
-  }, 'Check updates')
-
   // ===================================
   // Story 7.8: Project Search Shortcut
   // ===================================
@@ -669,6 +644,16 @@ async function initApp(): Promise<void> {
   // This must be called after DOM is ready (footer exists) but before user interaction
   initUpdateNotifications()
 
+  // ===================================
+  // Story 8.1: Window Bounds Persistence
+  // ===================================
+  // Listen for bounds-changed events from main process (debounced 500ms)
+  // and save to SettingsStore for persistence
+  window.electron.onBoundsChanged((bounds) => {
+    console.log('Window bounds changed, saving to settings', bounds)
+    settingsStore.setWindowBounds(bounds)
+  })
+
   // Global keyboard event handler
   window.addEventListener('keydown', (event) => {
     keyboardManager.handle(event)
@@ -693,8 +678,8 @@ async function initApp(): Promise<void> {
       input.value = ''
       input.focus()
 
-      // Auto-scroll to bottom
-      listContainer.scrollTop = listContainer.scrollHeight
+      // Auto-scroll to top (FR42: new todos appear at top)
+      listContainer.scrollTop = 0
     }
   })
 

@@ -452,12 +452,13 @@ let updateNotificationTimeout: number | null = null
  * Registers a callback with the updater API to receive update status changes.
  * Updates the footer to show update notifications based on the status received.
  *
- * Update notification states:
+ * Update notification states (Story 8.4):
  * - 'checking': Shows "Checking for updates..." (persistent until result, manual checks only)
- * - 'available': Shows "Update available. Downloading..." (persistent while downloading)
- * - 'downloaded': Shows "Update available. Restart to install." (persistent until app close)
- * - 'not-available': Shows "You're on the latest version." (auto-hide after 3s, manual checks only)
- * - 'error': Shows "Update check failed. Try again later." (auto-hide after 3s, manual checks only)
+ * - 'available': Shows "Update available. Downloading..." (brief, superseded by downloading)
+ * - 'downloading': Shows "Downloading update... X%" (real-time progress, bright green)
+ * - 'downloaded': Shows "Update ready. Restart to install." (persistent until app close, bright green)
+ * - 'not-available': Shows "You're on the latest version." (auto-hide after 3s)
+ * - 'error': Shows "Update failed. Try again later." (red color, auto-hide after 5s)
  *
  * @example
  * ```typescript
@@ -500,17 +501,25 @@ export function initUpdateNotifications(): void {
         break
 
       case 'available':
-        // Show "Downloading..." message (persistent while downloading)
+        // Show "Downloading..." message (brief, will be superseded by downloading status)
         hintsElement.textContent = status.message
         hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
-        // No auto-hide - persistent
+        // No auto-hide - will be replaced by downloading progress
+        break
+
+      case 'downloading':
+        // Story 8.4 AC #1, #2: Show "Downloading update... X%" with real percentage
+        // Updates smoothly without flickering (DOM text update only)
+        hintsElement.textContent = status.message
+        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic (AC #1)
+        // No auto-hide - continuous progress updates until downloaded or error
         break
 
       case 'downloaded':
-        // Show "Restart to install" message (persistent until app close)
+        // Story 8.4 AC #3: "Update ready. Restart to install." persists until app restart
         hintsElement.textContent = status.message
         hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
-        // No auto-hide - persistent
+        // No auto-hide - persistent until app restart (does not auto-hide)
         break
 
       case 'not-available':
@@ -526,15 +535,15 @@ export function initUpdateNotifications(): void {
         break
 
       case 'error':
-        // Show "Update check failed. Try again later." (auto-hide after 3s)
+        // Story 8.4 AC #4: "Update failed. Try again later." with red color, auto-hide 5s
         hintsElement.textContent = status.message
-        hintsElement.style.color = '#00FF00' // Bright green per terminal aesthetic
-        // Auto-hide after 3 seconds and restore keyboard hints
+        hintsElement.style.color = '#FF0000' // Red color for error state (AC #4)
+        // Auto-hide after 5 seconds and restore keyboard hints (AC #4)
         updateNotificationTimeout = window.setTimeout(() => {
           restoreFooterHints(footer)
           hintsElement.style.color = '' // Reset to default CSS color
           updateNotificationTimeout = null
-        }, 3000)
+        }, 5000)
         break
 
       default:

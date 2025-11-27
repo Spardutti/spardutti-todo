@@ -1,7 +1,7 @@
 import type { Todo } from './Todo'
 import type { Project } from './Project'
 import type { UpdateStatus } from './UpdateStatus'
-import type { AppSettings } from './Settings'
+import type { AppSettings, WindowBounds } from './Settings'
 
 export interface MigrationResult {
   success: boolean
@@ -34,6 +34,11 @@ export interface ElectronAPI {
 
   // App info
   getAppVersion: () => Promise<string>
+
+  // Window bounds operations (Story 8.1)
+  getWindowBounds: () => Promise<WindowBounds | null>
+  setWindowBounds: (bounds: WindowBounds) => Promise<boolean>
+  onBoundsChanged: (callback: (bounds: WindowBounds) => void) => void
 }
 
 export interface UpdaterAPI {

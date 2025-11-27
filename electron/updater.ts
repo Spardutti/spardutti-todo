@@ -66,6 +66,7 @@ export function initUpdater(mainWindow: BrowserWindow): void {
     log.info('Update available:', info.version)
 
     // Send IPC message to renderer (both manual and automatic checks)
+    // Story 8.4: This will be immediately followed by download-progress events
     if (_mainWindow) {
       const status: UpdateStatus = {
         status: 'available',
@@ -77,6 +78,22 @@ export function initUpdater(mainWindow: BrowserWindow): void {
 
     // Reset manual check flag after handling
     _isManualCheck = false
+  })
+
+  // Event: Download progress (Story 8.4)
+  // Emits real-time progress percentage during update download
+  autoUpdater.on('download-progress', (progress) => {
+    const percent = Math.floor(progress.percent)
+    log.info('Download progress:', { percent, transferred: progress.transferred, total: progress.total })
+
+    if (_mainWindow) {
+      const status: UpdateStatus = {
+        status: 'downloading',
+        percent,
+        message: `Downloading update... ${percent}%`,
+      }
+      _mainWindow.webContents.send('update-status', status)
+    }
   })
 
   // Event: No update available
@@ -98,7 +115,7 @@ export function initUpdater(mainWindow: BrowserWindow): void {
     _isManualCheck = false
   })
 
-  // Event: Update downloaded and ready to install
+  // Event: Update downloaded and ready to install (Story 8.4: AC #3)
   autoUpdater.on('update-downloaded', (info) => {
     log.info('Update downloaded:', info.version)
 
@@ -106,11 +123,12 @@ export function initUpdater(mainWindow: BrowserWindow): void {
     _updateDownloaded = true
 
     // Send IPC message to renderer (both manual and automatic checks)
+    // Story 8.4 AC #3: "Update ready. Restart to install." persists until restart
     if (_mainWindow) {
       const status: UpdateStatus = {
         status: 'downloaded',
         version: info.version,
-        message: 'Update available. Restart to install.',
+        message: 'Update ready. Restart to install.',
       }
       _mainWindow.webContents.send('update-status', status)
     }
@@ -119,21 +137,22 @@ export function initUpdater(mainWindow: BrowserWindow): void {
     _isManualCheck = false
   })
 
-  // Event: Error occurred during update process
+  // Event: Error occurred during update process (Story 8.4: AC #4)
   // Offline-first design: Don't crash app, just log the error
+  // Story 8.4 AC #4: Show error for both manual and automatic checks during download
   autoUpdater.on('error', (error) => {
     log.error('Update error:', error.message)
 
-    // Manual checks show "Update check failed." with auto-hide
-    if (_isManualCheck && _mainWindow) {
+    // Story 8.4 AC #4: Show error message for download failures
+    // Red color, auto-hide after 5 seconds (handled in renderer)
+    if (_mainWindow) {
       const status: UpdateStatus = {
         status: 'error',
-        message: 'Update check failed. Try again later.',
+        message: 'Update failed. Try again later.',
         error: error.message,
       }
       _mainWindow.webContents.send('update-status', status)
     }
-    // Automatic checks: Silent (no IPC message sent)
 
     // Reset manual check flag after handling
     _isManualCheck = false

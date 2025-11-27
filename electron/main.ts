@@ -1,11 +1,87 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import path from 'node:path';
 import log from 'electron-log';
 import { ToonStorage } from './storage';
 import { initUpdater, isUpdateDownloaded, quitAndInstall, checkForUpdates } from './updater';
 import type { Todo } from '../src/types/Todo';
 import type { Project } from '../src/types/Project';
-import type { AppSettings } from '../src/types/Settings';
+import type { AppSettings, WindowBounds } from '../src/types/Settings';
+
+// ===================================
+// Debounce Utility
+// ===================================
+
+/**
+ * Creates a debounced version of a function that delays execution until after
+ * the specified delay has elapsed since the last call.
+ *
+ * @param fn - The function to debounce
+ * @param delay - Delay in milliseconds
+ * @returns Debounced function
+ */
+const debounce = <T extends (...args: unknown[]) => void>(fn: T, delay: number): T => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  return ((...args: Parameters<T>) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  }) as T;
+};
+
+// ===================================
+// Window Bounds Validation
+// ===================================
+
+/**
+ * Validates if the given window bounds are visible on any connected display.
+ * Checks if the window's center point is within any display's work area.
+ *
+ * @param bounds - Window bounds to validate
+ * @returns true if bounds are valid (visible on a display), false otherwise
+ */
+const isValidBounds = (bounds: WindowBounds): boolean => {
+  const displays = screen.getAllDisplays();
+
+  // Calculate window center point
+  const centerX = bounds.x + bounds.width / 2;
+  const centerY = bounds.y + bounds.height / 2;
+
+  // Check if center is within any display's work area
+  for (const display of displays) {
+    const area = display.workArea;
+    if (
+      centerX >= area.x &&
+      centerX <= area.x + area.width &&
+      centerY >= area.y &&
+      centerY <= area.y + area.height
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Gets default window bounds: centered on primary display with default size.
+ *
+ * @returns Default window bounds (600x400, centered)
+ */
+const getDefaultBounds = (): WindowBounds => {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workArea;
+  const defaultWidth = 600;
+  const defaultHeight = 400;
+
+  return {
+    x: Math.round((screenWidth - defaultWidth) / 2),
+    y: Math.round((screenHeight - defaultHeight) / 2),
+    width: defaultWidth,
+    height: defaultHeight,
+  };
+};
+
+// Store reference to main window for bounds tracking
+let mainWindow: BrowserWindow | null = null;
 
 // ===================================
 // Data Path Helpers
@@ -67,6 +143,35 @@ ipcMain.handle('load-settings', async (_event, filePath: string) => {
 
 ipcMain.handle('save-settings', async (_event, filePath: string, settings: AppSettings) => {
   await ToonStorage.saveSettings(filePath, settings);
+});
+
+// ===================================
+// Window Bounds IPC Handlers (Story 8.1)
+// ===================================
+
+/**
+ * Gets current window bounds from BrowserWindow.
+ * Returns null if window is not available.
+ */
+ipcMain.handle('get-window-bounds', () => {
+  if (!mainWindow) return null;
+  return mainWindow.getBounds();
+});
+
+/**
+ * Sets window bounds programmatically.
+ * Validates bounds before applying and falls back to centering if invalid.
+ */
+ipcMain.handle('set-window-bounds', (_event, bounds: WindowBounds) => {
+  if (!mainWindow) return false;
+
+  if (isValidBounds(bounds)) {
+    mainWindow.setBounds(bounds);
+    return true;
+  } else {
+    mainWindow.center();
+    return false;
+  }
 });
 
 // ===================================
@@ -161,11 +266,45 @@ ipcMain.on('check-for-updates-manual', () => {
 // Capture startup time before any async operations
 const startTime = Date.now();
 
-const createWindow = () => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
+/**
+ * Creates the main application window with bounds restoration.
+ *
+ * Story 8.1: Window bounds persistence
+ * - Loads saved bounds from settings.toon
+ * - Validates bounds against connected displays
+ * - Applies valid bounds or falls back to centered defaults
+ * - Sets up debounced resize/move listeners for persistence
+ */
+const createWindow = async (): Promise<void> => {
+  // Load saved bounds from settings.toon (if available)
+  const settingsPath = path.join(getUserDataPath(), 'settings.toon');
+  let initialBounds = getDefaultBounds();
+
+  try {
+    const settings = await ToonStorage.loadSettings(settingsPath);
+    if (settings?.windowBounds) {
+      // Validate saved bounds against current displays
+      if (isValidBounds(settings.windowBounds)) {
+        initialBounds = settings.windowBounds;
+        log.info('Window bounds restored from settings', initialBounds);
+      } else {
+        log.info('Saved window bounds invalid (off-screen), using defaults', {
+          saved: settings.windowBounds,
+          default: initialBounds,
+        });
+      }
+    }
+  } catch (error) {
+    // No settings file or error - use defaults (not an error for fresh install)
+    log.info('No saved window bounds, using defaults', initialBounds);
+  }
+
+  // Create the browser window with restored or default bounds.
+  mainWindow = new BrowserWindow({
+    x: initialBounds.x,
+    y: initialBounds.y,
+    width: initialBounds.width,
+    height: initialBounds.height,
     minWidth: 400,
     minHeight: 300,
     backgroundColor: '#000000',
@@ -178,12 +317,40 @@ const createWindow = () => {
     },
   });
 
+  // ===================================
+  // Story 8.1: Window Bounds Tracking
+  // ===================================
+
+  /**
+   * Debounced handler for window bounds changes.
+   * Sends bounds to renderer for persistence via SettingsStore.
+   * 500ms debounce prevents excessive saves during drag/resize.
+   */
+  const sendBoundsToRenderer = debounce(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    const bounds = mainWindow.getBounds();
+    mainWindow.webContents.send('bounds-changed', bounds);
+    log.info('Window bounds changed, sent to renderer', bounds);
+  }, 500);
+
+  // Listen for resize events
+  mainWindow.on('resize', () => {
+    sendBoundsToRenderer();
+  });
+
+  // Listen for move events
+  mainWindow.on('move', () => {
+    sendBoundsToRenderer();
+  });
+
   // Show window only when ready to prevent white flash
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-
-    // Initialize auto-updater after window is ready
-    initUpdater(mainWindow);
+    if (mainWindow) {
+      mainWindow.show();
+      // Initialize auto-updater after window is ready
+      initUpdater(mainWindow);
+    }
   });
 
   // and load the index.html of the app.

@@ -4,7 +4,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { Todo } from '../src/types/Todo'
 import type { Project } from '../src/types/Project'
-import type { AppSettings } from '../src/types/Settings'
+import type { AppSettings, WindowBounds } from '../src/types/Settings'
 import type { UpdateStatus } from '../src/types/UpdateStatus'
 
 // Expose safe API to renderer process
@@ -32,7 +32,19 @@ contextBridge.exposeInMainWorld('electron', {
   runMigration: () => ipcRenderer.invoke('run-migration'),
 
   // App info
-  getAppVersion: () => ipcRenderer.invoke('get-app-version')
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+
+  // Window bounds operations (Story 8.1)
+  getWindowBounds: () => ipcRenderer.invoke('get-window-bounds'),
+  setWindowBounds: (bounds: WindowBounds) => ipcRenderer.invoke('set-window-bounds', bounds),
+
+  /**
+   * Registers a callback to receive window bounds changes from the main process.
+   * Called after debounced resize/move events (500ms delay).
+   */
+  onBoundsChanged: (callback: (bounds: WindowBounds) => void) => {
+    ipcRenderer.on('bounds-changed', (_event, bounds: WindowBounds) => callback(bounds))
+  }
 })
 
 // Expose updater API to renderer process
