@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import path from 'path'
 
 // Mock electron-log before importing migration
 vi.mock('electron-log', () => ({
@@ -144,8 +145,8 @@ describe('migration', () => {
 
         expect(result.status).toBe('success')
         expect(mockFs.copyFile).toHaveBeenCalledWith(
-          '/test/data/todos.toon',
-          '/test/data/todos.toon.backup'
+          path.join('/test/data', 'todos.toon'),
+          path.join('/test/data', 'todos.toon.backup')
         )
         // Verify backup is created before other operations
         const copyCallOrder = mockFs.copyFile.mock.invocationCallOrder[0]
@@ -160,30 +161,30 @@ describe('migration', () => {
 
         // Verify rename of todos.toon to todos-{projectId}.toon
         expect(mockFs.rename).toHaveBeenCalledWith(
-          '/test/data/todos.toon',
-          `/test/data/todos-${mockUUID}.toon`
+          path.join('/test/data', 'todos.toon'),
+          path.join('/test/data', `todos-${mockUUID}.toon`)
         )
 
         // Verify projects.toon created with Default project
         expect(mockFs.writeFile).toHaveBeenCalledWith(
-          '/test/data/projects.toon',
+          path.join('/test/data', 'projects.toon'),
           expect.stringContaining('projects[1]{id,name,createdAt}:'),
           'utf-8'
         )
         expect(mockFs.writeFile).toHaveBeenCalledWith(
-          '/test/data/projects.toon',
+          path.join('/test/data', 'projects.toon'),
           expect.stringContaining(mockUUID),
           'utf-8'
         )
         expect(mockFs.writeFile).toHaveBeenCalledWith(
-          '/test/data/projects.toon',
+          path.join('/test/data', 'projects.toon'),
           expect.stringContaining('Default'),
           'utf-8'
         )
 
         // Verify settings.toon created with activeProjectId
         expect(mockFs.writeFile).toHaveBeenCalledWith(
-          '/test/data/settings.toon',
+          path.join('/test/data', 'settings.toon'),
           expect.stringContaining(`activeProjectId: ${mockUUID}`),
           'utf-8'
         )
@@ -220,7 +221,7 @@ describe('migration', () => {
         expect(mockLog.warn).toHaveBeenCalledWith(
           'Migration completed successfully',
           expect.objectContaining({
-            backupPath: '/test/data/todos.toon.backup',
+            backupPath: path.join('/test/data', 'todos.toon.backup'),
             projectId: mockUUID,
           })
         )

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import path from 'path'
 import type { Project } from '../src/types/Project'
 import type { AppSettings } from '../src/types/Settings'
 import type { Todo } from '../src/types/Todo'
@@ -272,7 +273,7 @@ version: 1.0`
 
       await ToonStorage.loadTodos('/data', 'project-123')
 
-      expect(mockFs.readFile).toHaveBeenCalledWith('/data/todos-project-123.toon', 'utf-8')
+      expect(mockFs.readFile).toHaveBeenCalledWith(path.join('/data', 'todos-project-123.toon'), 'utf-8')
     })
 
     it('should return empty array when file does not exist', async () => {
@@ -310,7 +311,7 @@ version: 1.0`
       await ToonStorage.saveTodos('/data', 'project-123', todos)
 
       expect(mockFs.writeFile).toHaveBeenCalledWith(
-        '/data/todos-project-123.toon',
+        path.join('/data', 'todos-project-123.toon'),
         expect.any(String),
         'utf-8'
       )

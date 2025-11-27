@@ -3,13 +3,35 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import type { Todo } from '../src/types/Todo'
+import type { Project } from '../src/types/Project'
+import type { AppSettings } from '../src/types/Settings'
 import type { UpdateStatus } from '../src/types/UpdateStatus'
 
 // Expose safe API to renderer process
 contextBridge.exposeInMainWorld('electron', {
+  // Path getters
   getTodosPath: () => ipcRenderer.invoke('get-todos-path'),
+  getProjectsPath: () => ipcRenderer.invoke('get-projects-path'),
+  getSettingsPath: () => ipcRenderer.invoke('get-settings-path'),
+
+  // Todo operations
   loadTodos: (filePath: string) => ipcRenderer.invoke('load-todos', filePath),
   saveTodos: (filePath: string, todos: Todo[]) => ipcRenderer.invoke('save-todos', filePath, todos),
+  deleteTodosFile: (projectId: string) => ipcRenderer.invoke('delete-todos-file', projectId),
+
+  // Project operations
+  loadProjects: (filePath: string) => ipcRenderer.invoke('load-projects', filePath),
+  saveProjects: (filePath: string, projects: Project[]) => ipcRenderer.invoke('save-projects', filePath, projects),
+
+  // Settings operations
+  loadSettings: (filePath: string) => ipcRenderer.invoke('load-settings', filePath),
+  saveSettings: (filePath: string, settings: AppSettings) => ipcRenderer.invoke('save-settings', filePath, settings),
+
+  // Migration operations
+  checkMigrationNeeded: () => ipcRenderer.invoke('check-migration-needed'),
+  runMigration: () => ipcRenderer.invoke('run-migration'),
+
+  // App info
   getAppVersion: () => ipcRenderer.invoke('get-app-version')
 })
 
