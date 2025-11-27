@@ -212,6 +212,41 @@ ul, ol {
 }
 
 /* ============================================
+   PROJECT INDICATOR
+   ============================================ */
+
+/* Project indicator container - displays current project name and dropdown arrow */
+.project-indicator {
+  display: inline-flex;                       /* Inline horizontal layout */
+  align-items: center;                        /* Vertical center alignment */
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: inherit;                         /* 14px from body */
+  cursor: pointer;                            /* Indicates clickable */
+  background: transparent;                    /* Inherit black background */
+  padding: 0.25rem 0.5rem;                    /* Compact padding */
+  max-width: 200px;                           /* Limit width for long project names */
+}
+
+/* Hover state - subtle background tint for visual feedback */
+.project-indicator:hover {
+  background: #001100;                        /* Subtle dark green tint */
+}
+
+/* Project name span - handles text truncation for long names */
+.project-indicator-name {
+  overflow: hidden;                           /* Hide overflow text */
+  text-overflow: ellipsis;                    /* Show ellipsis (...) for truncated text */
+  white-space: nowrap;                        /* Prevent text wrapping */
+}
+
+/* Dropdown arrow span - prevents shrinking and maintains spacing */
+.project-indicator-arrow {
+  margin-left: 0.25rem;                       /* Small gap between name and arrow */
+  flex-shrink: 0;                             /* Prevent arrow from shrinking */
+}
+
+/* ============================================
    LAYOUT & APP CONTAINER
    ============================================ */
 
