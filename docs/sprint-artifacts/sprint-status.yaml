@@ -118,9 +118,9 @@ development_status:
   epic-8-retrospective: optional
 
   # Epic 9: Linux Distribution
-  epic-9: backlog
-  9-1-configure-appimage-maker-in-electron-forge: backlog
-  9-2-ensure-cross-platform-path-handling: backlog
-  9-3-configure-linux-auto-update: backlog
-  9-4-update-build-and-release-pipeline-for-linux: backlog
+  epic-9: contexted
+  9-1-configure-appimage-maker-in-electron-forge: done
+  9-2-ensure-cross-platform-path-handling: done
+  9-3-configure-linux-auto-update: done
+  9-4-update-build-and-release-pipeline-for-linux: done
   epic-9-retrospective: optional
