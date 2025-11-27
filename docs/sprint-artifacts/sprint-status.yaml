@@ -99,7 +99,7 @@ development_status:
   7-2-implement-projectstore-class: done
   7-3-implement-settingsstore-class: done
   7-4-extend-toonstorage-for-multi-file-structure: done
-  7-5-implement-data-migration-v1-to-v2: ready-for-dev
+  7-5-implement-data-migration-v1-to-v2: done
   7-6-update-todostore-for-project-scoping: ready-for-dev
   7-7-implement-project-indicator-ui-component: ready-for-dev
   7-8-implement-keyboard-project-search-ctrl-p: ready-for-dev
