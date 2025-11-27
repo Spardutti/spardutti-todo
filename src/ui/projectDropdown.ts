@@ -325,7 +325,7 @@ const setupKeyboardNav = ({
   } as any
 }
 
-const selectProject = ({
+const selectProject = async ({
   project,
   projectStore,
   todoStore,
@@ -337,9 +337,9 @@ const selectProject = ({
   todoStore: TodoStore
   settingsStore: SettingsStore
   onClose: () => void
-}): void => {
-  // Switch project
-  todoStore.load(project.id)
+}): Promise<void> => {
+  // Switch project - await async load before closing
+  await todoStore.load(project.id)
   settingsStore.setActiveProject(project.id)
 
   // Close dropdown
@@ -370,13 +370,13 @@ const createNewProject = ({
 
   // Show terminal-styled input prompt
   showCreateProjectInput(
-    (projectName: string) => {
+    async (projectName: string) => {
       try {
         // Create project (validation happens in ProjectStore.create)
         const newProject = projectStore.create(projectName)
 
-        // Switch to new project
-        todoStore.load(newProject.id)
+        // Switch to new project - await async load before UI focus
+        await todoStore.load(newProject.id)
         settingsStore.setActiveProject(newProject.id)
 
         // Return focus to input
@@ -415,9 +415,8 @@ const renameProject = ({
   projectStore: ProjectStore
   onClose: () => void
 }): void => {
-  // Close dropdown first
+  // Close dropdown first (but don't call onClose yet - wait for rename to complete)
   hideProjectDropdown()
-  onClose()
 
   // Show rename input with current name pre-filled
   showRenameProjectInput(
@@ -427,12 +426,18 @@ const renameProject = ({
         // Rename project (validation happens in ProjectStore.rename)
         projectStore.rename(project.id, newName)
 
+        // Refresh project indicator after rename
+        onClose()
+
         // Return focus to input
         const inputField = document.querySelector('#todo-input') as HTMLInputElement
         if (inputField) {
           inputField.focus()
         }
       } catch (error) {
+        // On error, still call onClose to restore UI state
+        onClose()
+
         // Log error (validation failures from ProjectStore.rename)
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         console.error('Failed to rename project:', errorMessage)
@@ -445,7 +450,10 @@ const renameProject = ({
       }
     },
     () => {
-      // User cancelled - return focus to input
+      // User cancelled - call onClose to restore UI state
+      onClose()
+
+      // Return focus to input
       const inputField = document.querySelector('#todo-input') as HTMLInputElement
       if (inputField) {
         inputField.focus()

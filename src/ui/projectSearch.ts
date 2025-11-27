@@ -117,7 +117,7 @@ export const activateProjectSearch = ({
   })
 
   // Keyboard event handler
-  const handleKeydown = (event: KeyboardEvent): void => {
+  const handleKeydown = async (event: KeyboardEvent): Promise<void> => {
     if (!searchState.isActive) return
 
     // Handle different keys
@@ -138,8 +138,8 @@ export const activateProjectSearch = ({
       if (searchState.filteredProjects.length > 0) {
         const selectedProject = searchState.filteredProjects[searchState.selectedIndex]
 
-        // Switch project
-        todoStore.load(selectedProject.id)
+        // Switch project - await async load before UI update
+        await todoStore.load(selectedProject.id)
         settingsStore.setActiveProject(selectedProject.id)
 
         // Exit search mode

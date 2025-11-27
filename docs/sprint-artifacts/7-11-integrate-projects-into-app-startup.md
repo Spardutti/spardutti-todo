@@ -56,6 +56,19 @@ So that I can continue where I left off.
    - Auto-update check runs as before
    - All 88 existing tests continue to pass
 
+8. Project search cancellation (Ctrl+P):
+   - ESC key exits project search mode
+   - Footer hints restored after ESC
+   - Enter key selects project and exits search mode
+   - Footer hints restored after Enter selection
+
+9. New project keyboard shortcut:
+   - Ctrl+Shift+N opens new project input prompt
+   - Project name input uses terminal styling
+   - Enter confirms, ESC cancels
+   - After creation, switches to new project
+   - Input field focused after completion
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Update src/main.ts with project-aware startup sequence (AC: #1)
@@ -125,6 +138,19 @@ So that I can continue where I left off.
   - [ ] Test: Corrupt activeProjectId → Fallback works
   - [ ] Test: Performance within limits
   - [ ] Manual test: Full startup flow
+
+- [x] Task 9: Fix project search cancellation (AC: #8)
+  - [x] Fix restoreFooterHints() to recreate footer structure if destroyed
+  - [x] Update delete button to use event delegation for footer recreation
+  - [x] ESC exits search and restores footer hints
+  - [x] Enter selects project and restores footer hints
+
+- [x] Task 10: Implement new project shortcut (AC: #9)
+  - [x] Add Ctrl+Shift+N keyboard shortcut registration
+  - [x] Add createNewProject() helper function
+  - [x] Use showCreateProjectInput() from projectNameInput.ts
+  - [x] Switch to new project after creation
+  - [x] Focus input field after completion
 
 ## Dev Notes
 

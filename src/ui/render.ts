@@ -332,6 +332,7 @@ export function showFeedback(
  *
  * Returns the footer to its default state showing keyboard hints.
  * Used after confirmation prompts or feedback messages.
+ * If footer structure was destroyed (e.g., by project search), recreates it.
  *
  * @param footer - The footer DOM element to restore
  *
@@ -341,8 +342,35 @@ export function showFeedback(
  * ```
  */
 export function restoreFooterHints(footer: HTMLDivElement): void {
-  const hintsElement = getFooterHintsElement(footer)
-  if (!hintsElement) return
+  let hintsElement = getFooterHintsElement(footer)
+
+  // Recreate footer structure if destroyed by project search
+  if (!hintsElement) {
+    footer.innerHTML = '' // Clear any search UI remnants
+
+    // Recreate hints element
+    hintsElement = document.createElement('div')
+    hintsElement.className = 'footer-hints'
+    footer.appendChild(hintsElement)
+
+    // Recreate delete button
+    const deleteButton = document.createElement('button')
+    deleteButton.id = 'delete-completed-btn'
+    deleteButton.textContent = 'Delete Completed'
+    deleteButton.setAttribute('aria-label', 'Delete all completed todos')
+    footer.appendChild(deleteButton)
+
+    // Recreate version display
+    const versionDisplay = document.createElement('div')
+    versionDisplay.className = 'version-display'
+    footer.appendChild(versionDisplay)
+    window.electron.getAppVersion().then(v => {
+      versionDisplay.textContent = `v${v}`
+    }).catch(() => {
+      versionDisplay.textContent = ''
+    })
+  }
+
   hintsElement.textContent = footerOriginalContent
 }
 

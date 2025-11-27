@@ -1,13 +1,24 @@
 /**
  * Renderer process entry point for spardutti-todo.
  *
- * This file initializes the TodoStore and renders the application UI
- * when the DOM is ready. It serves as the main entry point for the
- * Electron renderer process.
+ * This file initializes the stores (Settings, Projects, Todos) and renders
+ * the application UI when the DOM is ready. It serves as the main entry point
+ * for the Electron renderer process.
+ *
+ * Story 7.11: Project-aware startup sequence:
+ * 1. Migration check (v1→v2)
+ * 2. SettingsStore load
+ * 3. ProjectStore load
+ * 4. ActiveProjectId validation
+ * 5. TodoStore load for active project
+ * 6. UI render with project indicator
  */
 
 // Removed import './index.css' - using styles.css from index.html instead
 import { TodoStore } from '@/store/TodoStore'
+import { ProjectStore } from '@/store/ProjectStore'
+import { SettingsStore } from '@/store/SettingsStore'
+import type { Project } from '@/types/Project'
 import {
   renderApp,
   renderTodoList,
@@ -18,6 +29,10 @@ import {
   displayError,
   initUpdateNotifications,
 } from '@/ui/render'
+import { renderProjectIndicator } from '@/ui/projectIndicator'
+import { showProjectDropdown, hideProjectDropdown } from '@/ui/projectDropdown'
+import { activateProjectSearch } from '@/ui/projectSearch'
+import { showCreateProjectInput } from '@/ui/projectNameInput'
 import KeyboardManager from '@/keyboard/KeyboardManager'
 
 // ===================================
@@ -36,6 +51,21 @@ let selectedTodoIndex: number | null = null
 let todoStore: TodoStore
 
 /**
+ * Reference to ProjectStore instance for project operations
+ */
+let projectStore: ProjectStore
+
+/**
+ * Reference to SettingsStore instance for settings operations
+ */
+let settingsStore: SettingsStore
+
+/**
+ * Reference to currently active project
+ */
+let activeProject: Project | null = null
+
+/**
  * Reference to list container for scrolling
  */
 let listContainer: HTMLUListElement
@@ -46,10 +76,26 @@ let listContainer: HTMLUListElement
 let inputElement: HTMLInputElement
 
 /**
+ * Reference to footer element for project search
+ */
+let footerElement: HTMLDivElement
+
+/**
+ * Reference to project indicator container
+ */
+let projectIndicatorContainer: HTMLElement | null = null
+
+/**
  * Tracks whether a confirmation dialog is currently showing.
  * Used by Esc handler to determine context-aware behavior.
  */
 let isConfirmationShowing = false
+
+/**
+ * Tracks whether project search is currently active.
+ * Used to coordinate with dropdown and keyboard handling.
+ */
+let isProjectSearchActive = false
 
 // ===================================
 // Navigation Helper Functions
@@ -187,6 +233,111 @@ function toggleSelectedTodo(): void {
   renderTodoList(todos, listContainer, selectedTodoIndex)
 }
 
+// ===================================
+// Project UI Helper Functions
+// ===================================
+
+/**
+ * Handles click on project indicator to show dropdown.
+ * Coordinates with project search to prevent conflicts.
+ */
+function handleProjectDropdownClick(): void {
+  if (!projectIndicatorContainer || !projectStore || !todoStore || !settingsStore) return
+  if (isProjectSearchActive) return // Don't open dropdown while search is active
+
+  showProjectDropdown({
+    anchor: projectIndicatorContainer,
+    projectStore,
+    todoStore,
+    settingsStore,
+    onClose: handleProjectUIClose
+  })
+}
+
+/**
+ * Handles closure of any project UI (dropdown or search).
+ * Updates project indicator with new active project if changed.
+ */
+function handleProjectUIClose(): void {
+  isProjectSearchActive = false
+
+  // Refresh active project and re-render indicator
+  const newActiveProjectId = settingsStore.getActiveProjectId()
+  activeProject = projectStore.findById(newActiveProjectId) || null
+
+  if (activeProject && projectIndicatorContainer) {
+    renderProjectIndicator({
+      project: activeProject,
+      container: projectIndicatorContainer,
+      onDropdownClick: handleProjectDropdownClick
+    })
+  }
+
+  // Re-render todo list (in case project switched)
+  selectedTodoIndex = null
+  renderTodoList(todoStore.getAll(), listContainer, selectedTodoIndex)
+
+  // Restore footer hints
+  restoreFooterHints(footerElement)
+
+  // Focus input
+  inputElement.focus()
+}
+
+/**
+ * Opens project search in footer.
+ * Called by Ctrl+P keyboard shortcut.
+ */
+function openProjectSearch(): void {
+  if (!footerElement || !projectStore || !todoStore || !settingsStore) return
+  if (isProjectSearchActive) return // Already active
+
+  // Hide dropdown if open
+  hideProjectDropdown()
+
+  isProjectSearchActive = true
+
+  activateProjectSearch({
+    footerContainer: footerElement,
+    projectStore,
+    todoStore,
+    settingsStore,
+    onComplete: handleProjectUIClose
+  })
+}
+
+/**
+ * Creates a new project via inline input prompt.
+ * Called by Ctrl+Shift+N keyboard shortcut.
+ */
+function createNewProject(): void {
+  if (!projectStore || !todoStore || !settingsStore) return
+
+  showCreateProjectInput(
+    async (name: string) => {
+      const newProject = projectStore.create(name)
+      settingsStore.setActiveProject(newProject.id)
+      await todoStore.load(newProject.id)
+
+      // Update UI
+      activeProject = newProject
+      selectedTodoIndex = null
+      if (projectIndicatorContainer) {
+        renderProjectIndicator({
+          project: activeProject,
+          container: projectIndicatorContainer,
+          onDropdownClick: handleProjectDropdownClick
+        })
+      }
+      renderTodoList(todoStore.getAll(), listContainer, selectedTodoIndex)
+      inputElement.focus()
+    },
+    () => {
+      inputElement.focus()
+    }
+  )
+}
+
 // Wait for DOM to be ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
@@ -214,9 +365,18 @@ if (document.readyState === 'loading') {
 /**
  * Initialize the application.
  *
- * Creates TodoStore instance, loads todos from disk, and renders the UI.
+ * Story 7.11: Project-aware startup sequence:
+ * 1. Migration check (v1→v2)
+ * 2. SettingsStore load
+ * 3. ProjectStore load
+ * 4. ActiveProjectId validation
+ * 5. TodoStore load for active project
+ * 6. UI render with project indicator
  */
 async function initApp(): Promise<void> {
+  // Capture startup time for performance measurement
+  const startTime = Date.now()
+
   // Check if electron API is available
   if (!window.electron) {
     throw new Error('window.electron is not defined. Preload script may not have loaded.')
@@ -224,11 +384,88 @@ async function initApp(): Promise<void> {
 
   console.log('Initializing app...')
 
-  // Create TodoStore instance (module-scoped for navigation helpers)
-  // NOTE: Story 7-6 - TodoStore now requires projectId in load() instead of filePath in constructor
-  // Full integration with projects will be done in Story 7-11
-  todoStore = new TodoStore()
+  // ===================================
+  // Step 1: Migration Check (v1→v2)
+  // ===================================
+  try {
+    const needsMigration = await window.electron.checkMigrationNeeded()
+    console.log('Migration check complete', { elapsed: Date.now() - startTime, needsMigration })
 
+    if (needsMigration) {
+      console.log('Starting v1→v2 migration...')
+      const result = await window.electron.runMigration()
+      if (!result.success) {
+        console.error('Migration failed', result.error)
+        displayError('Data migration failed. Check logs.')
+      } else {
+        console.log('Migration successful', { projectId: result.projectId })
+      }
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Migration check error', errorMessage)
+    // Continue - fresh install will create defaults
+  }
+
+  // ===================================
+  // Step 2: Load Settings
+  // ===================================
+  const settingsPath = await window.electron.getSettingsPath()
+  settingsStore = new SettingsStore(settingsPath)
+  await settingsStore.load()
+  console.log('Settings loaded', { elapsed: Date.now() - startTime })
+
+  // ===================================
+  // Step 3: Load Projects
+  // ===================================
+  const projectsPath = await window.electron.getProjectsPath()
+  projectStore = new ProjectStore(projectsPath)
+  await projectStore.load()
+  console.log('Projects loaded', { elapsed: Date.now() - startTime, count: projectStore.getAll().length })
+
+  // ===================================
+  // Step 4: Validate activeProjectId / Fresh Install
+  // ===================================
+  let activeProjectId = settingsStore.getActiveProjectId()
+  const allProjects = projectStore.getAll()
+
+  // Fresh install: No projects exist yet
+  if (allProjects.length === 0) {
+    console.log('Fresh install detected, creating Default project')
+    const defaultProject = projectStore.create('Default')
+    activeProjectId = defaultProject.id
+    settingsStore.setActiveProject(activeProjectId)
+    console.log('Default project created', { id: activeProjectId })
+  } else if (!activeProjectId || !projectStore.findById(activeProjectId)) {
+    // ActiveProjectId missing or references non-existent project
+    console.warn('Active project not found, falling back', { activeProjectId })
+    const fallbackProject = projectStore.getAll()[0]
+    activeProjectId = fallbackProject.id
+    settingsStore.setActiveProject(activeProjectId)
+    console.log('Fallback project selected', { id: activeProjectId, name: fallbackProject.name })
+  }
+
+  // Store reference to active project
+  activeProject = projectStore.findById(activeProjectId) || null
+
+  // ===================================
+  // Step 5: Load Todos for Active Project
+  // ===================================
+  todoStore = new TodoStore()
+  try {
+    await todoStore.load(activeProjectId)
+    console.log('Todos loaded', { elapsed: Date.now() - startTime, count: todoStore.getAll().length })
+  } catch (error) {
+    // Corrupt file error - log and display error message
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Failed to load todos', errorMessage, activeProjectId)
+    displayError('Data file corrupted. Starting fresh.')
+    // Continue with empty list (already initialized in TodoStore)
+  }
+
+  // ===================================
+  // Step 6: Render UI with Project Indicator
+  // ===================================
   // Get root container
   const appContainer = document.querySelector('#app')
 
@@ -239,7 +476,7 @@ async function initApp(): Promise<void> {
   }
 
   // Render the application first to create error display element
-  const { input, listContainer: list, footer, deleteButton } = renderApp(
+  const { input, listContainer: list, footer } = renderApp(
     todoStore,
     appContainer as HTMLElement,
   )
@@ -247,25 +484,37 @@ async function initApp(): Promise<void> {
   // Store element references (module-scoped for helper functions)
   listContainer = list
   inputElement = input
+  footerElement = footer
 
   // Initialize navigation state
   selectedTodoIndex = null
 
-  // Load todos from disk after rendering
-  // NOTE: Story 7-6 - Using temporary 'default' projectId until Story 7-11 integrates projects system
-  try {
-    await todoStore.load('default')
-    // Re-render with loaded todos
-    renderTodoList(todoStore.getAll(), listContainer, selectedTodoIndex)
-  } catch (error) {
-    // Corrupt file error - log and display error message
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('Failed to load todos', errorMessage, 'default')
+  // Create project indicator container
+  projectIndicatorContainer = document.createElement('div')
+  projectIndicatorContainer.id = 'project-indicator-container'
 
-    // Display inline error message to user
-    displayError('Data file corrupted. Starting fresh.')
+  // Insert project indicator before the input element
+  appContainer.insertBefore(projectIndicatorContainer, input)
 
-    // Continue with empty list (already initialized in TodoStore)
+  // Render project indicator
+  if (activeProject) {
+    renderProjectIndicator({
+      project: activeProject,
+      container: projectIndicatorContainer,
+      onDropdownClick: handleProjectDropdownClick
+    })
+  }
+
+  // Re-render todo list with loaded todos
+  renderTodoList(todoStore.getAll(), listContainer, selectedTodoIndex)
+
+  // Log startup time
+  const totalStartupTime = Date.now() - startTime
+  console.log('Startup complete', { totalTime: totalStartupTime })
+
+  // Warn if startup exceeds 2-second target
+  if (totalStartupTime > 2000) {
+    console.warn('Startup time exceeds 2s target', { totalTime: totalStartupTime })
   }
 
   // ===================================
@@ -376,6 +625,30 @@ async function initApp(): Promise<void> {
   }, 'Check updates')
 
   // ===================================
+  // Story 7.8: Project Search Shortcut
+  // ===================================
+  // Ctrl+P opens project search in footer
+  keyboardManager.register('ctrl+p', () => {
+    // Don't open if confirmation is showing
+    if (isConfirmationShowing) return true
+
+    openProjectSearch()
+    return true
+  }, 'Projects')
+
+  // ===================================
+  // Story 7.11: New Project Shortcut
+  // ===================================
+  // Ctrl+Shift+N creates a new project
+  keyboardManager.register('ctrl+shift+n', () => {
+    // Don't open if confirmation or search is active
+    if (isConfirmationShowing || isProjectSearchActive) return true
+
+    createNewProject()
+    return true
+  }, 'New project')
+
+  // ===================================
   // Story 4.5: Initialize Footer Hints
   // ===================================
   // After all shortcuts are registered, get formatted hints string
@@ -442,8 +715,11 @@ async function initApp(): Promise<void> {
     renderTodoList(todoStore.getAll(), listContainer, selectedTodoIndex)
   })
 
-  // Add click event listener for delete completed button
-  deleteButton.addEventListener('click', () => {
+  // Add click event listener for delete completed button (using event delegation for footer recreation)
+  footer.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement
+    if (target.id !== 'delete-completed-btn') return
+
     // Get completed count
     const completedCount = todoStore.getCompleted().length
 

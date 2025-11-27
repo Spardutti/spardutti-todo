@@ -39,7 +39,7 @@ describe('projectDropdown', () => {
     } as any
 
     mockTodoStore = {
-      load: vi.fn()
+      load: vi.fn().mockResolvedValue(undefined)
     } as any
 
     mockSettingsStore = {
@@ -340,7 +340,7 @@ describe('projectDropdown', () => {
       expect(dropdowns.length).toBe(1) // Should still be open
     })
 
-    it('should focus input after project selection', () => {
+    it('should focus input after project selection', async () => {
       const inputField = document.createElement('input')
       inputField.id = 'todo-input'
       document.body.appendChild(inputField)
@@ -359,10 +359,11 @@ describe('projectDropdown', () => {
       const firstItem = items[0] as HTMLElement
       firstItem.click()
 
-      expect(focusSpy).toHaveBeenCalled()
+      // Wait for async selectProject to complete
+      await vi.waitFor(() => expect(focusSpy).toHaveBeenCalled())
     })
 
-    it('should call TodoStore.load with selected project ID', () => {
+    it('should call TodoStore.load with selected project ID', async () => {
       showProjectDropdown({
         anchor,
         projectStore: mockProjectStore,
@@ -375,10 +376,11 @@ describe('projectDropdown', () => {
       const secondItem = items[1] as HTMLElement
       secondItem.click()
 
-      expect(mockTodoStore.load).toHaveBeenCalledWith('2')
+      // Wait for async selectProject to complete
+      await vi.waitFor(() => expect(mockTodoStore.load).toHaveBeenCalledWith('2'))
     })
 
-    it('should call SettingsStore.setActiveProject with selected project ID', () => {
+    it('should call SettingsStore.setActiveProject with selected project ID', async () => {
       showProjectDropdown({
         anchor,
         projectStore: mockProjectStore,
@@ -391,10 +393,11 @@ describe('projectDropdown', () => {
       const secondItem = items[1] as HTMLElement
       secondItem.click()
 
-      expect(mockSettingsStore.setActiveProject).toHaveBeenCalledWith('2')
+      // Wait for async selectProject to complete
+      await vi.waitFor(() => expect(mockSettingsStore.setActiveProject).toHaveBeenCalledWith('2'))
     })
 
-    it('should call onClose after project selection', () => {
+    it('should call onClose after project selection', async () => {
       const onClose = vi.fn()
 
       showProjectDropdown({
@@ -409,7 +412,8 @@ describe('projectDropdown', () => {
       const firstItem = items[0] as HTMLElement
       firstItem.click()
 
-      expect(onClose).toHaveBeenCalled()
+      // Wait for async selectProject to complete
+      await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
     })
 
     it('should show project name input when "New Project" is clicked', () => {
@@ -455,7 +459,7 @@ describe('projectDropdown', () => {
       expect(mockProjectStore.create).toHaveBeenCalledWith('TestProject')
     })
 
-    it('should switch to new project after creation', () => {
+    it('should switch to new project after creation', async () => {
       showProjectDropdown({
         anchor,
         projectStore: mockProjectStore,
@@ -473,7 +477,8 @@ describe('projectDropdown', () => {
       const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
       input.dispatchEvent(enterEvent)
 
-      expect(mockTodoStore.load).toHaveBeenCalledWith('new-id')
+      // Wait for async createNewProject callback to complete
+      await vi.waitFor(() => expect(mockTodoStore.load).toHaveBeenCalledWith('new-id'))
       expect(mockSettingsStore.setActiveProject).toHaveBeenCalledWith('new-id')
     })
 
