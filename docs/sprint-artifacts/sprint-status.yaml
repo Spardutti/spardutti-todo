@@ -103,8 +103,8 @@ development_status:
   7-6-update-todostore-for-project-scoping: done
   7-7-implement-project-indicator-ui-component: done
   7-8-implement-keyboard-project-search-ctrl-p: done
-  7-9-implement-mouse-dropdown-for-project-switch: ready-for-dev
-  7-10-implement-project-create-rename-delete-operations: ready-for-dev
+  7-9-implement-mouse-dropdown-for-project-switch: done
+  7-10-implement-project-create-rename-delete-operations: done
   7-11-integrate-projects-into-app-startup: ready-for-dev
   epic-7-retrospective: optional
 

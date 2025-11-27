@@ -85,8 +85,9 @@ export class ProjectStore {
    *
    * Generates a UUID v4 for the id and ISO 8601 timestamp for createdAt.
    *
-   * @param name - The project name
+   * @param name - The project name (must be non-empty after trimming)
    * @returns The created Project object
+   * @throws {Error} If the name is empty or contains only whitespace
    *
    * @example
    * ```typescript
@@ -96,12 +97,17 @@ export class ProjectStore {
    * ```
    */
   create = (name: string): Project => {
+    // Validate non-empty name
+    if (!name || name.trim().length === 0) {
+      throw new Error('Project name cannot be empty')
+    }
+
     const id = crypto.randomUUID()
     const createdAt = new Date().toISOString()
 
     const project: Project = {
       id,
-      name,
+      name: name.trim(),
       createdAt,
     }
 
@@ -117,8 +123,9 @@ export class ProjectStore {
    * Renames a project by ID.
    *
    * @param id - The UUID of the project to rename
-   * @param newName - The new name for the project
+   * @param newName - The new name for the project (must be non-empty after trimming)
    * @throws {Error} If the project with the given ID is not found
+   * @throws {Error} If the new name is empty or contains only whitespace
    *
    * @example
    * ```typescript
@@ -126,13 +133,18 @@ export class ProjectStore {
    * ```
    */
   rename = (id: string, newName: string): void => {
+    // Validate non-empty name
+    if (!newName || newName.trim().length === 0) {
+      throw new Error('Project name cannot be empty')
+    }
+
     const project = this.findById(id)
 
     if (!project) {
       throw new Error(`Project not found: ${id}`)
     }
 
-    project.name = newName
+    project.name = newName.trim()
 
     // Fire-and-forget auto-save (no await - non-blocking)
     this.save()

@@ -174,6 +174,35 @@ describe('ProjectStore', () => {
       expect(project).toBeDefined()
       expect(project.name).toBe('Fire-and-forget Test')
     })
+
+    it('should throw error for empty name', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+
+      expect(() => store.create('')).toThrow('Project name cannot be empty')
+    })
+
+    it('should throw error for whitespace-only name', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+
+      expect(() => store.create('   ')).toThrow('Project name cannot be empty')
+      expect(() => store.create('\t\n ')).toThrow('Project name cannot be empty')
+    })
+
+    it('should trim whitespace from name', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+
+      const project = store.create('  My Project  ')
+
+      expect(project.name).toBe('My Project')
+    })
+
+    it('should accept valid names with spaces', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+
+      const project = store.create('My Cool Project')
+
+      expect(project.name).toBe('My Cool Project')
+    })
   })
 
   describe('rename()', () => {
@@ -203,6 +232,30 @@ describe('ProjectStore', () => {
       store.rename(project.id, 'Updated')
 
       expect(saveSpy).toHaveBeenCalled()
+    })
+
+    it('should throw error for empty name', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+      const project = store.create('Original')
+
+      expect(() => store.rename(project.id, '')).toThrow('Project name cannot be empty')
+    })
+
+    it('should throw error for whitespace-only name', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+      const project = store.create('Original')
+
+      expect(() => store.rename(project.id, '   ')).toThrow('Project name cannot be empty')
+      expect(() => store.rename(project.id, '\t\n ')).toThrow('Project name cannot be empty')
+    })
+
+    it('should trim whitespace from new name', () => {
+      vi.mocked(window.electron.saveProjects).mockResolvedValue()
+      const project = store.create('Original')
+
+      store.rename(project.id, '  New Name  ')
+
+      expect(store.findById(project.id)?.name).toBe('New Name')
     })
   })
 

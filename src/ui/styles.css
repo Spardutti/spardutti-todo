@@ -329,3 +329,167 @@ ul, ol {
 #delete-completed-btn:hover {
   background: #001100;                        /* Subtle dark green tint on hover */
 }
+
+/* ============================================
+   PROJECT DROPDOWN (Mouse Click)
+   ============================================ */
+
+/* Dropdown container - appears below project indicator when clicked */
+.project-dropdown {
+  position: absolute;                         /* Positioned relative to indicator */
+  background: var(--color-bg-primary);        /* Black background #000000 */
+  border: 1px solid var(--color-border-default); /* Green border #00FF00 */
+  z-index: 100;                               /* Ensure dropdown appears above other content */
+  min-width: 150px;                           /* Minimum width for project names */
+  max-height: 200px;                          /* Limit height to prevent overwhelming UI */
+  overflow-y: auto;                           /* Scrollable if many projects */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: inherit;                         /* 14px from body */
+}
+
+/* Individual project item in dropdown */
+.project-dropdown-item {
+  display: flex;                              /* Horizontal layout: checkmark + name */
+  align-items: center;                        /* Vertical center alignment */
+  padding: 0.35rem 0.5rem;                    /* Dense padding per terminal aesthetic */
+  cursor: pointer;                            /* Indicates clickable */
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+}
+
+/* Hover state for dropdown items */
+.project-dropdown-item:hover,
+.project-dropdown-item--highlighted {
+  background: #001100;                        /* Subtle dark green tint */
+}
+
+/* Checkmark span - visible only for active project */
+.project-dropdown-checkmark {
+  width: 1rem;                                /* Fixed width for alignment */
+  margin-right: 0.5rem;                       /* Gap between checkmark and name */
+  flex-shrink: 0;                             /* Prevent shrinking */
+  color: inherit;                             /* Use item color */
+}
+
+/* Project name span in dropdown */
+.project-dropdown-name {
+  flex: 1;                                    /* Take remaining space */
+  white-space: nowrap;                        /* Prevent text wrapping */
+  overflow: hidden;                           /* Hide overflow text */
+  text-overflow: ellipsis;                    /* Show ellipsis for long names */
+  color: inherit;                             /* Use item color */
+}
+
+/* Active project item styling */
+.project-dropdown-item--active {
+  /* No visual distinction beyond checkmark - terminal simplicity */
+}
+
+/* Separator between regular projects and "New Project" */
+.project-dropdown-separator {
+  height: 1px;                                /* Thin line */
+  background: #004400;                        /* Dark green separator */
+  margin: 0.25rem 0;                          /* Small vertical spacing */
+}
+
+/* New Project item styling */
+.project-dropdown-item--new {
+  /* Inherits base item styling */
+}
+
+/* Icon for "New Project" (+ symbol) */
+.project-dropdown-icon {
+  width: 1rem;                                /* Fixed width to match checkmark */
+  margin-right: 0.5rem;                       /* Gap between icon and text */
+  flex-shrink: 0;                             /* Prevent shrinking */
+  text-align: center;                         /* Center the + symbol */
+  color: inherit;                             /* Use item color */
+}
+
+/* Action hints for rename/delete (visible on highlighted items) */
+.project-dropdown-actions {
+  margin-left: auto;                          /* Push to right side */
+  flex-shrink: 0;                             /* Prevent shrinking */
+  color: var(--color-text-secondary);         /* Dimmed green #008800 */
+  font-size: 12px;                            /* Smaller font for hints */
+  letter-spacing: 0.3rem;                     /* Spacing between 'r' and 'd' */
+}
+
+/* ============================================
+   PROJECT NAME INPUT (Modal Prompt)
+   ============================================ */
+
+/* Overlay - centers the input modal over the entire screen */
+.project-name-input-overlay {
+  position: fixed;                            /* Fixed to viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;                               /* Full viewport width */
+  height: 100vh;                              /* Full viewport height */
+  background: rgba(0, 0, 0, 0.7);             /* Semi-transparent black overlay */
+  display: flex;                              /* Enable flexbox for centering */
+  align-items: center;                        /* Vertical center */
+  justify-content: center;                    /* Horizontal center */
+  z-index: 200;                               /* Above dropdown (z-index 100) */
+}
+
+/* Input box container - the actual modal card */
+.project-name-input-box {
+  background: var(--color-bg-primary);        /* Black background #000000 */
+  border: 2px solid var(--color-border-default); /* Thick green border for emphasis */
+  padding: 1rem;                              /* Internal spacing */
+  min-width: 300px;                           /* Minimum width for comfortable input */
+  max-width: 400px;                           /* Maximum width to prevent too wide */
+  display: flex;                              /* Vertical layout: label → input → hint */
+  flex-direction: column;                     /* Stack vertically */
+  gap: 0.75rem;                               /* Spacing between elements */
+}
+
+/* Label/prompt text above input */
+.project-name-input-label {
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: 14px;                            /* Same as body */
+  margin: 0;
+}
+
+/* Error state for label */
+.project-name-input-label--error {
+  color: var(--color-error);                  /* Red #FF0000 for errors */
+}
+
+/* Input field */
+.project-name-input-field {
+  background: var(--color-bg-primary);        /* Black background */
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+  border: 1px solid var(--color-border-default); /* Green border */
+  border-radius: 0;                           /* Sharp corners - terminal constraint */
+  padding: 0.35rem;                           /* Dense padding per terminal aesthetic */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: 14px;                            /* Same as body */
+  caret-color: var(--color-text-primary);     /* Green text cursor */
+  width: 100%;                                /* Full width of container */
+}
+
+/* Focus state with green glow */
+.project-name-input-field:focus {
+  box-shadow: 0 0 8px var(--color-border-default); /* Green glow */
+  outline: none;                              /* Remove default browser outline */
+}
+
+/* Error state for input */
+.project-name-input-field--error {
+  border-color: var(--color-error);           /* Red border #FF0000 */
+}
+
+/* Placeholder text styling */
+.project-name-input-field::placeholder {
+  color: rgba(0, 255, 0, 0.5);                /* 50% opacity green (dimmed) */
+}
+
+/* Hint text below input */
+.project-name-input-hint {
+  color: var(--color-text-secondary);         /* Dimmed green #008800 */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: 12px;                            /* Smaller than input for de-emphasis */
+  margin: 0;
+}
