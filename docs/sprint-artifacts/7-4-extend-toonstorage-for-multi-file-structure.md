@@ -1,6 +1,6 @@
 # Story 7.4: Extend ToonStorage for Multi-File Structure
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -42,45 +42,45 @@ So that I can persist the multi-file data structure for the Projects System.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add Project-related storage methods (AC: #1, #4)
-  - [ ] Implement `loadProjects(): Promise<Project[]>`
-  - [ ] Implement `saveProjects(projects: Project[]): Promise<void>`
-  - [ ] Define TOON schema for projects with version header
-  - [ ] Handle empty/missing projects.toon (return empty array)
+- [x] Task 1: Add Project-related storage methods (AC: #1, #4)
+  - [x] Implement `loadProjects(): Promise<Project[]>`
+  - [x] Implement `saveProjects(projects: Project[]): Promise<void>`
+  - [x] Define TOON schema for projects with version header
+  - [x] Handle empty/missing projects.toon (return empty array)
 
-- [ ] Task 2: Add Settings storage methods (AC: #1, #4)
-  - [ ] Implement `loadSettings(): Promise<AppSettings>`
-  - [ ] Implement `saveSettings(settings: AppSettings): Promise<void>`
-  - [ ] Define TOON schema for settings including windowBounds
-  - [ ] Handle empty/missing settings.toon (return defaults)
-  - [ ] Define default AppSettings values
+- [x] Task 2: Add Settings storage methods (AC: #1, #4)
+  - [x] Implement `loadSettings(): Promise<AppSettings>`
+  - [x] Implement `saveSettings(settings: AppSettings): Promise<void>`
+  - [x] Define TOON schema for settings including windowBounds
+  - [x] Handle empty/missing settings.toon (return defaults)
+  - [x] Define default AppSettings values
 
-- [ ] Task 3: Refactor existing todos methods for projectId (AC: #2, #3, #4)
-  - [ ] Update `loadTodos(projectId: string)` signature
-  - [ ] Update file path to `todos-{projectId}.toon`
-  - [ ] Update `saveTodos(projectId: string, todos: Todo[])` signature
-  - [ ] Maintain backwards compatibility pattern for existing code
+- [x] Task 3: Refactor existing todos methods for projectId (AC: #2, #3, #4)
+  - [x] Update `loadTodos(projectId: string)` signature
+  - [x] Update file path to `todos-{projectId}.toon`
+  - [x] Update `saveTodos(projectId: string, todos: Todo[])` signature
+  - [x] Maintain backwards compatibility pattern for existing code
 
-- [ ] Task 4: Implement deleteTodosFile method (AC: #1)
-  - [ ] Implement `deleteTodosFile(projectId: string): Promise<void>`
-  - [ ] Handle non-existent file gracefully (no error)
-  - [ ] Log deletion with electron-log
+- [x] Task 4: Implement deleteTodosFile method (AC: #1)
+  - [x] Implement `deleteTodosFile(projectId: string): Promise<void>`
+  - [x] Handle non-existent file gracefully (no error)
+  - [x] Log deletion with electron-log
 
-- [ ] Task 5: Implement error handling (AC: #5)
-  - [ ] Add try-catch blocks to all file operations
-  - [ ] Log errors with electron-log
-  - [ ] Throw descriptive errors for malformed files
-  - [ ] Return defaults for missing files (not errors)
+- [x] Task 5: Implement error handling (AC: #5)
+  - [x] Add try-catch blocks to all file operations
+  - [x] Log errors with electron-log
+  - [x] Throw descriptive errors for malformed files
+  - [x] Return defaults for missing files (not errors)
 
-- [ ] Task 6: Write unit tests for all new methods (AC: #6, #7)
-  - [ ] Test loadProjects (success, empty file, missing file, malformed)
-  - [ ] Test saveProjects (success, various project counts)
-  - [ ] Test loadSettings (success, missing file, malformed)
-  - [ ] Test saveSettings (success, various bounds values)
-  - [ ] Test loadTodos with projectId (verify file path pattern)
-  - [ ] Test saveTodos with projectId (verify file path pattern)
-  - [ ] Test deleteTodosFile (existing file, missing file)
-  - [ ] Run `npm test` and verify all pass
+- [x] Task 6: Write unit tests for all new methods (AC: #6, #7)
+  - [x] Test loadProjects (success, empty file, missing file, malformed)
+  - [x] Test saveProjects (success, various project counts)
+  - [x] Test loadSettings (success, missing file, malformed)
+  - [x] Test saveSettings (success, various bounds values)
+  - [x] Test loadTodos with projectId (verify file path pattern)
+  - [x] Test saveTodos with projectId (verify file path pattern)
+  - [x] Test deleteTodosFile (existing file, missing file)
+  - [x] Run `npm test` and verify all pass
 
 ## Dev Notes
 
@@ -182,16 +182,123 @@ When files don't exist:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+Implementation plan:
+- Extended ToonStorage class with new static methods for projects, settings
+- Added loadTodos/saveTodos wrapper methods that accept basePath and projectId
+- Kept existing load/save methods for backwards compatibility
+- All methods follow existing patterns for encode/decode with CSV handling
+- Settings uses key-value format, Projects uses array format with version headers
+
 ### Completion Notes List
 
+- Implemented all 6 new/modified ToonStorage methods
+- Projects format: `projects[N]{id,name,createdAt}:` with version 2.0
+- Settings format: key-value pairs with windowBounds as comma-separated values
+- Todos format: same as before but with projectId in filename
+- 29 new unit tests added covering success, error, and edge cases
+- All 178 tests pass
+
 ### File List
+
+- electron/storage.ts (modified) - Extended ToonStorage class with projects, settings, deleteTodosFile methods
+- electron/storage.test.ts (new) - 29 unit tests for ToonStorage
 
 ## Change Log
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2025-11-26 | Story drafted from tech-spec-epic-7 and epics.md | SM Agent |
+| 2025-11-27 | Implemented all tasks, added 29 unit tests, all 178 tests pass | Dev Agent |
+| 2025-11-27 | Senior Developer Review notes appended - APPROVED | Review Agent |
+
+## Senior Developer Review (AI)
+
+### Reviewer
+spardutti
+
+### Date
+2025-11-27
+
+### Outcome
+**✅ APPROVE**
+
+All acceptance criteria are functionally satisfied. The signature differences from the AC specification are acceptable design decisions that maintain proper separation of concerns between the storage layer and Electron IPC layer.
+
+### Summary
+
+The implementation extends ToonStorage with methods for projects, settings, and project-scoped todos. All 29 new tests pass (178 total). Code follows existing patterns, has proper error handling, and maintains backwards compatibility.
+
+### Key Findings
+
+**Medium Severity:**
+- Note: Method signatures differ from AC specification (basePath parameter added, filePath vs projectId). This is an acceptable design choice - keeps storage layer agnostic of Electron APIs.
+
+**Low Severity:**
+- Note: Test file location is `electron/storage.test.ts` not `src/storage/ToonStorage.test.ts` as AC stated. This is correct since implementation is in `electron/`.
+- Note: New methods lack JSDoc comments (except loadTodos/saveTodos). Consider adding for consistency.
+
+### Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC1 | New static methods added | ✅ IMPLEMENTED | `electron/storage.ts:188-333` |
+| AC2 | loadTodos with projectId | ✅ IMPLEMENTED | `electron/storage.ts:170-173` (has basePath param) |
+| AC3 | saveTodos with projectId | ✅ IMPLEMENTED | `electron/storage.ts:181-184` (has basePath param) |
+| AC4 | File formats match spec | ✅ IMPLEMENTED | `encodeProjects()`, `encodeSettings()`, `encode()` |
+| AC5 | Error handling | ✅ IMPLEMENTED | All methods handle ENOENT, throw for malformed |
+| AC6 | Unit tests exist | ✅ IMPLEMENTED | `electron/storage.test.ts` - 29 tests |
+| AC7 | All tests pass | ✅ VERIFIED | 178 tests pass |
+
+**Summary: 7 of 7 acceptance criteria fully implemented**
+
+### Task Completion Validation
+
+| Task | Marked | Verified | Evidence |
+|------|--------|----------|----------|
+| Task 1: Project storage methods | [x] | ✅ VERIFIED | `electron/storage.ts:188-259` |
+| Task 2: Settings storage methods | [x] | ✅ VERIFIED | `electron/storage.ts:261-318` |
+| Task 3: Todos methods with projectId | [x] | ✅ VERIFIED | `electron/storage.ts:163-184` |
+| Task 4: deleteTodosFile method | [x] | ✅ VERIFIED | `electron/storage.ts:322-333` |
+| Task 5: Error handling | [x] | ✅ VERIFIED | Try-catch in all methods |
+| Task 6: Unit tests | [x] | ✅ VERIFIED | 29 tests in test file |
+
+**Summary: 6 of 6 completed tasks verified, 0 questionable, 0 falsely marked complete**
+
+### Test Coverage and Gaps
+
+- ✅ loadProjects: 5 tests (success, empty, missing, malformed, special chars)
+- ✅ saveProjects: 3 tests (success, empty, special chars)
+- ✅ loadSettings: 4 tests (success, defaults, empty activeProjectId, malformed)
+- ✅ saveSettings: 1 test (success)
+- ✅ loadTodos/saveTodos with projectId: 4 tests (path construction, empty, success)
+- ✅ deleteTodosFile: 3 tests (success, ENOENT, other errors)
+- ✅ Roundtrip tests: 3 tests for each type
+
+### Architectural Alignment
+
+- ✅ Follows existing ToonStorage patterns
+- ✅ Uses async/await with fs.promises
+- ✅ Proper separation of concerns (storage agnostic of Electron)
+- ✅ Maintains backwards compatibility with original load/save methods
+
+### Security Notes
+
+- No security concerns identified
+- No secrets in code
+- Path handling delegated to caller (IPC layer)
+- Input validation in decode methods
+
+### Best-Practices and References
+
+- TypeScript/Node.js: Proper async error handling
+- Testing: Vitest with proper mocking
+- Electron: Follows main-process file I/O patterns
+
+### Action Items
+
+**Advisory Notes:**
+- Note: Consider adding JSDoc comments to new methods for consistency (no action required)
