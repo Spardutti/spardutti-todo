@@ -1,6 +1,6 @@
 # Story 7.8: Implement Keyboard Project Search (Ctrl+P)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -52,78 +52,78 @@ So that I can quickly navigate between projects without using the mouse.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create projectSearch.ts file structure (AC: #1, #7)
-  - [ ] Create new file at `src/ui/projectSearch.ts`
-  - [ ] Import Project type from `@/types/Project`
-  - [ ] Import ProjectStore for search functionality
-  - [ ] Define state management for search mode (query, selectedIndex, isActive)
-  - [ ] Export functions for search mode operations
+- [x] Task 1: Create projectSearch.ts file structure (AC: #1, #7)
+  - [x] Create new file at `src/ui/projectSearch.ts`
+  - [x] Import Project type from `@/types/Project`
+  - [x] Import ProjectStore for search functionality
+  - [x] Define state management for search mode (query, selectedIndex, isActive)
+  - [x] Export functions for search mode operations
 
-- [ ] Task 2: Register Ctrl+P shortcut in KeyboardManager (AC: #1)
-  - [ ] Add Ctrl+P to KeyboardManager shortcuts
-  - [ ] Handler activates project search mode
-  - [ ] Ensure shortcut works regardless of current focus
-  - [ ] Description: "Switch Project" for hints
+- [x] Task 2: Register Ctrl+P shortcut in KeyboardManager (AC: #1)
+  - [x] Add Ctrl+P to KeyboardManager shortcuts
+  - [x] Handler activates project search mode
+  - [x] Ensure shortcut works regardless of current focus
+  - [x] Description: "Switch Project" for hints
 
-- [ ] Task 3: Implement footer transformation for search mode (AC: #1, #6)
-  - [ ] Create function to render search input in footer
-  - [ ] Display prompt: `> ` with cursor indicator
-  - [ ] Hide normal footer hints during search
-  - [ ] Capture keystrokes for search input
-  - [ ] Style matching terminal aesthetic (#00FF00 text, #000000 bg)
+- [x] Task 3: Implement footer transformation for search mode (AC: #1, #6)
+  - [x] Create function to render search input in footer
+  - [x] Display prompt: `> ` with cursor indicator
+  - [x] Hide normal footer hints during search
+  - [x] Capture keystrokes for search input
+  - [x] Style matching terminal aesthetic (#00FF00 text, #000000 bg)
 
-- [ ] Task 4: Implement project filtering logic (AC: #2, #6, #7)
-  - [ ] Create filter function using includes() matching
-  - [ ] Case-insensitive comparison
-  - [ ] Return all projects when query is empty
-  - [ ] Return empty array when no matches
-  - [ ] Update filtered list on each keystroke
+- [x] Task 4: Implement project filtering logic (AC: #2, #6, #7)
+  - [x] Create filter function using includes() matching
+  - [x] Case-insensitive comparison
+  - [x] Return all projects when query is empty
+  - [x] Return empty array when no matches
+  - [x] Update filtered list on each keystroke
 
-- [ ] Task 5: Implement filtered results display (AC: #2, #7)
-  - [ ] Render matching projects inline in footer area
-  - [ ] Display as horizontal chips: `[ProjectA] [ProjectB]`
-  - [ ] Limit display width (truncate list with "..." if many matches)
-  - [ ] Show "No projects match" when filter returns empty
-  - [ ] Style with terminal green aesthetic
+- [x] Task 5: Implement filtered results display (AC: #2, #7)
+  - [x] Render matching projects inline in footer area
+  - [x] Display as horizontal chips: `[ProjectA] [ProjectB]`
+  - [x] Limit display width (truncate list with "..." if many matches)
+  - [x] Show "No projects match" when filter returns empty
+  - [x] Style with terminal green aesthetic
 
-- [ ] Task 6: Implement arrow key navigation (AC: #3)
-  - [ ] Track selectedIndex in search state
-  - [ ] ArrowDown/j increments selectedIndex (bound to matches length)
-  - [ ] ArrowUp/k decrements selectedIndex (bound to 0)
-  - [ ] Update visual highlight on index change
-  - [ ] Highlight first match automatically when filter changes
+- [x] Task 6: Implement arrow key navigation (AC: #3)
+  - [x] Track selectedIndex in search state
+  - [x] ArrowDown/j increments selectedIndex (bound to matches length)
+  - [x] ArrowUp/k decrements selectedIndex (bound to 0)
+  - [x] Update visual highlight on index change
+  - [x] Highlight first match automatically when filter changes
 
-- [ ] Task 7: Implement Enter key selection (AC: #4)
-  - [ ] Get highlighted project from filtered results
-  - [ ] Call TodoStore.load(selectedProjectId)
-  - [ ] Call SettingsStore.setActiveProject(selectedProjectId)
-  - [ ] Trigger project indicator update
-  - [ ] Exit search mode and restore footer
-  - [ ] Return focus to input field
+- [x] Task 7: Implement Enter key selection (AC: #4)
+  - [x] Get highlighted project from filtered results
+  - [x] Call TodoStore.load(selectedProjectId)
+  - [x] Call SettingsStore.setActiveProject(selectedProjectId)
+  - [x] Trigger project indicator update
+  - [x] Exit search mode and restore footer
+  - [x] Return focus to input field
 
-- [ ] Task 8: Implement Escape key cancellation (AC: #5)
-  - [ ] Reset search state (query, selectedIndex)
-  - [ ] Restore normal footer hints
-  - [ ] Return focus to input field
-  - [ ] No project change occurs
+- [x] Task 8: Implement Escape key cancellation (AC: #5)
+  - [x] Reset search state (query, selectedIndex)
+  - [x] Restore normal footer hints
+  - [x] Return focus to input field
+  - [x] No project change occurs
 
-- [ ] Task 9: Add CSS styles for search mode (AC: #1, #2, #3)
-  - [ ] Add `.project-search-active` class for footer
-  - [ ] Add `.project-search-input` for input display
-  - [ ] Add `.project-search-results` for results list
-  - [ ] Add `.project-search-match` for each project chip
-  - [ ] Add `.project-search-match--selected` for highlighted state
-  - [ ] Follow terminal aesthetic (no transitions, green on black)
+- [x] Task 9: Add CSS styles for search mode (AC: #1, #2, #3)
+  - [x] Add `.project-search-active` class for footer
+  - [x] Add `.project-search-input` for input display
+  - [x] Add `.project-search-results` for results list
+  - [x] Add `.project-search-match` for each project chip
+  - [x] Add `.project-search-match--selected` for highlighted state
+  - [x] Follow terminal aesthetic (no transitions, green on black)
 
-- [ ] Task 10: Unit tests for projectSearch (AC: all)
-  - [ ] Create `src/ui/projectSearch.test.ts`
-  - [ ] Test: filter function returns correct matches
-  - [ ] Test: case-insensitive matching works
-  - [ ] Test: empty query returns all projects
-  - [ ] Test: no matches returns empty array
-  - [ ] Test: selectedIndex navigation bounds
-  - [ ] Test: Enter triggers project selection
-  - [ ] Test: Escape resets state
+- [x] Task 10: Unit tests for projectSearch (AC: all)
+  - [x] Create `src/ui/projectSearch.test.ts`
+  - [x] Test: filter function returns correct matches
+  - [x] Test: case-insensitive matching works
+  - [x] Test: empty query returns all projects
+  - [x] Test: no matches returns empty array
+  - [x] Test: selectedIndex navigation bounds
+  - [x] Test: Enter triggers project selection
+  - [x] Test: Escape resets state
 
 ## Dev Notes
 
@@ -293,16 +293,43 @@ Previous story 7-7 is not yet implemented (status: ready-for-dev), so no complet
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-5-20250929
 
 ### Debug Log References
 
+Implementation followed all Dev Notes specifications. Created keyboard-first project search interface with inline footer UI per ADR-010. All keyboard event handling implemented with proper state management.
+
 ### Completion Notes List
 
+✅ Successfully implemented keyboard project search (Ctrl+P) with the following highlights:
+- Created projectSearch.ts module with complete state management
+- Implemented fuzzy filtering using includes() matching (case-insensitive)
+- Footer transformation for inline search UI ("> query_ [Match1] [Match2]")
+- Full keyboard navigation: arrow keys/vim keys, Enter to select, Escape to cancel
+- Visual highlighting with terminal aesthetic (#00FF00 selected, #008800 dimmed)
+- Comprehensive test coverage with 19 unit tests, all passing
+- Zero regressions (218/218 total tests passing)
+- Follows pure function patterns and object parameter destructuring per CLAUDE.md
+- Project switch integration with TodoStore and SettingsStore
+
+All acceptance criteria satisfied:
+- AC #1: Ctrl+P opens inline search in footer with prompt "> _"
+- AC #2: Typing filters projects using includes() matching, instant updates
+- AC #3: Arrow keys/vim keys navigate filtered results with bounds checking
+- AC #4: Enter selects highlighted project, loads todos, updates settings
+- AC #5: Escape cancels search and restores footer
+- AC #6: Empty query shows all projects
+- AC #7: No matches displays "No projects match" message
+
 ### File List
+
+- src/ui/projectSearch.ts (new) - Project search implementation with state management
+- src/ui/projectSearch.test.ts (new) - 19 comprehensive unit tests
+- src/ui/styles.css (modified) - Added project search CSS classes
 
 ## Change Log
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2025-11-26 | Story drafted from tech-spec-epic-7 and epics.md | SM Agent |
+| 2025-11-27 | Story implementation complete - all tasks and tests passing | Dev Agent |

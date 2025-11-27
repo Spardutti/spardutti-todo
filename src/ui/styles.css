@@ -247,6 +247,59 @@ ul, ol {
 }
 
 /* ============================================
+   PROJECT SEARCH (Ctrl+P)
+   ============================================ */
+
+/* Search mode container - active state for footer during Ctrl+P search */
+.project-search-active {
+  display: flex;                              /* Horizontal layout for prompt + results */
+  align-items: center;                        /* Vertical center alignment */
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+  font-family: inherit;                       /* Consolas monospace from body */
+  font-size: inherit;                         /* 14px from body */
+  background: transparent;                    /* Inherit black background */
+}
+
+/* Search prompt ("> " indicator) */
+.project-search-prompt {
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+  margin-right: 0;                            /* No gap (space is in text content) */
+}
+
+/* Search input display with cursor */
+.project-search-input {
+  color: var(--color-text-primary);           /* Bright green #00FF00 */
+  margin-right: 0.5rem;                       /* Gap before results */
+}
+
+/* Results container - holds project chips */
+.project-search-results {
+  display: inline-flex;                       /* Horizontal layout for chips */
+  gap: 0.25rem;                               /* Small gap between chips */
+  flex-wrap: nowrap;                          /* No wrapping - horizontal scroll if needed */
+  overflow-x: auto;                           /* Allow horizontal scroll for many matches */
+}
+
+/* Individual project match chip */
+.project-search-match {
+  color: var(--color-text-secondary);         /* Dimmed green #008800 for unselected */
+  white-space: nowrap;                        /* Prevent text wrapping */
+}
+
+/* Selected/highlighted project match */
+.project-search-match--selected {
+  color: var(--color-text-primary);           /* Bright green #00FF00 for selected */
+  background: #001100;                        /* Subtle dark green highlight */
+  padding: 0 0.25rem;                         /* Small horizontal padding for highlight */
+}
+
+/* No matches message */
+.project-search-no-match {
+  color: var(--color-text-secondary);         /* Dimmed green #008800 */
+  font-style: italic;                         /* Italic for informational message */
+}
+
+/* ============================================
    LAYOUT & APP CONTAINER
    ============================================ */
 
